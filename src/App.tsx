@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { AppShellProvider, useAppShell, BottomNav } from './components/AppShell';
+import { NotificationProvider } from './providers/notificationProvider';
 import { BootScreen } from './screens/BootScreen';
 import { OnboardingMain } from './screens/OnboardingMain';
 import { OnboardingName } from './screens/OnboardingName';
@@ -105,7 +106,9 @@ function AppContent() {
 export default function App() {
   return (
     <AppShellProvider>
-      <AppContent />
+      <NotificationProvider>
+        <AppContent />
+      </NotificationProvider>
     </AppShellProvider>
   );
 }

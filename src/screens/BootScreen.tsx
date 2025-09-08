@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useAppShell } from '../components/AppShell';
-import seventhPathLogo from 'figma:asset/d39dcef0d5c4765688b970ab66912bbb65f81e62.png';
+import seventhPathLogo from '../assets/d39dcef0d5c4765688b970ab66912bbb65f81e62.png';
 
 export function BootScreen() {
   const { navigate, isOnboarded } = useAppShell();
