@@ -19,7 +19,7 @@ const emojiOptions = [
 ];
 
 export function AddHabit() {
-  const { navigate } = useAppShell();
+  const { navigate, registerBackHandler, handleBack } = useAppShell();
   const { hydrateAll } = useHabitsStore();
   const { 
     scheduleHabitReminder, 
@@ -33,6 +33,26 @@ export function AddHabit() {
   const [hasReminder, setHasReminder] = useState(false);
   const [reminderTimes, setReminderTimes] = useState<string[]>(['08:00']);
   const [isSaving, setIsSaving] = useState(false);
+  const isDirty = Boolean(
+    title.trim() ||
+    (hasReminder && reminderTimes.length > 0 && !(reminderTimes.length === 1 && reminderTimes[0] === '08:00')) ||
+    emoji !== '🎯' ||
+    frequency !== 'daily'
+  );
+
+  React.useEffect(() => {
+    const unregister = registerBackHandler(() => {
+      if (isDirty && !isSaving) {
+        const confirmLeave = window.confirm('Discard changes?');
+        if (confirmLeave) {
+          navigate('/home');
+        }
+        return true; // handled
+      }
+      return false; // let default
+    });
+    return unregister;
+  }, [isDirty, isSaving, navigate, registerBackHandler]);
 
   const handleSave = async () => {
     if (!title.trim()) return;
@@ -96,7 +116,13 @@ export function AddHabit() {
       <AppBar
         title="Add Habit"
         showBack
-        onBack={() => navigate('/home')}
+        onBack={async () => {
+          if (isDirty && !isSaving) {
+            const ok = window.confirm('Discard changes?');
+            if (!ok) return;
+          }
+          navigate('/home');
+        }}
       />
 
       <div className="flex-1 p-6 pb-40">

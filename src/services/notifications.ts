@@ -290,8 +290,12 @@ class NotificationService {
       nextNotification.setHours(hours, minutes, 0, 0);
 
       // If the time has already passed today, schedule for tomorrow
-      if (nextNotification <= now) {
-        nextNotification.setDate(nextNotification.getDate() + 1);
+      // Testing mode: allow scheduling within next 5 minutes even if close to now
+      const diffMs = nextNotification.getTime() - now.getTime();
+      if (!(diffMs >= 60_000 || (diffMs >= 0 && diffMs < 5 * 60_000))) {
+        if (nextNotification <= now) {
+          nextNotification.setDate(nextNotification.getDate() + 1);
+        }
       }
 
       const timeUntilNotification = nextNotification.getTime() - now.getTime();

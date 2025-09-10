@@ -9,6 +9,7 @@ import { useNotifications } from '../providers/notificationProvider';
 import seventhPathLogo from '../assets/d39dcef0d5c4765688b970ab66912bbb65f81e62.png';
 import { useHabitStore } from '../lib/habitStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { LocalNotifications } from '@capacitor/local-notifications';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore - vite json import allowed
 import pkg from '../../package.json';
@@ -21,12 +22,15 @@ export function Settings() {
     sendTestNotification, 
     isLoading: notificationLoading,
     error: notificationError,
+    isEnabled,
+    setEnabled,
   } = useNotifications();
   const { clearAllHabits } = useHabitStore();
   
   const [isTestingNotification, setIsTestingNotification] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const version = useMemo(() => (pkg?.version as string) || '1.0.0', []);
+  const [pendingCount, setPendingCount] = useState<number>(0);
 
   const openLink = useCallback(async (url: string) => {
     try {
@@ -66,12 +70,25 @@ export function Settings() {
         '🔔 Test Notification',
         'This is a test notification from Seventh Path!'
       );
+      try {
+        const pending = await LocalNotifications.getPending();
+        setPendingCount(pending.notifications.length);
+      } catch {}
     } catch (error) {
       console.error('Error sending test notification:', error);
     } finally {
       setIsTestingNotification(false);
     }
   };
+
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const pending = await LocalNotifications.getPending();
+        setPendingCount(pending.notifications.length);
+      } catch {}
+    })();
+  }, []);
 
   const SettingsSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <div className="mb-6">
@@ -149,47 +166,58 @@ export function Settings() {
         <SettingsSection title="Notifications">
           <SettingsRow
             icon={<Bell size={20} />}
-            title="Notification Permission"
-            description={
-              isPermissionGranted 
-                ? "Notifications are enabled" 
-                : "Notifications are disabled"
-            }
+            title="Notifications"
+            description={isPermissionGranted ? 'Permission granted' : 'Permission required'}
             action={
-              <Switch 
-                checked={isPermissionGranted} 
+              <Switch
+                checked={isPermissionGranted}
                 onCheckedChange={handleRequestNotificationPermission}
                 disabled={notificationLoading}
               />
             }
           />
-          
-          {isPermissionGranted && (
-            <SettingsRow
-              icon={<TestTube size={20} />}
-              title="Test Notification"
-              description="Send a test notification to verify it's working"
-              action={
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleTestNotification}
-                  disabled={isTestingNotification}
-                >
-                  {isTestingNotification ? 'Sending...' : 'Test'}
-                </Button>
-              }
-            />
-          )}
-          
-          {!isPermissionGranted && (
-            <SettingsRow
-              icon={<SettingsIcon size={20} />}
-              title="Enable Notifications"
-              description="Tap to enable notifications in system settings"
-              onClick={handleRequestNotificationPermission}
-            />
-          )}
+
+          <SettingsRow
+            icon={<SettingsIcon size={20} />}
+            title="Enabled"
+            description={isPermissionGranted ? 'App will send notifications' : 'Grant permission to enable'}
+            action={
+              <Switch
+                checked={isEnabled}
+                onCheckedChange={async (on) => {
+                  try { await setEnabled(on); } catch (e) { console.error(e); }
+                }}
+                disabled={notificationLoading || !isPermissionGranted}
+              />
+            }
+          />
+
+          <SettingsRow
+            icon={<TestTube size={20} />}
+            title="Scheduled Count"
+            description={`${pendingCount} scheduled`}
+            action={
+              <Button size="sm" variant="outline" onClick={async () => {
+                try { const p = await LocalNotifications.getPending(); setPendingCount(p.notifications.length); } catch {}
+              }}>Refresh</Button>
+            }
+          />
+
+          <SettingsRow
+            icon={<TestTube size={20} />}
+            title="Test Notification"
+            description={isPermissionGranted ? "Send a test notification to verify it's working" : 'Grant permission first'}
+            action={
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleTestNotification}
+                disabled={isTestingNotification || !isPermissionGranted || !isEnabled}
+              >
+                {isTestingNotification ? 'Sending...' : 'Test'}
+              </Button>
+            }
+          />
         </SettingsSection>
 
         {/* Error Display */}

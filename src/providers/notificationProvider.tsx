@@ -10,11 +10,28 @@ import {
   ScheduledNotification 
 } from '../services/notifications';
 import { Capacitor } from '@capacitor/core';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { useHabitsStore } from '../store/HabitsStore';
+// Ensure numeric ids for native notifications (Java int range)
+function toJavaIntId(key: string): number {
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) | 0;
+  h = Math.abs(h);
+  if (h === 0) h = 1;
+  return h % 2147483647;
+}
+function getNativeSoundName(): string {
+  const platform = Capacitor.getPlatform();
+  // iOS expects filename with extension included in app bundle; Android uses channel sound name without extension
+  return platform === 'ios' ? 'ting.caf' : 'ting';
+}
 
 interface NotificationContextType {
   // Permission state
   permission: NotificationPermission | null;
   isPermissionGranted: boolean;
+  isEnabled: boolean;
+  setEnabled: (on: boolean) => Promise<void>;
   
   // Notification management
   scheduledNotifications: ScheduledNotification[];
@@ -59,6 +76,62 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   const [scheduledNotifications, setScheduledNotifications] = useState<ScheduledNotification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isEnabled, setIsEnabled] = useState<boolean>(() => {
+    try { return localStorage.getItem('notificationsEnabled') !== 'false'; } catch { return true; }
+  });
+
+  // Helper: compute next N occurrence dates for a given time/frequency
+  function getNextOccurrenceDates(
+    hours: number,
+    minutes: number,
+    frequency: 'daily' | 'weekly',
+    weekdays?: number[], // 0-6 Sun-Sat
+    count: number = 7
+  ): Date[] {
+    const dates: Date[] = [];
+    const now = new Date();
+    if (frequency === 'daily' || !weekdays || weekdays.length === 0) {
+      let d = new Date();
+      d.setHours(hours, minutes, 0, 0);
+      // If passed, apply testing rule: allow within next 5m; else roll to tomorrow
+      const diff = d.getTime() - now.getTime();
+      if (!(diff >= 60_000 || (diff >= 0 && diff < 5 * 60_000))) {
+        d.setDate(d.getDate() + 1);
+      }
+      for (let i = 0; i < count; i++) {
+        const at = new Date(d.getTime() + i * 24 * 60 * 60 * 1000);
+        dates.push(at);
+      }
+    } else {
+      // Weekly: walk forward day by day collecting matching weekdays
+      let day = 0;
+      let cur = new Date();
+      cur.setHours(hours, minutes, 0, 0);
+      while (dates.length < count && day < 21) { // cap walk to 3 weeks
+        const candidate = new Date(cur.getTime() + day * 24 * 60 * 60 * 1000);
+        const dow = candidate.getDay();
+        const isToday = day === 0;
+        if (weekdays.includes(dow)) {
+          const diff = candidate.getTime() - now.getTime();
+          if (!isToday || (diff >= 60_000 || (diff >= 0 && diff < 5 * 60_000))) {
+            dates.push(candidate);
+          }
+        }
+        day++;
+      }
+      // If we couldn't fill count due to testing rule, continue into next weeks
+      while (dates.length < count) {
+        const last = dates[dates.length - 1] || new Date();
+        const next = new Date(last.getTime() + 24 * 60 * 60 * 1000);
+        const dow = next.getDay();
+        if (weekdays.includes(dow)) {
+          next.setHours(hours, minutes, 0, 0);
+          dates.push(next);
+        }
+      }
+    }
+    return dates;
+  }
 
   // Initialize notification service
   useEffect(() => {
@@ -68,8 +141,45 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         const isNative = Capacitor.getPlatform() !== 'web';
 
         if (isNative) {
-          // Native environment: we delegate to Android/iOS layers; assume granted unknown
-          setPermission({ granted: true, canAskAgain: true, status: 'granted' });
+          // Initialize high-importance notification channel for Android
+          try {
+            await LocalNotifications.createChannel({
+              id: 'habit-reminders',
+              name: 'Habit Reminders',
+              description: 'Notifications for habit reminders',
+              importance: 4, // High importance
+              visibility: 1, // Public
+              sound: 'default',
+              lights: true,
+              vibration: true,
+            });
+          } catch (err) {
+            console.warn('Failed to create notification channel:', err);
+          }
+
+          // Register action types (Snooze, Mark Done)
+          try {
+            await LocalNotifications.registerActionTypes({
+              types: [
+                {
+                  id: 'HABIT_REM',
+                  actions: [
+                    { id: 'DONE', title: 'Mark Done' },
+                    { id: 'SNOOZE', title: 'Snooze 10m' },
+                  ],
+                },
+              ],
+            });
+          } catch {}
+
+          // Check permission status
+          const permissionStatus = await LocalNotifications.checkPermissions();
+          const granted = permissionStatus.display === 'granted';
+          setPermission({ 
+            granted, 
+            canAskAgain: permissionStatus.display !== 'denied', 
+            status: permissionStatus.display 
+          });
           setScheduledNotifications([]);
         } else {
           // Web fallback
@@ -110,6 +220,36 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     window.addEventListener('notification-click', handleNotificationClick as EventListener);
     window.addEventListener('notification-action', handleNotificationAction as EventListener);
 
+    // Native listener: actions
+    try {
+      LocalNotifications.addListener('localNotificationActionPerformed', async (action) => {
+        try {
+          const info = action?.notification;
+          const extra = info?.extra || {};
+          const habitId: string | undefined = extra.habitId;
+          const time: string | undefined = extra.time;
+          const actionId: string | undefined = (action as any)?.actionId;
+          if (!habitId) return;
+          const store = useHabitsStore.getState();
+          if (actionId === 'DONE' && time) {
+            // Cancel this instance id and mark done
+            const id = info?.id;
+            if (typeof id === 'number') {
+              try { await LocalNotifications.cancel({ notifications: [{ id }] }); } catch {}
+            }
+            try { await store.toggleTime(habitId, time); } catch (e) { console.warn(e); }
+          } else if (actionId === 'SNOOZE') {
+            // Schedule one-off +10 minutes
+            const at = new Date(Date.now() + 10 * 60 * 1000);
+            const nativeId = toJavaIntId(`snooze|${habitId}|${at.getTime()}`);
+            await LocalNotifications.schedule({ notifications: [{ id: nativeId, title: info?.title || 'Reminder', body: info?.body || '', schedule: { at }, channelId: 'habit-reminders-ting', sound: getNativeSoundName(), extra: { habitId, type: 'habit-reminder', snoozed: true } }] });
+          }
+        } catch (e) {
+          console.warn('Action handler error', e);
+        }
+      });
+    } catch {}
+
     return () => {
       window.removeEventListener('notification-click', handleNotificationClick as EventListener);
       window.removeEventListener('notification-action', handleNotificationAction as EventListener);
@@ -122,8 +262,14 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       setError(null);
       const isNative = Capacitor.getPlatform() !== 'web';
       if (isNative) {
-        // Assume permissions managed at OS level; mark as granted.
-        const perm: NotificationPermission = { granted: true, canAskAgain: true, status: 'granted' };
+        // Request permission using LocalNotifications
+        const permissionStatus = await LocalNotifications.requestPermissions();
+        const granted = permissionStatus.display === 'granted';
+        const perm: NotificationPermission = { 
+          granted, 
+          canAskAgain: permissionStatus.display !== 'denied', 
+          status: permissionStatus.display 
+        };
         setPermission(perm);
         return perm;
       } else {
@@ -140,6 +286,20 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     }
   };
 
+  const setEnabled = async (on: boolean) => {
+    try {
+      setIsLoading(true);
+      setIsEnabled(on);
+      try { localStorage.setItem('notificationsEnabled', on ? 'true' : 'false'); } catch {}
+      if (!on) {
+        // Cancel all scheduled notifications when disabled
+        await cancelAllReminders();
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const scheduleHabitReminder = async (
     habitId: string,
     title: string,
@@ -151,10 +311,28 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     try {
       setIsLoading(true);
       setError(null);
+      if (!isEnabled) throw new Error('Notifications disabled');
       const isNative = Capacitor.getPlatform() !== 'web';
       if (isNative) {
-        // Native: scheduled via platform-specific layer elsewhere
-        return `native-${habitId}-${Date.now()}`;
+        // New approach: one-shot notifications for the next 7 occurrences (no repeats), so we can reschedule precisely
+        const [hours, minutes] = scheduledTime.split(':').map(Number);
+        const baseTitle = `${emoji} ${title}`;
+        const body = `Time for your ${title} session!`;
+        const nextDates = getNextOccurrenceDates(hours, minutes, frequency, weekdays, 7);
+        const ids: number[] = [];
+        const toSchedule: any[] = [];
+        for (const d of nextDates) {
+          const ymd = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+          const idKey = `${habitId}|${ymd}|${scheduledTime}`;
+          const nativeId = toJavaIntId(idKey);
+          ids.push(nativeId);
+          toSchedule.push({ id: nativeId, title: baseTitle, body, schedule: { at: d }, channelId: 'habit-reminders-ting', sound: getNativeSoundName(), actionTypeId: 'HABIT_REM', extra: { habitId, time: scheduledTime, date: ymd, type: 'habit-reminder' } });
+        }
+        if (toSchedule.length) {
+          await LocalNotifications.schedule({ notifications: toSchedule });
+          setHabitScheduledIds(habitId, [...getHabitScheduledIds(habitId), ...ids]);
+        }
+        return `native-${habitId}-${scheduledTime}`;
       } else {
         const notificationId = await notificationService.scheduleHabitReminder(
           habitId,
@@ -205,7 +383,19 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       setError(null);
       const isNative = Capacitor.getPlatform() !== 'web';
       if (isNative) {
-        // Native: handled by platform layer
+        // Get all pending notifications and cancel those for this habit
+        const pending = await LocalNotifications.getPending();
+        const habitNotifications = pending.notifications.filter(
+          n => n.extra?.habitId === habitId
+        );
+        
+        if (habitNotifications.length > 0) {
+          await LocalNotifications.cancel({
+            notifications: habitNotifications.map(n => ({ id: n.id }))
+          });
+        }
+        // Also clear our stored id mapping
+        clearHabitScheduledIds(habitId);
       } else {
         await notificationService.cancelHabitReminders(habitId);
         const notifications = notificationService.getScheduledNotifications();
@@ -226,7 +416,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       setError(null);
       const isNative = Capacitor.getPlatform() !== 'web';
       if (isNative) {
-        // Native: handled by platform layer (e.g., boot receiver)
+        // Cancel all pending notifications
+        await LocalNotifications.cancelAll();
         setScheduledNotifications([]);
       } else {
         await notificationService.cancelAllReminders();
@@ -255,8 +446,10 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       setError(null);
       const isNative = Capacitor.getPlatform() !== 'web';
       if (isNative) {
-        // Native: cancel + reschedule handled by platform layer
-        return `native-${habitId}-${Date.now()}`;
+        // Cancel existing notifications for this habit
+        await cancelHabitReminders(habitId);
+        // Schedule new notification
+        return await scheduleHabitReminder(habitId, title, emoji, scheduledTime, frequency, weekdays);
       } else {
         const notificationId = await notificationService.updateHabitReminder(
           habitId,
@@ -283,10 +476,14 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     try {
       setIsLoading(true);
       setError(null);
+      if (!isEnabled) throw new Error('Notifications disabled');
       const isNative = Capacitor.getPlatform() !== 'web';
       if (isNative) {
-        // Native: use fallback web notification when running in web context
-        await notificationService.sendTestNotification(title, body);
+        // Send immediate notification using LocalNotifications with safe int id
+        const id = toJavaIntId(`test-${Date.now()}`);
+        await LocalNotifications.schedule({
+          notifications: [{ id, title, body, channelId: 'habit-reminders-ting', sound: getNativeSoundName() }]
+        });
       } else {
         await notificationService.sendTestNotification(title, body);
       }
@@ -321,6 +518,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   const value: NotificationContextType = {
     permission,
     isPermissionGranted: permission?.granted ?? false,
+    isEnabled,
+    setEnabled,
     scheduledNotifications,
     requestPermission,
     scheduleHabitReminder,

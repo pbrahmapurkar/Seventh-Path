@@ -1,9 +1,14 @@
 import React, { useEffect, useState, createContext, useContext } from 'react';
 import { Home, Plus, BarChart3, Settings } from 'lucide-react';
 
+type BackHandler = () => boolean | Promise<boolean>;
+
 interface AppShellContextType {
   currentRoute: string;
   navigate: (route: string) => void;
+  goBack: () => void;
+  registerBackHandler: (handler: BackHandler) => () => void;
+  handleBack: () => Promise<boolean>;
   isOnboarded: boolean;
   setIsOnboarded: (value: boolean) => void;
   theme: 'light' | 'dark' | 'system';
@@ -28,6 +33,8 @@ interface AppShellProviderProps {
 
 export function AppShellProvider({ children }: AppShellProviderProps) {
   const [currentRoute, setCurrentRoute] = useState('/boot');
+  const [routeStack, setRouteStack] = useState<string[]>(['/boot']);
+  const [backHandlers, setBackHandlers] = useState<BackHandler[]>([]);
   const [isOnboarded, setIsOnboarded] = useState<boolean>(() => {
     try {
       const stored = localStorage.getItem('onboarding-complete');
@@ -53,6 +60,37 @@ export function AppShellProvider({ children }: AppShellProviderProps) {
 
   const navigate = (route: string) => {
     setCurrentRoute(route);
+    setRouteStack((prev) => {
+      if (prev[prev.length - 1] === route) return prev;
+      return [...prev, route];
+    });
+  };
+
+  const goBack = () => {
+    setRouteStack((prev) => {
+      if (prev.length <= 1) return prev;
+      const next = prev.slice(0, -1);
+      const prevRoute = next[next.length - 1] || '/home';
+      setCurrentRoute(prevRoute);
+      return next;
+    });
+  };
+
+  const registerBackHandler = (handler: BackHandler) => {
+    setBackHandlers((prev) => [...prev, handler]);
+    return () => setBackHandlers((prev) => prev.filter((h) => h !== handler));
+  };
+
+  const handleBack = async () => {
+    const handler = backHandlers[backHandlers.length - 1];
+    if (handler) {
+      try {
+        const res = await Promise.resolve(handler());
+        if (res) return true; // handled
+      } catch {}
+    }
+    goBack();
+    return true;
   };
 
   // Persist onboarding flag
@@ -81,6 +119,9 @@ export function AppShellProvider({ children }: AppShellProviderProps) {
       value={{
         currentRoute,
         navigate,
+        goBack,
+        registerBackHandler,
+        handleBack,
         isOnboarded,
         setIsOnboarded,
         theme,
