@@ -7,8 +7,9 @@ import { Switch } from '../components/ui/switch';
 import { AppBar } from '../components/AppShell';
 import { useAppShell } from '../components/AppShell';
 import { useNotifications } from '../providers/notificationProvider';
-import { useHabitStore } from '../lib/habitStore';
-import { ReminderTimePicker } from '../components/ReminderTimePicker';
+import { createHabit } from '../lib/habits';
+import { useHabitsStore } from '../store/HabitsStore';
+import { MultiTimePicker } from '../components/MultiTimePicker';
 import { Bell, BellOff } from 'lucide-react';
 
 const emojiOptions = [
@@ -19,7 +20,7 @@ const emojiOptions = [
 
 export function AddHabit() {
   const { navigate } = useAppShell();
-  const { addHabit } = useHabitStore();
+  const { hydrateAll } = useHabitsStore();
   const { 
     scheduleHabitReminder, 
     isPermissionGranted, 
@@ -30,44 +31,53 @@ export function AddHabit() {
   const [emoji, setEmoji] = useState('🎯');
   const [frequency, setFrequency] = useState<'daily' | 'weekly'>('daily');
   const [hasReminder, setHasReminder] = useState(false);
-  const [reminderTime, setReminderTime] = useState('09:00');
-  const [reminderFrequency, setReminderFrequency] = useState<'daily' | 'weekly'>('daily');
-  const [weekdays, setWeekdays] = useState<number[]>([]);
+  const [reminderTimes, setReminderTimes] = useState<string[]>(['08:00']);
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
     if (!title.trim()) return;
+    if (!emoji) return;
+    if (hasReminder && reminderTimes.length === 0) return;
 
     setIsSaving(true);
     
     try {
-      // Add habit to store
-      const habitData = {
-        title: title.trim(),
+      // Persist habit to Preferences
+      const newHabit = await createHabit({
+        name: title.trim(),
         emoji,
         frequency,
-        reminderTime: hasReminder ? reminderTime : undefined,
-      };
-      
-      addHabit(habitData);
+        reminderTimes: hasReminder ? reminderTimes : [],
+      });
       
       // Schedule notification if enabled and permission granted
       if (hasReminder && isPermissionGranted) {
         try {
-          await scheduleHabitReminder(
-            Date.now().toString(), // This would be the actual habit ID from the store
-            title.trim(),
-            emoji,
-            reminderTime,
-            reminderFrequency,
-            reminderFrequency === 'weekly' ? weekdays : undefined
-          );
+          for (const t of reminderTimes) {
+            await scheduleHabitReminder(
+              newHabit.id,
+              newHabit.name,
+              emoji,
+              t,
+              'daily'
+            );
+          }
         } catch (error) {
           console.error('Failed to schedule reminder:', error);
           // Don't block habit creation if notification fails
         }
       }
       
+      // Refresh in-memory store so Home reflects immediately
+      try { await hydrateAll(); } catch {}
+
+      try {
+        // Simple confirmation toast/snackbar
+        // Replace with your toast system if available
+        // eslint-disable-next-line no-alert
+        alert('Habit added successfully 🎉');
+      } catch {}
+
       navigate('/home');
     } catch (error) {
       console.error('Error saving habit:', error);
@@ -78,28 +88,7 @@ export function AddHabit() {
 
   const handleReminderToggle = (enabled: boolean) => {
     setHasReminder(enabled);
-    if (!enabled) {
-      setReminderTime('09:00');
-      setReminderFrequency('daily');
-      setWeekdays([]);
-    }
-  };
-
-  const handleReminderTimeChange = (time: string | null) => {
-    if (time) {
-      setReminderTime(time);
-    }
-  };
-
-  const handleReminderFrequencyChange = (freq: 'daily' | 'weekly') => {
-    setReminderFrequency(freq);
-    if (freq === 'daily') {
-      setWeekdays([]);
-    }
-  };
-
-  const handleWeekdaysChange = (days: number[]) => {
-    setWeekdays(days);
+    if (!enabled) setReminderTimes([]);
   };
 
   return (
@@ -110,7 +99,7 @@ export function AddHabit() {
         onBack={() => navigate('/home')}
       />
 
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-6 pb-40">
         <div className="space-y-6">
           {/* Habit Title */}
           <div className="space-y-2">
@@ -159,14 +148,13 @@ export function AddHabit() {
             </Select>
           </div>
 
-          {/* Reminder Settings */}
-          <ReminderTimePicker
-            value={hasReminder ? reminderTime : null}
-            onChange={handleReminderTimeChange}
-            frequency={reminderFrequency}
-            onFrequencyChange={handleReminderFrequencyChange}
-            weekdays={weekdays}
-            onWeekdaysChange={handleWeekdaysChange}
+          {/* Reminder Settings: multiple times */}
+          <MultiTimePicker
+            enabled={hasReminder}
+            onEnabledChange={handleReminderToggle}
+            times={reminderTimes}
+            onChange={setReminderTimes}
+            defaultTime="08:00"
             disabled={isSaving || notificationLoading}
           />
 
@@ -192,15 +180,10 @@ export function AddHabit() {
                 <p className="font-medium">{title || 'Your habit name'}</p>
                 <p className="text-sm text-muted-foreground">
                   {frequency.charAt(0).toUpperCase() + frequency.slice(1)}
-                  {hasReminder && reminderTime && (
+                  {hasReminder && reminderTimes.length > 0 && (
                     <>
                       {' • '}
-                      {reminderFrequency === 'daily' ? 'Daily' : 'Weekly'} reminder at {reminderTime}
-                      {reminderFrequency === 'weekly' && weekdays.length > 0 && (
-                        <span className="ml-1">
-                          ({weekdays.map(d => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d]).join(', ')})
-                        </span>
-                      )}
+                      Daily reminders at {reminderTimes.join(', ')}
                     </>
                   )}
                 </p>
@@ -215,12 +198,12 @@ export function AddHabit() {
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="p-6 border-t border-border">
+      {/* Fixed Save Button above bottom nav */}
+      <div className="fixed left-1/2 -translate-x-1/2 bottom-24 w-full max-w-md px-6">
         <Button
           onClick={handleSave}
           disabled={!title.trim() || isSaving || notificationLoading}
-          className="w-full h-12"
+          className="w-full h-12 rounded-full"
         >
           {isSaving ? 'Saving...' : 'Save Habit'}
         </Button>

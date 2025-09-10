@@ -3,9 +3,13 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { useAppShell } from '../components/AppShell';
 import { starterHabits } from '../lib/habitStore';
+import { createHabit, makeHabitId, setOnboardingSelected } from '../lib/habits';
+import { useHabitsStore } from '../store/HabitsStore';
+import * as EventBus from '../lib/eventBus';
 
 export function OnboardingHabits() {
   const { navigate } = useAppShell();
+  const { hydrateAll } = useHabitsStore();
   const [selectedHabits, setSelectedHabits] = useState<typeof starterHabits>([]);
 
   const toggleHabit = (habit: typeof starterHabits[0]) => {
@@ -83,7 +87,21 @@ export function OnboardingHabits() {
       {/* Footer */}
       <div className="p-6 pt-0">
         <Button
-          onClick={() => navigate('/onboarding/reminder')}
+          onClick={async () => {
+            // Persist selected habits in order and update in-memory store immediately
+            const ids: string[] = [];
+            const created: any[] = [];
+            for (const h of selectedHabits) {
+              const id = makeHabitId(h.title);
+              ids.push(id);
+              const habit = await createHabit({ id, name: h.title, emoji: h.emoji, frequency: 'daily', reminderTimes: [] });
+              created.push(habit);
+              EventBus.emit('habit:created', { habit });
+            }
+            await setOnboardingSelected(ids);
+            try { await hydrateAll(); } catch {}
+            navigate('/onboarding/reminder');
+          }}
           disabled={selectedHabits.length === 0}
           className="w-full h-12"
         >

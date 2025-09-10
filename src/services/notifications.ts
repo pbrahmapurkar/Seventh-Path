@@ -172,6 +172,22 @@ class NotificationService {
   }
 
   /**
+   * Cancel all scheduled reminders
+   */
+  async cancelAllReminders(): Promise<void> {
+    const all = Array.from(this.scheduledNotifications.values());
+    for (const notification of all) {
+      await this.cancelHabitReminder(notification.id);
+    }
+    // Clear persisted storage for notifications
+    try {
+      localStorage.removeItem('scheduled-notifications');
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
    * Update a habit reminder
    */
   async updateHabitReminder(

@@ -1,34 +1,22 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Edit, Trash2, Calendar, TrendingUp } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { AppBar } from '../components/AppShell';
 import { useAppShell } from '../components/AppShell';
-
-// Mock habit data - replace with real data
-const mockHabit = {
-  id: '1',
-  title: 'Drink Water',
-  emoji: '💧',
-  frequency: 'daily',
-  reminderTime: '9:00 AM',
-  createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-  streak: 5,
-  completionRate: 85,
-  totalCompletions: 17,
-  completions: [
-    new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-    new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-    new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
-    new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-  ],
-};
+import { useHabitStore } from '../lib/habitStore';
 
 export function HabitDetail({ habitId }: { habitId: string }) {
   const { navigate } = useAppShell();
+  const { habits, deleteHabit, getHabitStreak, getCompletionPercentage } = useHabitStore();
   const [activeTab, setActiveTab] = useState('overview');
+
+  const habit = habits.find((h) => h.id === habitId) || habits[0];
+  const streak = habit ? getHabitStreak(habit.id) : 0;
+  const completionRate = habit ? (habit.frequency === 'daily' ? getCompletionPercentage(habit.id, 7) : getCompletionPercentage(habit.id, 7)) : 0;
+  const totalCompletions = habit ? habit.completions.length : 0;
+  const recentCompletions = useMemo(() => (habit ? habit.completions.slice().sort((a, b) => b.getTime() - a.getTime()) : []), [habit]);
 
   const handleEdit = () => {
     navigate(`/habit/${habitId}/edit`);
@@ -36,7 +24,7 @@ export function HabitDetail({ habitId }: { habitId: string }) {
 
   const handleDelete = () => {
     if (confirm('Are you sure you want to delete this habit?')) {
-      // Delete habit logic here
+      deleteHabit(habitId);
       navigate('/home');
     }
   };
@@ -48,7 +36,7 @@ export function HabitDetail({ habitId }: { habitId: string }) {
     // Generate last 30 days
     for (let i = 29; i >= 0; i--) {
       const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
-      const isCompleted = mockHabit.completions.some(
+      const isCompleted = recentCompletions.some(
         completion => completion.toDateString() === date.toDateString()
       );
       
@@ -99,27 +87,28 @@ export function HabitDetail({ habitId }: { habitId: string }) {
         {/* Habit Header */}
         <div className="bg-card border border-border rounded-lg p-6 mb-6">
           <div className="flex items-center gap-4 mb-4">
-            <span className="text-4xl">{mockHabit.emoji}</span>
+            <span className="text-4xl">{habit?.emoji}</span>
             <div className="flex-1">
-              <h1 className="text-2xl font-medium">{mockHabit.title}</h1>
+              <h1 className="text-2xl font-medium">{habit?.title}</h1>
               <p className="text-muted-foreground">
-                {mockHabit.frequency.charAt(0).toUpperCase() + mockHabit.frequency.slice(1)}
-                {mockHabit.reminderTime && ` • Reminder at ${mockHabit.reminderTime}`}
+                {habit ? habit.frequency.charAt(0).toUpperCase() + habit.frequency.slice(1) : ''}
+                {habit?.reminderTimes && habit.reminderTimes.length > 0 && ` • Reminders at ${habit.reminderTimes.join(', ')}`}
+                {!habit?.reminderTimes?.length && habit?.reminderTime && ` • Reminder at ${habit.reminderTime}`}
               </p>
             </div>
           </div>
           
           <div className="flex gap-4">
             <div className="text-center">
-              <div className="text-2xl font-medium text-primary">{mockHabit.streak}</div>
+              <div className="text-2xl font-medium text-primary">{streak}</div>
               <div className="text-sm text-muted-foreground">Day Streak</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-medium text-primary">{mockHabit.completionRate}%</div>
+              <div className="text-2xl font-medium text-primary">{completionRate}%</div>
               <div className="text-sm text-muted-foreground">Completion Rate</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-medium text-primary">{mockHabit.totalCompletions}</div>
+              <div className="text-2xl font-medium text-primary">{totalCompletions}</div>
               <div className="text-sm text-muted-foreground">Total Completions</div>
             </div>
           </div>
@@ -158,7 +147,7 @@ export function HabitDetail({ habitId }: { habitId: string }) {
             <div className="bg-card border border-border rounded-lg p-6">
               <h3 className="font-medium mb-4">Recent Activity</h3>
               <div className="space-y-3">
-                {mockHabit.completions.slice(0, 5).map((completion, index) => (
+                {recentCompletions.slice(0, 5).map((completion, index) => (
                   <div key={index} className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-primary rounded-full" />
                     <span className="text-sm">
@@ -194,7 +183,7 @@ export function HabitDetail({ habitId }: { habitId: string }) {
             <div className="bg-card border border-border rounded-lg p-6">
               <h3 className="font-medium mb-4">Completion History</h3>
               <div className="space-y-3 max-h-64 overflow-y-auto">
-                {mockHabit.completions.map((completion, index) => (
+                {recentCompletions.map((completion, index) => (
                   <div key={index} className="flex items-center justify-between">
                     <span className="text-sm">{completion.toLocaleDateString()}</span>
                     <Badge variant="secondary" className="text-xs">

@@ -3,34 +3,15 @@ import { Plus } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { HabitCard, EmptyState } from '../components/HabitCard';
 import { useAppShell } from '../components/AppShell';
-
-// Mock habit store for now - we'll replace with real store later
-const mockHabits = [
-  {
-    id: '1',
-    title: 'Drink Water',
-    emoji: '💧',
-    streak: 5,
-    completed: true,
-  },
-  {
-    id: '2',
-    title: 'Morning Walk',
-    emoji: '🚶',
-    streak: 3,
-    completed: false,
-  },
-  {
-    id: '3',
-    title: 'Read 20 mins',
-    emoji: '📚',
-    streak: 0,
-    completed: false,
-  },
-];
+import { useEffect } from 'react';
+import { useHabitsStore, getTodayProgress } from '../store/HabitsStore';
+import { toYMD } from '../lib/habits';
 
 export function HomeToday() {
   const { navigate, userName } = useAppShell();
+  const { habitsById, statsById, hydrateAll, hydrationState, habitDaysByKey } = useHabitsStore();
+
+  useEffect(() => { if (hydrationState !== 'ready') void hydrateAll(); }, [hydrationState, hydrateAll]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -39,16 +20,31 @@ export function HomeToday() {
     return 'Good evening';
   };
 
-  const completedCount = mockHabits.filter(h => h.completed).length;
-  const totalCount = mockHabits.length;
+  const habitList = Object.values(habitsById);
+  const completedCount = habitList.filter(h => getTodayProgress(h.id).complete).length;
+  const totalCount = habitList.length;
 
-  const handleToggleHabit = (id: string) => {
-    // This will be connected to the habit store
-    console.log('Toggle habit:', id);
-  };
+  // Completion is updated in /habit/:id as per spec
 
   const handleHabitClick = (id: string) => {
     navigate(`/habit/${id}`);
+  };
+
+  const handleToggleToday = async (habitId: string) => {
+    const store = useHabitsStore.getState();
+    const habit = store.habitsById[habitId];
+    if (!habit) return;
+    const progress = getTodayProgress(habitId, store);
+    if (!progress.complete) {
+      await store.markAllDone(habitId);
+    } else {
+      // Undo: toggle each done reminder to not done
+      const times = (habit.reminderTimes && habit.reminderTimes.length > 0) ? habit.reminderTimes : ['default'];
+      for (const t of times) {
+        // Only toggle if currently done; calling toggle will flip state
+        await store.toggleTime(habitId, t);
+      }
+    }
   };
 
   return (
@@ -108,18 +104,9 @@ export function HomeToday() {
       <div className="flex-1 px-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-medium">Today's Habits</h2>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/add')}
-            className="text-primary"
-          >
-            <Plus size={16} className="mr-1" />
-            Add
-          </Button>
         </div>
 
-        {mockHabits.length === 0 ? (
+        {habitList.length === 0 ? (
           <EmptyState
             icon={<Plus size={48} className="text-muted-foreground" />}
             title="No habits yet"
@@ -133,21 +120,42 @@ export function HomeToday() {
           />
         ) : (
           <div className="space-y-3">
-            {mockHabits.map((habit) => (
-              <HabitCard
-                key={habit.id}
-                id={habit.id}
-                title={habit.title}
-                emoji={habit.emoji}
-                streak={habit.streak}
-                completed={habit.completed}
-                onToggle={handleToggleHabit}
-                onClick={() => handleHabitClick(habit.id)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+            {habitList.map((habit) => {
+              const { total, done, complete } = getTodayProgress(habit.id);
+              const streak = statsById[habit.id]?.currentStreak ?? 0;
+              const progress = total > 0 ? Math.round((done / total) * 100) : (complete ? 100 : 0);
+              const timesLabel = (habit.reminderTimes && habit.reminderTimes.length)
+                ? habit.reminderTimes.join(', ')
+                : undefined;
+              return (
+               <HabitCard
+                 key={habit.id}
+                 id={habit.id}
+                 title={habit.name}
+                 emoji={habit.emoji}
+                 streak={streak}
+                 completed={complete}
+                 frequency={habit.frequency}
+                 reminderTime={timesLabel}
+                 progress={progress}
+                 showCheckbox={true}
+                 onToggle={handleToggleToday}
+                 onClick={() => handleHabitClick(habit.id)}
+               />
+              );
+            })}
+         </div>
+       )}
+     </div>
+
+      {/* Floating Add Button */}
+      <button
+        onClick={() => navigate('/add')}
+        className="fixed bottom-24 right-6 bg-primary text-primary-foreground shadow-lg rounded-full w-14 h-14 flex items-center justify-center"
+        aria-label="Add Habit"
+      >
+        <Plus size={24} />
+      </button>
     </div>
   );
 }
