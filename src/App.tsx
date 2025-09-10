@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { AppShellProvider, useAppShell, BottomNav } from './components/AppShell';
 import { NotificationProvider } from './providers/notificationProvider';
 import { BootScreen } from './screens/BootScreen';
@@ -21,8 +21,11 @@ import { startDayRolloverService } from './services/DayRolloverService';
 import { start as startSyncBus } from './lib/syncBus';
 
 function AppContent() {
-  const { currentRoute, navigate, theme, isOnboarded } = useAppShell();
+  const { currentRoute, navigate, goBack, handleBack, theme, isOnboarded } = useAppShell();
   const { hydrateAll, hydrationState } = useHabitsStore();
+  const lastBackRef = useRef<number>(0);
+  const lastNotifNavAtRef = useRef<number>(0);
+  const lastNotifHabitRef = useRef<string | null>(null);
 
   // Apply theme to document
   useEffect(() => {
@@ -53,7 +56,51 @@ function AppContent() {
     startSyncBus(async (_msg) => {
       await hydrateAll();
     });
+    // Hardware back handling
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const appMod = require('@capacitor/app');
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const toastMod = require('@capacitor/toast');
+      const AppCap = appMod?.App;
+      const Toast = toastMod?.Toast;
+      if (AppCap?.addListener) {
+        const sub = AppCap.addListener('backButton', async () => {
+          const isHome = currentRoute === '/home';
+          const isModal = currentRoute === '/confirm-remove-habits';
+          if (isModal) { goBack(); return; }
+          if (!isHome) { await handleBack(); return; }
+          const now = Date.now();
+          if (now - (lastBackRef.current || 0) < 2200) {
+            try { await AppCap.exitApp(); } catch {}
+          } else {
+            lastBackRef.current = now;
+            try { await Toast?.show?.({ text: 'Press back again to exit', duration: 'short' }); } catch {}
+          }
+        });
+        return () => { try { sub.remove(); } catch {} };
+      }
+    } catch {}
   }, [hydrateAll, hydrationState]);
+
+  // Navigate to habit detail when a notification is tapped
+  useEffect(() => {
+    const onNotificationClick = (e: Event) => {
+      try {
+        const detail = (e as CustomEvent).detail as { habitId?: string };
+        if (!detail?.habitId) return;
+        const now = Date.now();
+        const isSameAsLast = lastNotifHabitRef.current === detail.habitId;
+        const withinWindow = now - (lastNotifNavAtRef.current || 0) < 800;
+        if (isSameAsLast && withinWindow) return; // debounce duplicate taps
+        lastNotifHabitRef.current = detail.habitId;
+        lastNotifNavAtRef.current = now;
+        navigate(`/habit/${detail.habitId}`);
+      } catch {}
+    };
+    window.addEventListener('notification-click', onNotificationClick as EventListener);
+    return () => window.removeEventListener('notification-click', onNotificationClick as EventListener);
+  }, [navigate]);
 
   // Route rendering
   const renderScreen = () => {

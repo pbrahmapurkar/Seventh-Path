@@ -5,7 +5,7 @@ import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { AppBar } from '../components/AppShell';
 import { useAppShell } from '../components/AppShell';
-import { useHabitStore } from '../lib/habitStore';
+import { useHabitsStore } from '../store/HabitsStore';
 import { MultiTimePicker } from '../components/MultiTimePicker';
 import { useNotifications } from '../providers/notificationProvider';
 import { Bell, BellOff } from 'lucide-react';
@@ -17,15 +17,15 @@ const emojiOptions = [
 ];
 
 export function HabitEdit({ habitId }: { habitId: string }) {
-  const { navigate } = useAppShell();
-  const { habits, updateHabit } = useHabitStore();
-  const habit = useMemo(() => habits.find(h => h.id === habitId), [habits, habitId]);
+  const { navigate, registerBackHandler } = useAppShell();
+  const store = useHabitsStore();
+  const habit = store.habitsById[habitId];
 
-  const [title, setTitle] = useState(habit?.title || '');
+  const [title, setTitle] = useState(habit?.name || '');
   const [emoji, setEmoji] = useState(habit?.emoji || '🎯');
   const [frequency, setFrequency] = useState<'daily' | 'weekly'>(habit?.frequency || 'daily');
-  const [hasReminder, setHasReminder] = useState(Boolean(habit?.reminderTimes?.length || habit?.reminderTime));
-  const [reminderTimes, setReminderTimes] = useState<string[]>(habit?.reminderTimes || (habit?.reminderTime ? [habit.reminderTime] : ['08:00']));
+  const [hasReminder, setHasReminder] = useState(Boolean(habit?.reminderTimes?.length));
+  const [reminderTimes, setReminderTimes] = useState<string[]>(habit?.reminderTimes || ['08:00']);
   const [isSaving, setIsSaving] = useState(false);
   const { updateHabitReminder, cancelHabitReminders, isPermissionGranted } = useNotifications();
 
@@ -43,26 +43,24 @@ export function HabitEdit({ habitId }: { habitId: string }) {
 
     setIsSaving(true);
     try {
-      updateHabit(habit.id, {
-        title: title.trim(),
+      // Persist via global store; this emits habit:updated and reschedules
+      await store.editHabit({
+        id: habit.id,
+        name: title.trim(),
         emoji,
         frequency,
         reminderTimes: hasReminder ? reminderTimes : [],
-        reminderTime: undefined,
       });
 
-      // Update notifications
+      // Best-effort: update native notifications on platforms using LocalNotifications
       try {
+        await cancelHabitReminders(habit.id);
         if (hasReminder && reminderTimes.length && isPermissionGranted) {
-          await cancelHabitReminders(habit.id);
           for (const t of reminderTimes) {
             await updateHabitReminder(habit.id, title.trim(), emoji, t, 'daily');
           }
-        } else {
-          await cancelHabitReminders(habit.id);
         }
       } catch (e) {
-        // Ignore notification errors to not block edit flow
         console.warn('Notification update failed', e);
       }
       navigate(`/habit/${habit.id}`);
@@ -76,9 +74,43 @@ export function HabitEdit({ habitId }: { habitId: string }) {
     if (!enabled) setReminderTimes([]);
   };
 
+  const initial = React.useMemo(() => ({
+    name: habit?.name || '',
+    emoji: habit?.emoji || '🎯',
+    frequency: habit?.frequency || 'daily',
+    times: habit?.reminderTimes || [],
+  }), [habit]);
+
+  const isDirty = (
+    initial.name !== title.trim() ||
+    initial.emoji !== emoji ||
+    initial.frequency !== frequency ||
+    JSON.stringify(initial.times) !== JSON.stringify(reminderTimes)
+  );
+
+  React.useEffect(() => {
+    const unregister = registerBackHandler(() => {
+      if (isDirty && !isSaving) {
+        const confirmLeave = window.confirm('Discard changes?');
+        if (confirmLeave) {
+          navigate(`/habit/${habit?.id}`);
+        }
+        return true;
+      }
+      return false;
+    });
+    return unregister;
+  }, [isDirty, isSaving, navigate, habit?.id, registerBackHandler]);
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <AppBar title="Edit Habit" showBack onBack={() => navigate(`/habit/${habit.id}`)} />
+      <AppBar title="Edit Habit" showBack onBack={() => {
+        if (isDirty && !isSaving) {
+          const ok = window.confirm('Discard changes?');
+          if (!ok) return;
+        }
+        navigate(`/habit/${habit.id}`);
+      }} />
 
       <div className="flex-1 p-6">
         <div className="space-y-6">
