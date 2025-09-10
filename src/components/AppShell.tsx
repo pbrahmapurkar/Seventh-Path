@@ -1,4 +1,4 @@
-import React, { useState, createContext, useContext } from 'react';
+import React, { useEffect, useState, createContext, useContext } from 'react';
 import { Home, Plus, BarChart3, Settings } from 'lucide-react';
 
 interface AppShellContextType {
@@ -28,13 +28,53 @@ interface AppShellProviderProps {
 
 export function AppShellProvider({ children }: AppShellProviderProps) {
   const [currentRoute, setCurrentRoute] = useState('/boot');
-  const [isOnboarded, setIsOnboarded] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
-  const [userName, setUserName] = useState('');
+  const [isOnboarded, setIsOnboarded] = useState<boolean>(() => {
+    try {
+      const stored = localStorage.getItem('onboarding-complete');
+      return stored === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(() => {
+    try {
+      return (localStorage.getItem('app-theme') as 'light' | 'dark' | 'system') || 'system';
+    } catch {
+      return 'system';
+    }
+  });
+  const [userName, setUserName] = useState<string>(() => {
+    try {
+      return localStorage.getItem('user-name') || '';
+    } catch {
+      return '';
+    }
+  });
 
   const navigate = (route: string) => {
     setCurrentRoute(route);
   };
+
+  // Persist onboarding flag
+  useEffect(() => {
+    try {
+      localStorage.setItem('onboarding-complete', isOnboarded ? 'true' : 'false');
+    } catch {}
+  }, [isOnboarded]);
+
+  // Persist theme
+  useEffect(() => {
+    try {
+      localStorage.setItem('app-theme', theme);
+    } catch {}
+  }, [theme]);
+
+  // Persist user name
+  useEffect(() => {
+    try {
+      if (userName) localStorage.setItem('user-name', userName);
+    } catch {}
+  }, [userName]);
 
   return (
     <AppShellContext.Provider

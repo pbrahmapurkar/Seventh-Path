@@ -86,14 +86,14 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
 
       const dateStr = date.toDateString();
       const existingCompletion = habit.completions.find(
-        (completion) => completion.toDateString() === dateStr
+        (completion) => new Date(completion as any).toDateString() === dateStr
       );
 
       let newCompletions: Date[];
       if (existingCompletion) {
         // Remove completion
         newCompletions = habit.completions.filter(
-          (completion) => completion.toDateString() !== dateStr
+          (completion) => new Date(completion as any).toDateString() !== dateStr
         );
       } else {
         // Add completion
@@ -113,7 +113,9 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
     if (!habit) return false;
     
     const today = new Date().toDateString();
-    return habit.completions.some((completion) => completion.toDateString() === today);
+    return habit.completions.some(
+      (completion) => new Date(completion as any).toDateString() === today
+    );
   },
 
   getHabitStreak: (id) => {

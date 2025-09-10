@@ -8,7 +8,11 @@ interface HabitCardProps {
   emoji: string;
   streak: number;
   completed: boolean;
-  onToggle: (id: string) => void;
+  frequency?: 'daily' | 'weekly';
+  reminderTime?: string;
+  progress?: number; // 0-100
+  showCheckbox?: boolean;
+  onToggle?: (id: string) => void;
   onClick?: () => void;
 }
 
@@ -17,7 +21,11 @@ export function HabitCard({
   title, 
   emoji, 
   streak, 
-  completed, 
+  completed,
+  frequency,
+  reminderTime,
+  progress,
+  showCheckbox = true,
   onToggle, 
   onClick 
 }: HabitCardProps) {
@@ -26,24 +34,45 @@ export function HabitCard({
       className="flex items-center gap-4 p-4 bg-card border border-border rounded-lg hover:bg-muted/50 transition-colors"
       onClick={onClick}
     >
-      <div
-        className="flex items-center gap-3 flex-1 cursor-pointer"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <Checkbox
-          checked={completed}
-          onCheckedChange={() => onToggle(id)}
-          className="w-6 h-6"
-        />
+      <div className="flex items-center gap-3 flex-1">
+        {showCheckbox && (
+          <Checkbox
+            checked={completed}
+            onClick={(e: any) => e.stopPropagation()}
+            onCheckedChange={() => {
+              onToggle && onToggle(id);
+            }}
+            className="w-6 h-6"
+            aria-label={completed ? 'Mark not done' : 'Mark done'}
+          />
+        )}
         <div className="flex items-center gap-3 flex-1">
           <span className="text-2xl">{emoji}</span>
           <div className="flex-1">
             <h3 className="font-medium">{title}</h3>
-            {streak > 0 && (
-              <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-2 mt-1">
+              {typeof frequency !== 'undefined' && (
+                <Badge variant="secondary" className="text-xs">
+                  {frequency === 'daily' ? 'Daily' : 'Weekly'}
+                </Badge>
+              )}
+              {typeof reminderTime !== 'undefined' && reminderTime && (
+                <Badge variant="secondary" className="text-xs">
+                  🔔 {reminderTime}
+                </Badge>
+              )}
+              {streak > 0 && (
                 <Badge variant="secondary" className="text-xs">
                   🔥 {streak} day{streak !== 1 ? 's' : ''}
                 </Badge>
+              )}
+            </div>
+            {typeof progress === 'number' && (
+              <div className="mt-2 h-2 w-full bg-muted rounded overflow-hidden">
+                <div
+                  className="h-2 bg-primary"
+                  style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
+                />
               </div>
             )}
           </div>

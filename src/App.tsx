@@ -10,13 +10,19 @@ import { HomeToday } from './screens/HomeToday';
 import { AddHabit } from './screens/AddHabit';
 import { Insights } from './screens/Insights';
 import { Settings } from './screens/Settings';
-import { HabitDetail } from './screens/HabitDetail';
+import { HabitDetails } from './screens/HabitDetails';
+import { HabitEdit } from './screens/HabitEdit';
 import { Affirmations } from './screens/Affirmations';
 import { DailyGratitudes } from './screens/DailyGratitudes';
 import { ErrorNotFound } from './screens/ErrorNotFound';
+import { ConfirmRemoveHabits } from './screens/ConfirmRemoveHabits';
+import { useHabitsStore } from './store/HabitsStore';
+import { startDayRolloverService } from './services/DayRolloverService';
+import { start as startSyncBus } from './lib/syncBus';
 
 function AppContent() {
   const { currentRoute, navigate, theme, isOnboarded } = useAppShell();
+  const { hydrateAll, hydrationState } = useHabitsStore();
 
   // Apply theme to document
   useEffect(() => {
@@ -36,6 +42,18 @@ function AppContent() {
       }
     }
   }, [theme]);
+
+  // Hydrate habits store on app start and start rollover service
+  useEffect(() => {
+    if (hydrationState !== 'ready') {
+      void hydrateAll();
+    }
+    startDayRolloverService();
+    // Start cross-tab/app sync bus: rehydrate on external mutations
+    startSyncBus(async (_msg) => {
+      await hydrateAll();
+    });
+  }, [hydrateAll, hydrationState]);
 
   // Route rendering
   const renderScreen = () => {
@@ -71,8 +89,15 @@ function AppContent() {
       case currentRoute === '/settings':
         return <Settings />;
       
+      case currentRoute === '/confirm-remove-habits':
+      case currentRoute === '/remove-all-habits':
+        return <ConfirmRemoveHabits />;
+      
+      case currentRoute.startsWith('/habit/') && currentRoute.endsWith('/edit'):
+        return <HabitEdit habitId={habitId || '1'} />;
+
       case currentRoute.startsWith('/habit/') && !currentRoute.includes('/edit'):
-        return <HabitDetail habitId={habitId || '1'} />;
+        return <HabitDetails habitId={habitId || '1'} />;
       
       case currentRoute === '/affirmations':
         return <Affirmations />;

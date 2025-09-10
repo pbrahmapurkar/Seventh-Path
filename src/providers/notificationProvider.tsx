@@ -9,6 +9,7 @@ import {
   NotificationPermission, 
   ScheduledNotification 
 } from '../services/notifications';
+import { Capacitor } from '@capacitor/core';
 
 interface NotificationContextType {
   // Permission state
@@ -28,6 +29,7 @@ interface NotificationContextType {
   ) => Promise<string>;
   cancelHabitReminder: (notificationId: string) => Promise<void>;
   cancelHabitReminders: (habitId: string) => Promise<void>;
+  cancelAllReminders: () => Promise<void>;
   updateHabitReminder: (
     habitId: string,
     title: string,
@@ -63,18 +65,21 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     const initializeNotifications = async () => {
       try {
         setIsLoading(true);
-        
-        // Check current permission status
-        const currentPermission = notificationService.getPermissionStatus();
-        setPermission(currentPermission);
-        
-        // Load scheduled notifications
-        const notifications = notificationService.getScheduledNotifications();
-        setScheduledNotifications(notifications);
-        
-        // Reschedule all notifications on app boot
-        if (currentPermission?.granted) {
-          await notificationService.rescheduleAllNotifications();
+        const isNative = Capacitor.getPlatform() !== 'web';
+
+        if (isNative) {
+          // Native environment: we delegate to Android/iOS layers; assume granted unknown
+          setPermission({ granted: true, canAskAgain: true, status: 'granted' });
+          setScheduledNotifications([]);
+        } else {
+          // Web fallback
+          const currentPermission = notificationService.getPermissionStatus();
+          setPermission(currentPermission);
+          const notifications = notificationService.getScheduledNotifications();
+          setScheduledNotifications(notifications);
+          if (currentPermission?.granted) {
+            await notificationService.rescheduleAllNotifications();
+          }
         }
         
         setError(null);
@@ -115,11 +120,17 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     try {
       setIsLoading(true);
       setError(null);
-      
-      const newPermission = await notificationService.requestPermission();
-      setPermission(newPermission);
-      
-      return newPermission;
+      const isNative = Capacitor.getPlatform() !== 'web';
+      if (isNative) {
+        // Assume permissions managed at OS level; mark as granted.
+        const perm: NotificationPermission = { granted: true, canAskAgain: true, status: 'granted' };
+        setPermission(perm);
+        return perm;
+      } else {
+        const newPermission = await notificationService.requestPermission();
+        setPermission(newPermission);
+        return newPermission;
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to request permission';
       setError(errorMessage);
@@ -140,21 +151,23 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     try {
       setIsLoading(true);
       setError(null);
-      
-      const notificationId = await notificationService.scheduleHabitReminder(
-        habitId,
-        title,
-        emoji,
-        scheduledTime,
-        frequency,
-        weekdays
-      );
-      
-      // Refresh scheduled notifications
-      const notifications = notificationService.getScheduledNotifications();
-      setScheduledNotifications(notifications);
-      
-      return notificationId;
+      const isNative = Capacitor.getPlatform() !== 'web';
+      if (isNative) {
+        // Native: scheduled via platform-specific layer elsewhere
+        return `native-${habitId}-${Date.now()}`;
+      } else {
+        const notificationId = await notificationService.scheduleHabitReminder(
+          habitId,
+          title,
+          emoji,
+          scheduledTime,
+          frequency,
+          weekdays
+        );
+        const notifications = notificationService.getScheduledNotifications();
+        setScheduledNotifications(notifications);
+        return notificationId;
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to schedule reminder';
       setError(errorMessage);
@@ -168,12 +181,15 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     try {
       setIsLoading(true);
       setError(null);
-      
-      await notificationService.cancelHabitReminder(notificationId);
-      
-      // Refresh scheduled notifications
-      const notifications = notificationService.getScheduledNotifications();
-      setScheduledNotifications(notifications);
+      const isNative = Capacitor.getPlatform() !== 'web';
+      if (isNative) {
+        // For native, prefer cancel by habit via cancelHabitReminders instead
+        // no-op here
+      } else {
+        await notificationService.cancelHabitReminder(notificationId);
+        const notifications = notificationService.getScheduledNotifications();
+        setScheduledNotifications(notifications);
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to cancel reminder';
       setError(errorMessage);
@@ -187,14 +203,38 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     try {
       setIsLoading(true);
       setError(null);
-      
-      await notificationService.cancelHabitReminders(habitId);
-      
-      // Refresh scheduled notifications
-      const notifications = notificationService.getScheduledNotifications();
-      setScheduledNotifications(notifications);
+      const isNative = Capacitor.getPlatform() !== 'web';
+      if (isNative) {
+        // Native: handled by platform layer
+      } else {
+        await notificationService.cancelHabitReminders(habitId);
+        const notifications = notificationService.getScheduledNotifications();
+        setScheduledNotifications(notifications);
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to cancel reminders';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const cancelAllReminders = async (): Promise<void> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const isNative = Capacitor.getPlatform() !== 'web';
+      if (isNative) {
+        // Native: handled by platform layer (e.g., boot receiver)
+        setScheduledNotifications([]);
+      } else {
+        await notificationService.cancelAllReminders();
+        const notifications = notificationService.getScheduledNotifications();
+        setScheduledNotifications(notifications);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to cancel all reminders';
       setError(errorMessage);
       throw err;
     } finally {
@@ -213,21 +253,23 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     try {
       setIsLoading(true);
       setError(null);
-      
-      const notificationId = await notificationService.updateHabitReminder(
-        habitId,
-        title,
-        emoji,
-        scheduledTime,
-        frequency,
-        weekdays
-      );
-      
-      // Refresh scheduled notifications
-      const notifications = notificationService.getScheduledNotifications();
-      setScheduledNotifications(notifications);
-      
-      return notificationId;
+      const isNative = Capacitor.getPlatform() !== 'web';
+      if (isNative) {
+        // Native: cancel + reschedule handled by platform layer
+        return `native-${habitId}-${Date.now()}`;
+      } else {
+        const notificationId = await notificationService.updateHabitReminder(
+          habitId,
+          title,
+          emoji,
+          scheduledTime,
+          frequency,
+          weekdays
+        );
+        const notifications = notificationService.getScheduledNotifications();
+        setScheduledNotifications(notifications);
+        return notificationId;
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update reminder';
       setError(errorMessage);
@@ -241,8 +283,13 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     try {
       setIsLoading(true);
       setError(null);
-      
-      await notificationService.sendTestNotification(title, body);
+      const isNative = Capacitor.getPlatform() !== 'web';
+      if (isNative) {
+        // Native: use fallback web notification when running in web context
+        await notificationService.sendTestNotification(title, body);
+      } else {
+        await notificationService.sendTestNotification(title, body);
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to send test notification';
       setError(errorMessage);
@@ -256,8 +303,12 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     try {
       setIsLoading(true);
       setError(null);
-      
-      await notificationService.rescheduleAllNotifications();
+      const isNative = Capacitor.getPlatform() !== 'web';
+      if (isNative) {
+        // Native alarms are rescheduled by BootReceiver; nothing to do here
+      } else {
+        await notificationService.rescheduleAllNotifications();
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to reschedule notifications';
       setError(errorMessage);
@@ -275,6 +326,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     scheduleHabitReminder,
     cancelHabitReminder,
     cancelHabitReminders,
+    cancelAllReminders,
     updateHabitReminder,
     sendTestNotification,
     rescheduleAllNotifications,

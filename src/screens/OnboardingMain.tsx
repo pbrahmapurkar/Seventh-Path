@@ -1,59 +1,78 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Button } from '../components/ui/button';
 import { useAppShell } from '../components/AppShell';
 import seventhPathLogo from '../assets/d39dcef0d5c4765688b970ab66912bbb65f81e62.png';
+import '../styles/onboarding.css';
+import { Capacitor } from '@capacitor/core';
 
 export function OnboardingMain() {
   const { navigate } = useAppShell();
 
+  const hapticTap = useCallback(async () => {
+    // Best-effort haptic feedback: Capacitor Haptics if present, else vibrate
+    try {
+      const anyWin: any = globalThis as any;
+      const Haptics = anyWin?.Capacitor?.Plugins?.Haptics;
+      if (Haptics) {
+        await Haptics.impact({ style: 'light' });
+        return;
+      }
+    } catch {}
+    if ('vibrate' in navigator) navigator.vibrate(10);
+  }, []);
+
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      {/* Progress Header */}
-      <div className="flex items-center justify-between p-4 pt-12">
-        <div className="flex gap-2">
-          <div className="w-8 h-1 bg-primary rounded-full" />
-          <div className="w-8 h-1 bg-muted rounded-full" />
-          <div className="w-8 h-1 bg-muted rounded-full" />
+    <div className="onboarding-intro bg-[#0C1117] dark:bg-[#0C1117] min-h-screen">
+      {/* Safe area header with progress */}
+      <div className="intro-header">
+        <div className="intro-progress-bars" aria-hidden="true">
+          <span className="bar bar-active" />
+          <span className="bar" />
+          <span className="bar" />
         </div>
-        <span className="text-sm text-muted-foreground">1 of 3</span>
+        <span className="intro-step text-muted-foreground">1 of 3</span>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-32 h-32 flex items-center justify-center mb-8">
-          <img src={seventhPathLogo} alt="Seventh Path Logo" className="w-32 h-32 object-contain" />
+      {/* Scrollable content */}
+      <div className="intro-scroll">
+        {/* Logo block */}
+        <div className="intro-logo-wrap motion-scale-in" role="img" aria-label="Seventh Path logo">
+          <img src={seventhPathLogo} alt="Seventh Path Logo" className="intro-logo" />
         </div>
-        
-        <h1 className="text-3xl font-medium mb-4">Welcome to Seventh Path</h1>
-        <p className="text-muted-foreground text-lg leading-relaxed mb-12 max-w-sm">
+
+        {/* Headline & Body */}
+        <h1 className="intro-headline motion-fade-up" style={{ animationDelay: '60ms' }}>Welcome to Seventh Path</h1>
+        <p className="intro-body motion-fade-up" style={{ animationDelay: '120ms' }}>
           Begin your journey of mindful habits. Transform your life with small, consistent actions that lead to lasting change.
         </p>
 
-        <div className="grid grid-cols-2 gap-4 w-full max-w-sm mb-12">
-          <div className="flex flex-col items-center p-4 bg-card border border-border rounded-lg">
-            <span className="text-2xl mb-2">📊</span>
-            <span className="text-sm text-center">Track Progress</span>
-          </div>
-          <div className="flex flex-col items-center p-4 bg-card border border-border rounded-lg">
-            <span className="text-2xl mb-2">🔔</span>
-            <span className="text-sm text-center">Smart Reminders</span>
-          </div>
-          <div className="flex flex-col items-center p-4 bg-card border border-border rounded-lg">
-            <span className="text-2xl mb-2">🏆</span>
-            <span className="text-sm text-center">Build Streaks</span>
-          </div>
-          <div className="flex flex-col items-center p-4 bg-card border border-border rounded-lg">
-            <span className="text-2xl mb-2">💫</span>
-            <span className="text-sm text-center">Stay Motivated</span>
-          </div>
+        {/* Feature cards */}
+        <div className="intro-cards">
+          {[
+            { icon: '📊', label: 'Track Progress' },
+            { icon: '🔔', label: 'Smart Reminders' },
+            { icon: '🏆', label: 'Build Streaks' },
+            { icon: '💫', label: 'Stay Motivated' },
+          ].map((c, i) => (
+            <button
+              key={c.label}
+              className="intro-card motion-fade-in"
+              style={{ animationDelay: `${200 + i * 80}ms` }}
+              aria-label={c.label}
+            >
+              <span className="intro-card-icon" aria-hidden="true">{c.icon}</span>
+              <span className="intro-card-label">{c.label}</span>
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="p-6 pt-0">
+      {/* Sticky CTA */}
+      <div className="intro-footer">
         <Button
-          onClick={() => navigate('/onboarding/name')}
-          className="w-full h-12"
+          onClick={async () => { await hapticTap(); navigate('/onboarding/name'); }}
+          className="intro-cta"
+          aria-label="Continue"
         >
           Continue
         </Button>
