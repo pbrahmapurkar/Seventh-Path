@@ -5,32 +5,30 @@ import { Switch } from '../components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { AppBar } from '../components/AppShell';
 import { useAppShell } from '../components/AppShell';
-import { useNotifications } from '../providers/notificationProvider';
+import { useNotificationsStore } from '../store/NotificationsStore';
 import seventhPathLogo from '../assets/d39dcef0d5c4765688b970ab66912bbb65f81e62.png';
-import { useHabitStore } from '../lib/habitStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
-import { LocalNotifications } from '@capacitor/local-notifications';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore - vite json import allowed
 import pkg from '../../package.json';
 
 export function Settings() {
   const { userName, theme, setTheme, setIsOnboarded, navigate } = useAppShell();
-  const { 
-    isPermissionGranted, 
-    requestPermission, 
-    sendTestNotification, 
-    isLoading: notificationLoading,
-    error: notificationError,
-    isEnabled,
+  const {
+    permission,
+    enabled,
+    scheduledCount,
+    hydrate,
+    requestPermission,
     setEnabled,
-  } = useNotifications();
-  const { clearAllHabits } = useHabitStore();
-  
+    refreshScheduledCount,
+    sendTest,
+    openSystemSettings,
+  } = useNotificationsStore();
+
   const [isTestingNotification, setIsTestingNotification] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const version = useMemo(() => (pkg?.version as string) || '1.0.0', []);
-  const [pendingCount, setPendingCount] = useState<number>(0);
 
   const openLink = useCallback(async (url: string) => {
     try {
@@ -66,14 +64,8 @@ export function Settings() {
   const handleTestNotification = async () => {
     try {
       setIsTestingNotification(true);
-      await sendTestNotification(
-        '🔔 Test Notification',
-        'This is a test notification from Seventh Path!'
-      );
-      try {
-        const pending = await LocalNotifications.getPending();
-        setPendingCount(pending.notifications.length);
-      } catch {}
+      await sendTest();
+      await refreshScheduledCount();
     } catch (error) {
       console.error('Error sending test notification:', error);
     } finally {
@@ -82,13 +74,8 @@ export function Settings() {
   };
 
   React.useEffect(() => {
-    (async () => {
-      try {
-        const pending = await LocalNotifications.getPending();
-        setPendingCount(pending.notifications.length);
-      } catch {}
-    })();
-  }, []);
+    hydrate();
+  }, [hydrate]);
 
   const SettingsSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <div className="mb-6">
@@ -167,27 +154,27 @@ export function Settings() {
           <SettingsRow
             icon={<Bell size={20} />}
             title="Notifications"
-            description={isPermissionGranted ? 'Permission granted' : 'Permission required'}
+            description={`Permission: ${permission}`}
             action={
-              <Switch
-                checked={isPermissionGranted}
-                onCheckedChange={handleRequestNotificationPermission}
-                disabled={notificationLoading}
-              />
+              permission === 'granted' ? (
+                <Button size="sm" variant="outline" onClick={openSystemSettings}>System</Button>
+              ) : (
+                <Button size="sm" variant="outline" onClick={handleRequestNotificationPermission}>Enable</Button>
+              )
             }
           />
 
           <SettingsRow
             icon={<SettingsIcon size={20} />}
             title="Enabled"
-            description={isPermissionGranted ? 'App will send notifications' : 'Grant permission to enable'}
+            description={permission === 'granted' ? 'App notifications' : 'Grant permission first'}
             action={
               <Switch
-                checked={isEnabled}
+                checked={enabled}
                 onCheckedChange={async (on) => {
                   try { await setEnabled(on); } catch (e) { console.error(e); }
                 }}
-                disabled={notificationLoading || !isPermissionGranted}
+                disabled={permission !== 'granted'}
               />
             }
           />
@@ -195,43 +182,28 @@ export function Settings() {
           <SettingsRow
             icon={<TestTube size={20} />}
             title="Scheduled Count"
-            description={`${pendingCount} scheduled`}
+            description={`${scheduledCount} scheduled`}
             action={
-              <Button size="sm" variant="outline" onClick={async () => {
-                try { const p = await LocalNotifications.getPending(); setPendingCount(p.notifications.length); } catch {}
-              }}>Refresh</Button>
+              <Button size="sm" variant="outline" onClick={refreshScheduledCount}>Refresh</Button>
             }
           />
 
           <SettingsRow
             icon={<TestTube size={20} />}
             title="Test Notification"
-            description={isPermissionGranted ? "Send a test notification to verify it's working" : 'Grant permission first'}
+            description={permission === 'granted' ? "Send a test notification" : 'Grant permission first'}
             action={
               <Button
                 size="sm"
                 variant="outline"
                 onClick={handleTestNotification}
-                disabled={isTestingNotification || !isPermissionGranted || !isEnabled}
+                disabled={isTestingNotification || permission !== 'granted' || !enabled}
               >
                 {isTestingNotification ? 'Sending...' : 'Test'}
               </Button>
             }
           />
         </SettingsSection>
-
-        {/* Error Display */}
-        {notificationError && (
-          <SettingsSection title="Error">
-            <div className="p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <Bell size={16} className="text-red-600 dark:text-red-400" />
-                <h3 className="font-medium text-red-900 dark:text-red-100">Notification Error</h3>
-              </div>
-              <p className="text-sm text-red-800 dark:text-red-200">{notificationError}</p>
-            </div>
-          </SettingsSection>
-        )}
 
         {/* Preferences Section */}
         <SettingsSection title="Preferences">
