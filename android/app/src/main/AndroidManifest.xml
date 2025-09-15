@@ -15,6 +15,14 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+        <!-- Default notification icon configuration -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/notification_icon" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/notification_color" />
+
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
             android:name=".MainActivity"
@@ -43,7 +51,7 @@
         <!-- Exact Alarm + Boot Receivers -->
         <receiver
             android:name=".BootReceiver"
-            android:enabled="true"
+            android:enabled="false"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -53,7 +61,7 @@
 
         <receiver
             android:name=".AlarmReceiver"
-            android:enabled="true"
+            android:enabled="false"
             android:exported="false" />
     </application>
 

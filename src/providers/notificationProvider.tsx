@@ -4,38 +4,33 @@
  */
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { 
-  notificationService, 
-  NotificationPermission, 
-  ScheduledNotification 
-} from '../services/notifications';
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { useHabitsStore } from '../store/HabitsStore';
-// Ensure numeric ids for native notifications (Java int range)
-function toJavaIntId(key: string): number {
-  let h = 0;
-  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) | 0;
-  h = Math.abs(h);
-  if (h === 0) h = 1;
-  return h % 2147483647;
-}
-function getNativeSoundName(): string {
-  const platform = Capacitor.getPlatform();
-  // iOS expects filename with extension included in app bundle; Android uses channel sound name without extension
-  return platform === 'ios' ? 'ting.caf' : 'ting';
-}
+import {
+  runMigrationOnce,
+  ensureReminderChannel,
+  requestPermissions as requestNotifPermissions,
+  checkPermissions as checkNotifPermissions,
+  getPendingCount as getNativePendingCount,
+  scheduleReminderInstances,
+  rescheduleHabit,
+  cancelAllForHabit as cancelAllForHabitNative,
+  cancelTodayAtTime as cancelTodayAtTimeNative,
+  toJavaIntId,
+  getNativeSoundName,
+} from '../lib/notifications/habitReminderSystem';
 
 interface NotificationContextType {
   // Permission state
-  permission: NotificationPermission | null;
+  permission: { granted: boolean; canAskAgain: boolean; status: 'granted' | 'denied' | 'prompt' } | null;
   isPermissionGranted: boolean;
   isEnabled: boolean;
   setEnabled: (on: boolean) => Promise<void>;
   
   // Notification management
-  scheduledNotifications: ScheduledNotification[];
-  requestPermission: () => Promise<NotificationPermission>;
+  scheduledNotifications: { id: string; habitId: string; title: string; body: string; scheduledTime: string; frequency: 'daily' | 'weekly'; weekdays?: number[]; isActive: boolean; createdAt: Date }[];
+  requestPermission: () => Promise<{ granted: boolean; canAskAgain: boolean; status: 'granted' | 'denied' | 'prompt' }>;
   scheduleHabitReminder: (
     habitId: string,
     title: string,
@@ -72,66 +67,15 @@ interface NotificationProviderProps {
 }
 
 export function NotificationProvider({ children }: NotificationProviderProps) {
-  const [permission, setPermission] = useState<NotificationPermission | null>(null);
-  const [scheduledNotifications, setScheduledNotifications] = useState<ScheduledNotification[]>([]);
+  const [permission, setPermission] = useState<{ granted: boolean; canAskAgain: boolean; status: 'granted' | 'denied' | 'prompt' } | null>(null);
+  const [scheduledNotifications, setScheduledNotifications] = useState<NotificationContextType['scheduledNotifications']>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isEnabled, setIsEnabled] = useState<boolean>(() => {
     try { return localStorage.getItem('notificationsEnabled') !== 'false'; } catch { return true; }
   });
 
-  // Helper: compute next N occurrence dates for a given time/frequency
-  function getNextOccurrenceDates(
-    hours: number,
-    minutes: number,
-    frequency: 'daily' | 'weekly',
-    weekdays?: number[], // 0-6 Sun-Sat
-    count: number = 7
-  ): Date[] {
-    const dates: Date[] = [];
-    const now = new Date();
-    if (frequency === 'daily' || !weekdays || weekdays.length === 0) {
-      let d = new Date();
-      d.setHours(hours, minutes, 0, 0);
-      // If passed, apply testing rule: allow within next 5m; else roll to tomorrow
-      const diff = d.getTime() - now.getTime();
-      if (!(diff >= 60_000 || (diff >= 0 && diff < 5 * 60_000))) {
-        d.setDate(d.getDate() + 1);
-      }
-      for (let i = 0; i < count; i++) {
-        const at = new Date(d.getTime() + i * 24 * 60 * 60 * 1000);
-        dates.push(at);
-      }
-    } else {
-      // Weekly: walk forward day by day collecting matching weekdays
-      let day = 0;
-      let cur = new Date();
-      cur.setHours(hours, minutes, 0, 0);
-      while (dates.length < count && day < 21) { // cap walk to 3 weeks
-        const candidate = new Date(cur.getTime() + day * 24 * 60 * 60 * 1000);
-        const dow = candidate.getDay();
-        const isToday = day === 0;
-        if (weekdays.includes(dow)) {
-          const diff = candidate.getTime() - now.getTime();
-          if (!isToday || (diff >= 60_000 || (diff >= 0 && diff < 5 * 60_000))) {
-            dates.push(candidate);
-          }
-        }
-        day++;
-      }
-      // If we couldn't fill count due to testing rule, continue into next weeks
-      while (dates.length < count) {
-        const last = dates[dates.length - 1] || new Date();
-        const next = new Date(last.getTime() + 24 * 60 * 60 * 1000);
-        const dow = next.getDay();
-        if (weekdays.includes(dow)) {
-          next.setHours(hours, minutes, 0, 0);
-          dates.push(next);
-        }
-      }
-    }
-    return dates;
-  }
+  // (migrated) computeNextOccurrences moved to habitReminderSystem
 
   // Initialize notification service
   useEffect(() => {
@@ -141,21 +85,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         const isNative = Capacitor.getPlatform() !== 'web';
 
         if (isNative) {
-          // Initialize high-importance notification channel for Android
-          try {
-            await LocalNotifications.createChannel({
-              id: 'habit-reminders',
-              name: 'Habit Reminders',
-              description: 'Notifications for habit reminders',
-              importance: 4, // High importance
-              visibility: 1, // Public
-              sound: 'default',
-              lights: true,
-              vibration: true,
-            });
-          } catch (err) {
-            console.warn('Failed to create notification channel:', err);
-          }
+          await runMigrationOnce();
+          await ensureReminderChannel();
 
           // Register action types (Snooze, Mark Done)
           try {
@@ -165,7 +96,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
                   id: 'HABIT_REM',
                   actions: [
                     { id: 'DONE', title: 'Mark Done' },
-                    { id: 'SNOOZE', title: 'Snooze 10m' },
+                    { id: 'SNOOZE', title: 'Snooze' },
                   ],
                 },
               ],
@@ -173,23 +104,19 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
           } catch {}
 
           // Check permission status
-          const permissionStatus = await LocalNotifications.checkPermissions();
-          const granted = permissionStatus.display === 'granted';
-          setPermission({ 
-            granted, 
-            canAskAgain: permissionStatus.display !== 'denied', 
-            status: permissionStatus.display 
-          });
+          const display = await checkNotifPermissions();
+          const permObj = { granted: display === 'granted', canAskAgain: display !== 'denied', status: display } as const;
+          setPermission(permObj);
           setScheduledNotifications([]);
-        } else {
-          // Web fallback
-          const currentPermission = notificationService.getPermissionStatus();
-          setPermission(currentPermission);
-          const notifications = notificationService.getScheduledNotifications();
-          setScheduledNotifications(notifications);
-          if (currentPermission?.granted) {
-            await notificationService.rescheduleAllNotifications();
+          // After migration, reschedule from current habits if enabled + granted
+          if (permObj.granted && isEnabled) {
+            const habits = Object.values(useHabitsStore.getState().habitsById || {});
+            for (const h of habits) await rescheduleHabit(h, h.frequency || 'daily', (h as any).weeklyDays);
           }
+        } else {
+          // Web: keep minimal state only
+          setPermission({ granted: false, canAskAgain: true, status: 'prompt' });
+          setScheduledNotifications([]);
         }
         
         setError(null);
@@ -227,11 +154,13 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
           const info = action?.notification;
           const extra = info?.extra || {};
           const habitId: string | undefined = extra.habitId;
-          const time: string | undefined = extra.time;
+          const time: string | undefined = extra.reminderTime;
           const actionId: string | undefined = (action as any)?.actionId;
           if (!habitId) return;
           const store = useHabitsStore.getState();
-          if (actionId === 'DONE' && time) {
+          if (!actionId || actionId === 'tap') {
+            try { window.dispatchEvent(new CustomEvent('notification-click', { detail: { habitId } })); } catch {}
+          } else if (actionId === 'DONE' && time) {
             // Cancel this instance id and mark done
             const id = info?.id;
             if (typeof id === 'number') {
@@ -256,26 +185,20 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     };
   }, []);
 
-  const requestPermission = async (): Promise<NotificationPermission> => {
+  const requestPermission = async (): Promise<{ granted: boolean; canAskAgain: boolean; status: 'granted' | 'denied' | 'prompt' }> => {
     try {
       setIsLoading(true);
       setError(null);
       const isNative = Capacitor.getPlatform() !== 'web';
       if (isNative) {
-        // Request permission using LocalNotifications
-        const permissionStatus = await LocalNotifications.requestPermissions();
-        const granted = permissionStatus.display === 'granted';
-        const perm: NotificationPermission = { 
-          granted, 
-          canAskAgain: permissionStatus.display !== 'denied', 
-          status: permissionStatus.display 
-        };
+        const display = await requestNotifPermissions();
+        const perm = { granted: display === 'granted', canAskAgain: display !== 'denied', status: display } as const;
         setPermission(perm);
         return perm;
       } else {
-        const newPermission = await notificationService.requestPermission();
-        setPermission(newPermission);
-        return newPermission;
+        const perm = { granted: false, canAskAgain: true, status: 'prompt' as const };
+        setPermission(perm);
+        return perm;
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to request permission';
@@ -313,39 +236,11 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       setError(null);
       if (!isEnabled) throw new Error('Notifications disabled');
       const isNative = Capacitor.getPlatform() !== 'web';
-      if (isNative) {
-        // New approach: one-shot notifications for the next 7 occurrences (no repeats), so we can reschedule precisely
-        const [hours, minutes] = scheduledTime.split(':').map(Number);
-        const baseTitle = `${emoji} ${title}`;
-        const body = `Time for your ${title} session!`;
-        const nextDates = getNextOccurrenceDates(hours, minutes, frequency, weekdays, 7);
-        const ids: number[] = [];
-        const toSchedule: any[] = [];
-        for (const d of nextDates) {
-          const ymd = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-          const idKey = `${habitId}|${ymd}|${scheduledTime}`;
-          const nativeId = toJavaIntId(idKey);
-          ids.push(nativeId);
-          toSchedule.push({ id: nativeId, title: baseTitle, body, schedule: { at: d }, channelId: 'habit-reminders-ting', sound: getNativeSoundName(), actionTypeId: 'HABIT_REM', extra: { habitId, time: scheduledTime, date: ymd, type: 'habit-reminder' } });
-        }
-        if (toSchedule.length) {
-          await LocalNotifications.schedule({ notifications: toSchedule });
-          setHabitScheduledIds(habitId, [...getHabitScheduledIds(habitId), ...ids]);
-        }
-        return `native-${habitId}-${scheduledTime}`;
-      } else {
-        const notificationId = await notificationService.scheduleHabitReminder(
-          habitId,
-          title,
-          emoji,
-          scheduledTime,
-          frequency,
-          weekdays
-        );
-        const notifications = notificationService.getScheduledNotifications();
-        setScheduledNotifications(notifications);
-        return notificationId;
-      }
+      if (!isNative) return `web-${habitId}-${scheduledTime}`;
+      const habit = useHabitsStore.getState().habitsById[habitId] ?? { id: habitId, name: title, emoji, frequency: 'daily', reminderTimes: [], createdAt: new Date().toISOString() };
+      const tmpHabit = { ...habit, reminderTimes: habit.reminderTimes?.includes(scheduledTime) ? habit.reminderTimes : [...(habit.reminderTimes || []), scheduledTime] };
+      await scheduleReminderInstances(tmpHabit, scheduledTime, frequency, weekdays);
+      return `native-${habitId}-${scheduledTime}`;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to schedule reminder';
       setError(errorMessage);
@@ -355,19 +250,11 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     }
   };
 
-  const cancelHabitReminder = async (notificationId: string): Promise<void> => {
+  const cancelHabitReminder = async (_notificationId: string): Promise<void> => {
     try {
       setIsLoading(true);
       setError(null);
-      const isNative = Capacitor.getPlatform() !== 'web';
-      if (isNative) {
-        // For native, prefer cancel by habit via cancelHabitReminders instead
-        // no-op here
-      } else {
-        await notificationService.cancelHabitReminder(notificationId);
-        const notifications = notificationService.getScheduledNotifications();
-        setScheduledNotifications(notifications);
-      }
+      // For native, prefer cancel by habit via cancelHabitReminders
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to cancel reminder';
       setError(errorMessage);
@@ -381,26 +268,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     try {
       setIsLoading(true);
       setError(null);
-      const isNative = Capacitor.getPlatform() !== 'web';
-      if (isNative) {
-        // Get all pending notifications and cancel those for this habit
-        const pending = await LocalNotifications.getPending();
-        const habitNotifications = pending.notifications.filter(
-          n => n.extra?.habitId === habitId
-        );
-        
-        if (habitNotifications.length > 0) {
-          await LocalNotifications.cancel({
-            notifications: habitNotifications.map(n => ({ id: n.id }))
-          });
-        }
-        // Also clear our stored id mapping
-        clearHabitScheduledIds(habitId);
-      } else {
-        await notificationService.cancelHabitReminders(habitId);
-        const notifications = notificationService.getScheduledNotifications();
-        setScheduledNotifications(notifications);
-      }
+      await cancelAllForHabitNative(habitId);
+      setScheduledNotifications([]);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to cancel reminders';
       setError(errorMessage);
@@ -414,16 +283,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     try {
       setIsLoading(true);
       setError(null);
-      const isNative = Capacitor.getPlatform() !== 'web';
-      if (isNative) {
-        // Cancel all pending notifications
-        await LocalNotifications.cancelAll();
-        setScheduledNotifications([]);
-      } else {
-        await notificationService.cancelAllReminders();
-        const notifications = notificationService.getScheduledNotifications();
-        setScheduledNotifications(notifications);
-      }
+      await LocalNotifications.cancelAll();
+      setScheduledNotifications([]);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to cancel all reminders';
       setError(errorMessage);
@@ -444,25 +305,9 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     try {
       setIsLoading(true);
       setError(null);
-      const isNative = Capacitor.getPlatform() !== 'web';
-      if (isNative) {
-        // Cancel existing notifications for this habit
-        await cancelHabitReminders(habitId);
-        // Schedule new notification
-        return await scheduleHabitReminder(habitId, title, emoji, scheduledTime, frequency, weekdays);
-      } else {
-        const notificationId = await notificationService.updateHabitReminder(
-          habitId,
-          title,
-          emoji,
-          scheduledTime,
-          frequency,
-          weekdays
-        );
-        const notifications = notificationService.getScheduledNotifications();
-        setScheduledNotifications(notifications);
-        return notificationId;
-      }
+      // Cancel existing then schedule new
+      await cancelHabitReminders(habitId);
+      return await scheduleHabitReminder(habitId, title, emoji, scheduledTime, frequency, weekdays);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update reminder';
       setError(errorMessage);
@@ -477,16 +322,10 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       setIsLoading(true);
       setError(null);
       if (!isEnabled) throw new Error('Notifications disabled');
-      const isNative = Capacitor.getPlatform() !== 'web';
-      if (isNative) {
-        // Send immediate notification using LocalNotifications with safe int id
-        const id = toJavaIntId(`test-${Date.now()}`);
-        await LocalNotifications.schedule({
-          notifications: [{ id, title, body, channelId: 'habit-reminders-ting', sound: getNativeSoundName() }]
-        });
-      } else {
-        await notificationService.sendTestNotification(title, body);
-      }
+      const id = toJavaIntId(`test-${Date.now()}`);
+      await LocalNotifications.schedule({
+        notifications: [{ id, title, body, channelId: 'habit-reminders-ting', sound: getNativeSoundName(), smallIcon: 'notification_icon' }]
+      });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to send test notification';
       setError(errorMessage);
@@ -500,12 +339,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     try {
       setIsLoading(true);
       setError(null);
-      const isNative = Capacitor.getPlatform() !== 'web';
-      if (isNative) {
-        // Native alarms are rescheduled by BootReceiver; nothing to do here
-      } else {
-        await notificationService.rescheduleAllNotifications();
-      }
+      const habits = Object.values(useHabitsStore.getState().habitsById || {});
+      for (const h of habits) await rescheduleHabit(h, h.frequency || 'daily', (h as any).weeklyDays);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to reschedule notifications';
       setError(errorMessage);

@@ -1,6 +1,5 @@
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications, type PermissionStatus, type ScheduleOptions, type PendingResult } from '@capacitor/local-notifications';
-import { App } from '@capacitor/app';
 
 // Helper to map PermissionStatus to spec types
 function mapPermission(status: PermissionStatus['display']): 'granted' | 'denied' | 'prompt' {
@@ -62,6 +61,7 @@ class NotificationService {
           schedule: { at: new Date(Date.now() + 1000) },
           channelId: 'seventhpath_reminders',
           sound,
+          smallIcon: 'notification_icon',
         },
       ],
     };
@@ -70,9 +70,14 @@ class NotificationService {
 
   async openSystemSettings(): Promise<void> {
     try {
-      await App.openSettings();
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const appMod = require('@capacitor/app');
+      const AppCap = appMod?.App;
+      if (AppCap && AppCap.openSettings) {
+        await AppCap.openSettings();
+      }
     } catch {
-      // ignore
+      // ignore (plugin not installed in this build)
     }
   }
 }

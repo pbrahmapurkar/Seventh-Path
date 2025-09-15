@@ -1,7 +1,6 @@
 import { create } from 'zustand';
-import { Capacitor } from '@capacitor/core';
-import { App } from '@capacitor/app';
-import { notificationService, type PermissionState } from '../services/NotificationService';
+import { checkPermissions, requestPermissions, getPendingCount, openSystemSettings, rescheduleHabit, type PermissionState } from '../lib/notifications/habitReminderSystem';
+import { useHabitsStore } from './HabitsStore';
 
 // simple Preferences helpers
 async function setPref(key: string, value: string): Promise<void> {
@@ -44,15 +43,15 @@ export const useNotificationsStore = create<NotificationsState>()((set, get) => 
   scheduledCount: 0,
 
   hydrate: async () => {
-    const perm = await notificationService.checkPermission();
+    const perm = await checkPermissions();
     const enabledStr = await getPref(ENABLED_KEY);
     const enabled = enabledStr !== 'false';
-    const count = await notificationService.getPendingCount();
+    const count = await getPendingCount();
     set({ permission: perm, enabled, scheduledCount: count });
   },
 
   requestPermission: async () => {
-    const perm = await notificationService.requestPermission();
+    const perm = await requestPermissions();
     set({ permission: perm });
     await get().refreshScheduledCount();
   },
@@ -60,25 +59,57 @@ export const useNotificationsStore = create<NotificationsState>()((set, get) => 
   setEnabled: async (on: boolean) => {
     set({ enabled: on });
     await setPref(ENABLED_KEY, on ? 'true' : 'false');
+    try {
+      const { LocalNotifications } = await import('@capacitor/local-notifications');
+      if (!on) {
+        // Cancel all pending notifications immediately
+        try { await LocalNotifications.cancelAll(); } catch {}
+        set({ scheduledCount: 0 });
+      } else {
+        // Re-schedule all saved habit reminders from DB
+        const habits = Object.values(useHabitsStore.getState().habitsById || {});
+        for (const h of habits) {
+          try { await rescheduleHabit(h, (h as any).frequency || 'daily', (h as any).weeklyDays); } catch {}
+        }
+        const count = await getPendingCount();
+        set({ scheduledCount: count });
+      }
+    } catch {}
   },
 
   refreshScheduledCount: async () => {
-    const count = await notificationService.getPendingCount();
+    const count = await getPendingCount();
     set({ scheduledCount: count });
   },
 
   sendTest: async () => {
     if (get().permission !== 'granted' || !get().enabled) return;
-    await notificationService.sendTestNotification();
+    // Schedule a one-off test notification 1 minute ahead
+    try {
+      const { LocalNotifications } = await import('@capacitor/local-notifications');
+      const { toJavaIntId, getNativeSoundName } = await import('../lib/notifications/habitReminderSystem');
+      const id = toJavaIntId(`test-${Date.now()}`);
+      const at = new Date(Date.now() + 60 * 1000);
+      await LocalNotifications.schedule({ notifications: [{ id, title: '🔔 Test Notification', body: 'This is a test notification with sound', schedule: { at }, channelId: 'habit-reminders-ting', sound: getNativeSoundName() }] });
+    } catch {}
     await get().refreshScheduledCount();
   },
 
   openSystemSettings: async () => {
-    await notificationService.openSystemSettings();
+    await openSystemSettings();
   },
 }));
 
 // Rehydrate on app resume
-App.addListener('appStateChange', ({ isActive }) => {
-  if (isActive) useNotificationsStore.getState().hydrate().catch(() => {});
-});
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const appMod = require('@capacitor/app');
+  const AppCap = appMod?.App;
+  if (AppCap && AppCap.addListener) {
+    AppCap.addListener('appStateChange', ({ isActive }: { isActive: boolean }) => {
+      if (isActive) useNotificationsStore.getState().hydrate().catch(() => {});
+    });
+  }
+} catch {
+  // Plugin not available in this build; ignore
+}

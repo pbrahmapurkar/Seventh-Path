@@ -41,7 +41,8 @@ const statsKey = (id: string) => `habit:${id}:stats`;
 const dayKey = (id: string, ymd: string) => `habit:${id}:day:${ymd}`;
 
 // Events
-export type HabitEventName =
+export type HabitEventName = 
+  | 'habit.created'
   | 'habit.updated'
   | 'habit.reminders.updated'
   | 'habit.day.updated'
@@ -52,6 +53,7 @@ export type HabitEventName =
 
 type Handler = (payload?: any) => void;
 const subscribers: Record<HabitEventName, Set<Handler>> = {
+  'habit.created': new Set(),
   'habit.updated': new Set(),
   'habit.reminders.updated': new Set(),
   'habit.day.updated': new Set(),
@@ -78,6 +80,7 @@ interface HabitsStoreState {
   habitDaysByKey: Record<string, HabitDay>;
   statsById: Record<string, HabitStats>;
   hydrateAll: () => Promise<void>;
+  addHabit: (habit: Habit) => Promise<void>;
   toggleTime: (habitId: string, time: string, date?: string) => Promise<void>;
   markAllDone: (habitId: string, date?: string) => Promise<void>;
   addReminder: (habitId: string, time: string) => Promise<void>;
@@ -114,6 +117,36 @@ export const useHabitsStore = create<HabitsStoreState>()((set, get) => ({
       habitDaysByKey[dayKey(h.id, today)] = entry;
     }
     set({ habitsById, statsById, habitDaysByKey, hydrationState: 'ready', lastHydratedYMD: today });
+  },
+
+  addHabit: async (habit) => {
+    const state = get();
+    const today = toYMD(new Date());
+    
+    // Add habit to store
+    const updatedHabitsById = { ...state.habitsById, [habit.id]: habit };
+    
+    // Compute initial stats for the new habit
+    const stats = await computeStats(habit);
+    const updatedStatsById = { ...state.statsById, [habit.id]: stats };
+    
+    // Ensure today entry exists for the new habit
+    const entry = await ensureDayEntry(habit, today);
+    const updatedHabitDaysByKey = { ...state.habitDaysByKey, [dayKey(habit.id, today)]: entry };
+    
+    // Update store state
+    set({ 
+      habitsById: updatedHabitsById, 
+      statsById: updatedStatsById, 
+      habitDaysByKey: updatedHabitDaysByKey 
+    });
+    
+    // Emit events for UI updates
+    emit('habit.created', { habitId: habit.id });
+    EventBus.emit('habit:created', { habit });
+    
+    // Save stats to persistence
+    await setJSON(statsKey(habit.id), stats);
   },
 
   toggleTime: async (habitId, time, date) => {
@@ -218,8 +251,10 @@ export const useHabitsStore = create<HabitsStoreState>()((set, get) => ({
     emit('habit.updated', { habitId: patch.id });
     EventBus.emit('habit:updated', { habit: updated });
     await get().recomputeStats(patch.id);
-    // If reminders changed, reschedule
-    if (patch.hasOwnProperty('reminderTimes')) await get().rescheduleNotifications(patch.id);
+    // If scheduling-related fields changed, reschedule
+    if (patch.hasOwnProperty('reminderTimes') || patch.hasOwnProperty('frequency') || (patch as any).hasOwnProperty('weeklyDays')) {
+      await get().rescheduleNotifications(patch.id);
+    }
   },
 
   deleteHabit: async (habitId) => {

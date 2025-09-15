@@ -7,7 +7,7 @@ import { useNotifications } from '../providers/notificationProvider';
 import { NotificationPermissionBanner } from '../components/ReminderTimePicker';
 import { getOnboardingSelected, getHabit, setOnboardingComplete } from '../lib/habits';
 import { useHabitsStore } from '../store/HabitsStore';
-import { Bell, BellOff, CheckCircle, AlertCircle, Plus, Clock } from 'lucide-react';
+import { Bell, BellOff, CheckCircle, AlertCircle, Plus, Clock, ArrowRight, Sparkles, Zap } from 'lucide-react';
 
 export function OnboardingReminder() {
   const { navigate, setIsOnboarded } = useAppShell();
@@ -27,6 +27,7 @@ export function OnboardingReminder() {
   const [selectedTimes, setSelectedTimes] = useState<string[]>(['09:00']);
   const [hasRequestedPermission, setHasRequestedPermission] = useState(false);
   const [customTime, setCustomTime] = useState('09:00');
+  const [finishing, setFinishing] = useState(false);
 
   React.useEffect(() => {
     (async () => {
@@ -38,6 +39,7 @@ export function OnboardingReminder() {
   }, []);
 
   const handleFinish = async () => {
+    setFinishing(true);
     try {
       // If reminders are enabled but permission not granted, request it
       let granted = isPermissionGranted;
@@ -78,7 +80,7 @@ export function OnboardingReminder() {
       await setOnboardingComplete();
       setIsOnboarded(true);
       navigate('/home');
-    }
+    } finally { setFinishing(false); }
   };
 
   const handleRequestPermission = async () => {
@@ -128,26 +130,44 @@ export function OnboardingReminder() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
+      {/* Progress Header */}
+      <div className="flex items-center justify-between px-6 py-4 pt-safe-area-top">
+        <div className="flex gap-2">
+          <div className="w-8 h-1 bg-primary rounded-full" />
+          <div className="w-8 h-1 bg-primary rounded-full" />
+          <div className="w-8 h-1 bg-primary rounded-full" />
+          <div className="w-8 h-1 bg-primary rounded-full" />
+        </div>
+        <span className="text-sm text-muted-foreground">4 of 4</span>
+      </div>
       {/* Content */}
-      <div className="flex-1 p-6 pt-16">
-        <div className="mb-8">
-          <h1 className="text-3xl font-medium mb-4">Set your reminder time</h1>
-          <p className="text-muted-foreground">
+      <div className="flex-1 px-6 py-6">
+        {/* Header Section */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-2xl mb-4">
+            <Bell className="w-8 h-8 text-primary" />
+          </div>
+          <h1 className="text-3xl font-bold mb-4">Set your reminder time</h1>
+          <p className="text-muted-foreground text-lg">
             Choose when you'd like to be reminded about your habits each day.
           </p>
         </div>
 
         {/* Enable/Disable Reminders */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between p-4 bg-card border border-border rounded-lg">
-            <div className="flex items-center gap-3">
-              {enableReminders ? (
-                <Bell size={24} className="text-primary" />
-              ) : (
-                <BellOff size={24} className="text-muted-foreground" />
-              )}
+        <div className="mb-8">
+          <div className="flex items-center justify-between p-6 bg-gradient-to-r from-card to-card/50 border border-border rounded-2xl shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
+                enableReminders ? 'bg-primary/20' : 'bg-muted/50'
+              }`}>
+                {enableReminders ? (
+                  <Bell className="w-6 h-6 text-primary" />
+                ) : (
+                  <BellOff className="w-6 h-6 text-muted-foreground" />
+                )}
+              </div>
               <div>
-                <h3 className="font-medium">Enable daily reminders</h3>
+                <h3 className="font-semibold text-lg">Enable daily reminders</h3>
                 <p className="text-sm text-muted-foreground">
                   Get gentle notifications to stay on track
                 </p>
@@ -156,13 +176,14 @@ export function OnboardingReminder() {
             <Switch
               checked={enableReminders}
               onCheckedChange={setEnableReminders}
+              className="scale-110"
             />
           </div>
         </div>
 
         {/* Permission Banner */}
         {enableReminders && !isPermissionGranted && (
-          <div className="mb-6">
+          <div className="mb-8">
             <NotificationPermissionBanner
               onRequestPermission={handleRequestPermission}
               isLoading={isLoading}
@@ -172,26 +193,39 @@ export function OnboardingReminder() {
 
         {/* Time Selection (multiple) */}
         {enableReminders && (
-          <div className="space-y-4 mb-8">
-            <Label className="text-base font-medium">Select reminder times</Label>
-            <div className="grid gap-3">
-              {timeSlots.map((slot) => {
+          <div className="space-y-6 mb-8">
+            <div className="text-center">
+              <Label className="text-lg font-semibold">Select reminder times</Label>
+              <p className="text-sm text-muted-foreground mt-2">Choose the best times for your daily habits</p>
+            </div>
+            <div className="grid gap-4">
+              {timeSlots.map((slot, index) => {
                 const isSelected = selectedTimes.includes(slot.value);
                 return (
                   <button
                     key={slot.value}
                     onClick={() => toggleTime(slot.value)}
-                    className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all ${
-                      isSelected ? 'border-primary bg-primary/5' : 'border-border bg-card hover:bg-muted/50'
+                    className={`group flex items-center justify-between p-5 rounded-2xl border-2 transition-all duration-300 ${
+                      isSelected 
+                        ? 'border-primary bg-primary/5 scale-105 shadow-lg' 
+                        : 'border-border bg-card hover:bg-muted/50 hover:border-primary/50 hover:scale-102'
                     }`}
+                    style={{ animationDelay: `${index * 100}ms` }}
                   >
-                    <div className="text-left">
-                      <span className="font-medium block">{slot.label}</span>
-                      <span className="text-sm text-muted-foreground">{slot.description}</span>
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                        isSelected ? 'bg-primary/20' : 'bg-muted/50'
+                      }`}>
+                        <Clock className={`w-5 h-5 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                      </div>
+                      <div className="text-left">
+                        <span className="font-semibold block text-lg">{slot.label}</span>
+                        <span className="text-sm text-muted-foreground">{slot.description}</span>
+                      </div>
                     </div>
                     {isSelected && (
-                      <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                        <div className="w-2 h-2 bg-white rounded-full" />
+                      <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-lg">
+                        <CheckCircle className="w-4 h-4 text-white" />
                       </div>
                     )}
                   </button>
@@ -200,48 +234,68 @@ export function OnboardingReminder() {
             </div>
 
             {/* Custom time */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 p-3 border border-border rounded-lg bg-card">
-                <Clock size={18} className="text-muted-foreground" />
-                <input
-                  type="time"
-                  value={customTime}
-                  onChange={(e) => setCustomTime(e.target.value)}
-                  className="bg-transparent outline-none"
-                />
+            <div className="bg-card border border-border rounded-2xl p-5">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-muted/50 rounded-xl flex items-center justify-center">
+                  <Plus className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <div className="flex-1">
+                  <Label className="text-sm font-medium mb-2 block">Add custom time</Label>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 p-3 border border-border rounded-xl bg-background">
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+                      <input
+                        type="time"
+                        value={customTime}
+                        onChange={(e) => setCustomTime(e.target.value)}
+                        className="bg-transparent outline-none text-sm"
+                      />
+                    </div>
+                    <Button variant="outline" onClick={addCustomTime} size="sm">
+                      <Plus className="w-4 h-4 mr-2" /> Add
+                    </Button>
+                  </div>
+                </div>
               </div>
-              <Button variant="outline" onClick={addCustomTime}>
-                <Plus size={16} className="mr-2" /> Add time
-              </Button>
             </div>
 
             {selectedTimes.length > 0 && (
-              <div className="bg-card border border-border rounded-lg p-4">
-                <h3 className="font-medium mb-3">Selected times</h3>
+              <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-2xl p-5 animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
+                    <Zap className="w-4 h-4 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-lg">Selected times</h3>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {selectedTimes.sort().map((t) => (
-                    <span key={t} className="text-sm px-2 py-1 rounded bg-muted">
+                    <span key={t} className="text-sm px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
                       {formatTime(t)}
                     </span>
                   ))}
                 </div>
+                <p className="text-sm text-primary/80 mt-3">
+                  You'll receive gentle reminders at these times daily.
+                </p>
               </div>
             )}
           </div>
         )}
 
         {/* Summary */}
-        <div className="bg-card border border-border rounded-lg p-4 mb-8">
-          <div className="flex items-center gap-3 mb-3">
-            <span className="text-2xl">🔔</span>
-            <h3 className="font-medium">Reminder summary</h3>
+        <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-2xl p-6 mb-8">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
+              <Sparkles className="w-6 h-6 text-primary" />
+            </div>
+            <h3 className="font-semibold text-lg">Reminder summary</h3>
           </div>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground">
             {enableReminders ? (
               selectedTimes.length > 0 ? (
-                <>You'll receive reminders at <strong>{selectedTimes.map(formatTime).join(', ')}</strong> daily.</>
+                <>You'll receive reminders at <strong className="text-primary">{selectedTimes.map(formatTime).join(', ')}</strong> daily.</>
               ) : (
-                <>No time selected. We'll default to <strong>9:00 AM</strong>.</>
+                <>No time selected. We'll default to <strong className="text-primary">9:00 AM</strong>.</>
               )
             ) : (
               <>Notifications are disabled. You can enable them anytime in settings.</>
@@ -262,10 +316,12 @@ export function OnboardingReminder() {
 
         {/* Success State */}
         {enableReminders && isPermissionGranted && (
-          <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6">
-            <div className="flex items-center gap-2 mb-2">
-              <CheckCircle size={16} className="text-green-600 dark:text-green-400" />
-              <h3 className="font-medium text-green-900 dark:text-green-100">Notifications Ready!</h3>
+          <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border border-green-200 dark:border-green-800 rounded-2xl p-6 mb-6">
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-10 h-10 bg-green-100 dark:bg-green-800 rounded-xl flex items-center justify-center">
+                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+              </div>
+              <h3 className="font-semibold text-lg text-green-900 dark:text-green-100">Notifications Ready!</h3>
             </div>
             <p className="text-sm text-green-800 dark:text-green-200">
               You'll receive reminders at {selectedTimes.length > 0 ? selectedTimes.map(formatTime).join(', ') : '9:00 AM'} daily.
@@ -273,25 +329,40 @@ export function OnboardingReminder() {
           </div>
         )}
 
-        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-xl">🎉</span>
-            <h3 className="font-medium text-primary">Almost ready!</h3>
+        {/* Final Motivation */}
+        <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/30 rounded-2xl p-6">
+          <div className="flex items-center gap-4 mb-3">
+            <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
+              <Sparkles className="w-6 h-6 text-primary" />
+            </div>
+            <h3 className="font-bold text-xl text-primary">Almost ready!</h3>
           </div>
-          <p className="text-primary/80 text-sm">
+          <p className="text-primary/90 text-lg">
             You're all set to start building amazing habits. Let's begin your journey!
           </p>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="p-6 pt-0">
+      <div className="px-6 py-6 pt-0 pb-safe-area-bottom space-y-3">
         <Button
           onClick={handleFinish}
-          disabled={isLoading}
+          disabled={finishing}
+          className="w-full h-14 text-lg font-medium group"
+        >
+          {finishing ? 'Setting up...' : 'Finish Setup'}
+          <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+        </Button>
+        <Button
+          variant="outline"
+          onClick={async () => {
+            setEnableReminders(false);
+            await handleFinish();
+          }}
+          disabled={finishing}
           className="w-full h-12"
         >
-          {isLoading ? 'Setting up...' : 'Finish Setup'}
+          Skip for now
         </Button>
       </div>
     </div>

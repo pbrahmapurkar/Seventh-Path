@@ -1,5 +1,5 @@
 import React, { useEffect, useState, createContext, useContext } from 'react';
-import { Home, Plus, BarChart3, Settings } from 'lucide-react';
+import { Home, Plus, BarChart3, Settings, History } from 'lucide-react';
 
 type BackHandler = () => boolean | Promise<boolean>;
 
@@ -143,33 +143,43 @@ interface BottomNavProps {
 export function BottomNav({ currentRoute, onNavigate }: BottomNavProps) {
   const navItems = [
     { route: '/home', icon: Home, label: 'Home' },
-    { route: '/add', icon: Plus, label: 'Add' },
+    { route: '/history', icon: History, label: 'History' },
     { route: '/insights', icon: BarChart3, label: 'Insights' },
     { route: '/settings', icon: Settings, label: 'Settings' },
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
-      <div className="flex h-20 max-w-md mx-auto">
-        {navItems.map(({ route, icon: Icon, label }) => {
-          const isActive = currentRoute === route;
-          return (
-            <button
-              key={route}
-              onClick={() => onNavigate(route)}
-              className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 px-2 ${
-                isActive
-                  ? 'text-primary'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <div className={`p-1 rounded-full ${isActive ? 'bg-primary/10' : ''}`}>
-                <Icon size={24} />
-              </div>
-              <span className="text-xs">{label}</span>
-            </button>
-          );
-        })}
+    <div className="fixed bottom-0 left-0 right-0 bg-card/95 border-t border-border backdrop-blur supports-[backdrop-filter]:bg-card/80 z-40">
+      {/* Safe area bottom padding */}
+      <div className="pb-safe-area-bottom">
+        <div className="flex h-16 max-w-md mx-auto px-2">
+          {navItems.map(({ route, icon: Icon, label }) => {
+            const isActive = currentRoute === route;
+            return (
+              <button
+                key={route}
+                onClick={() => onNavigate(route)}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[48px] transition-all duration-200 ${
+                  isActive
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+                aria-label={label}
+              >
+                <div className={`p-2 rounded-full transition-all duration-200 ${
+                  isActive ? 'bg-primary/10 scale-110' : 'hover:bg-muted/50'
+                }`}>
+                  <Icon size={20} className={isActive ? 'text-primary' : ''} />
+                </div>
+                <span className={`text-xs font-medium transition-colors duration-200 ${
+                  isActive ? 'text-primary' : 'text-muted-foreground'
+                }`}>
+                  {label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -184,33 +194,39 @@ interface AppBarProps {
 
 export function AppBar({ title, showBack = false, onBack, actions }: AppBarProps) {
   return (
-    <div className="flex items-center justify-between h-16 px-4 bg-card border-b border-border">
-      <div className="flex items-center gap-4">
-        {showBack && (
-          <button
-            onClick={onBack}
-            className="p-2 -ml-2 rounded-full hover:bg-muted"
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              className="text-foreground"
-            >
-              <path
-                d="M15 18L9 12L15 6"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-        )}
-        <h1 className="text-xl font-medium">{title}</h1>
+    <div className="sticky top-0 z-30 bg-card/95 border-b border-border backdrop-blur supports-[backdrop-filter]:bg-card/80">
+      {/* Safe area top padding */}
+      <div className="pt-safe-area-top">
+        <div className="flex items-center justify-between min-h-[56px] px-4 py-4">
+          <div className="flex items-center gap-4">
+            {showBack && (
+              <button
+                onClick={onBack}
+                className="touch-target rounded-full hover:bg-muted transition-colors"
+                aria-label="Go back"
+              >
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="text-foreground"
+                >
+                  <path
+                    d="M15 18L9 12L15 6"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            )}
+            <h1 className="text-xl font-medium leading-none">{title}</h1>
+          </div>
+          {actions && <div className="flex items-center">{actions}</div>}
+        </div>
       </div>
-      {actions && <div>{actions}</div>}
     </div>
   );
 }

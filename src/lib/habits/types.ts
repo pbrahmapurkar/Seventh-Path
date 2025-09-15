@@ -8,6 +8,8 @@ export interface HabitDef {
   emoji: string; // e.g. "💧"
   frequency: Frequency; // Daily/Weekly habit
   reminderTimes: string[]; // e.g. ["08:00", "14:00", "21:00"]
+  // For weekly frequency, selected weekdays (0-6, Sunday=0)
+  weeklyDays?: number[];
   createdAt: string; // ISO date string
 }
 
@@ -37,4 +39,3 @@ export interface HabitStats {
   totalCompletedDays: number;
   weeklyProgress: { date: string; complete: boolean }[]; // last 7 days
 }
-

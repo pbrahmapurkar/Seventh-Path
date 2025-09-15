@@ -114,6 +114,7 @@ export async function createHabit(input: Omit<HabitDef, 'id' | 'createdAt'> & { 
     emoji: input.emoji,
     frequency: input.frequency,
     reminderTimes: [...(input.reminderTimes || [])].sort(),
+    weeklyDays: input.weeklyDays ? [...input.weeklyDays] : undefined,
     createdAt: new Date().toISOString(),
   };
   const ids = await getHabitIds();
@@ -132,6 +133,7 @@ export async function updateHabit(id: string, patch: Partial<Omit<HabitDef, 'id'
     ...existing,
     ...patch,
     reminderTimes: patch.reminderTimes ? [...patch.reminderTimes].sort() : existing.reminderTimes,
+    weeklyDays: patch.hasOwnProperty('weeklyDays') ? (patch.weeklyDays ? [...patch.weeklyDays] : undefined) : existing.weeklyDays,
   };
   await prefsSet(habitKey(id), JSON.stringify(next));
   postMutated([habitKey(id)]);

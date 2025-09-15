@@ -1,11 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { useHabitDetails } from './hooks';
-import { useAppShell, AppBar } from '../../components/AppShell';
+import { useAppShell, AppBar, BottomNav } from '../../components/AppShell';
 import { Button } from '../../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Badge } from '../../components/ui/badge';
-import { Edit, Trash2, Plus, Clock, Check } from 'lucide-react';
-import { notificationService } from '../../services/notifications';
+import { Edit, Trash2, Plus, Clock, Check, Home, BarChart3, Settings, History } from 'lucide-react';
+// removed Snooze action; no LocalNotifications import needed here
 
 function formatSinceDays(iso: string): number {
   const created = new Date(iso);
@@ -30,7 +30,7 @@ function TimeInput({ onSubmit, initial }: { onSubmit: (t: string) => void; initi
 }
 
 export function HabitDetails({ habitId }: { habitId: string }) {
-  const { navigate } = useAppShell();
+  const { navigate, currentRoute } = useAppShell();
   const {
     habit, todayEntry, stats, activity, loading, error,
     completedToday,
@@ -51,7 +51,7 @@ export function HabitDetails({ habitId }: { habitId: string }) {
   );
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-background pb-24 pb-safe-area-bottom">
       <AppBar
         title="Habit Details"
         showBack
@@ -63,10 +63,10 @@ export function HabitDetails({ habitId }: { habitId: string }) {
         }
       />
 
-      <div className="flex-1 p-6">
+      <div className="flex-1 px-6 py-6">
         {/* Header Card */}
-        <div className="bg-card border border-border rounded-lg p-6 mb-6">
-          <div className="flex items-center gap-4 mb-4">
+        <div className="bg-card border border-border rounded-lg p-6 mb-8">
+          <div className="flex items-center gap-4 mb-6">
             <span className="text-4xl">{habit.emoji}</span>
             <div className="flex-1">
               <h1 className="text-2xl font-medium">{habit.name}</h1>
@@ -96,8 +96,8 @@ export function HabitDetails({ habitId }: { habitId: string }) {
         </div>
 
         {/* Reminder Checklist (today) */}
-        <div className="bg-card border border-border rounded-lg p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-card border border-border rounded-lg p-6 mb-8">
+          <div className="flex items-center justify-between mb-6">
             <h3 className="font-medium">Today's Reminders</h3>
             {!completedToday && (
               <Button size="sm" variant="secondary" onClick={() => setAdding(v => !v)}>
@@ -107,7 +107,7 @@ export function HabitDetails({ habitId }: { habitId: string }) {
           </div>
 
           {adding && (
-            <div className="mb-4">
+            <div className="mb-6">
               <TimeInput onSubmit={async (t) => { await addReminder(t); setAdding(false); }} />
             </div>
           )}
@@ -139,13 +139,7 @@ export function HabitDetails({ habitId }: { habitId: string }) {
                     {!r.done && (
                       <Button size="sm" variant="outline" onClick={() => removeReminder(r.time)}>Delete</Button>
                     )}
-                    {!r.done && (
-                      <Button size="sm" variant="secondary" onClick={() => {
-                        // Snooze: schedule a one-off 10 minutes later (web-only best-effort via notificationService)
-                        const fireAt = new Date(Date.now() + 10 * 60 * 1000);
-                        notificationService.sendTestNotification(`${habit.emoji} ${habit.name}`, `Snoozed to ${fireAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
-                      }}>Snooze 10m</Button>
-                    )}
+                    
                   </div>
                 </div>
               ))
@@ -154,7 +148,7 @@ export function HabitDetails({ habitId }: { habitId: string }) {
             )}
           </div>
 
-          <div className="mt-4">
+          <div className="mt-6">
             {completedToday ? (
               <Button className="w-full" disabled>✅ Completed Today</Button>
             ) : (
@@ -170,7 +164,7 @@ export function HabitDetails({ habitId }: { habitId: string }) {
             <TabsTrigger value="history">History</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6 mt-6">
+          <TabsContent value="overview" className="space-y-8 mt-8">
             {/* This Week */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-card border border-border rounded-lg p-4">
@@ -189,7 +183,7 @@ export function HabitDetails({ habitId }: { habitId: string }) {
 
             {/* Recent Activity */}
             <div className="bg-card border border-border rounded-lg p-6">
-              <h3 className="font-medium mb-4">Recent Activity</h3>
+              <h3 className="font-medium mb-6">Recent Activity</h3>
               <div className="space-y-3">
                 {activity.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No recent activity yet.</p>
@@ -206,9 +200,9 @@ export function HabitDetails({ habitId }: { habitId: string }) {
             </div>
           </TabsContent>
 
-          <TabsContent value="history" className="space-y-6 mt-6">
+          <TabsContent value="history" className="space-y-8 mt-8">
             <div className="bg-card border border-border rounded-lg p-6">
-              <h3 className="font-medium mb-4">Last 14 Days</h3>
+              <h3 className="font-medium mb-6">Last 14 Days</h3>
               <div className="grid grid-cols-7 gap-2">
                 {stats?.weeklyProgress && (
                   [...Array(14)].map((_, i) => {
@@ -238,6 +232,9 @@ export function HabitDetails({ habitId }: { habitId: string }) {
           </Button>
         </div>
       </div>
+
+      {/* Bottom Navigation */}
+      <BottomNav currentRoute={currentRoute} onNavigate={navigate} />
     </div>
   );
 }

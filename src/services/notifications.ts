@@ -310,7 +310,7 @@ class NotificationService {
             requireInteraction: true,
             actions: [
               { action: 'complete', title: '✅ Complete' },
-              { action: 'snooze', title: '⏰ Snooze 10min' },
+              { action: 'snooze', title: '⏰ Snooze' },
               { action: 'skip', title: '⏭️ Skip' }
             ]
           });
