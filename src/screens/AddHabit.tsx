@@ -101,6 +101,7 @@ export function AddHabit() {
         frequency,
         reminderTimes: hasReminder ? reminderTimes : [],
         weeklyDays: frequency === 'weekly' ? weeklyDays : undefined,
+        timerConfig: timerConfig.enabled ? timerConfig : undefined,
       });
       
       // Schedule notification if enabled and permission granted
