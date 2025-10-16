@@ -345,9 +345,9 @@ function parseCSVLine(line: string): string[] {
 }
 
 /**
- * Download CSV file
+ * Download CSV file with proper naming
  */
-export function downloadCSV(csvContent: string, filename: string = 'seventh-path-habits.csv'): void {
+export function downloadCSV(csvContent: string, filename: string): void {
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   
