@@ -368,6 +368,15 @@ export function downloadCSV(csvContent: string, filename: string): void {
  */
 export function generateFilename(): string {
   const now = new Date();
-  const timestamp = now.toISOString().split('T')[0].replace(/-/g, '');
+  const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
   return `seventh-path-export-${timestamp}.csv`;
+}
+
+/**
+ * Format file size for display
+ */
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
