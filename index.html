@@ -8,27 +8,38 @@
     <meta name="description" content="A beautiful habit tracking app with notification reminders to help you build consistent habits." />
     
     <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#D6E7FF" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="Seventh Path: Habit Tracker" />
+    <meta name="apple-mobile-web-app-title" content="Seventh Path" />
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
     
     <!-- Favicon -->
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
     
     <!-- Service Worker Registration -->
     <script>
-      if ('serviceWorker' in navigator) {
+      if ('serviceWorker' in navigator && 'PushManager' in window) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')
             .then((registration) => {
               console.log('SW registered: ', registration);
+              // Update service worker if available
+              registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    console.log('New service worker available, refreshing...');
+                    window.location.reload();
+                  }
+                });
+              });
             })
-            .catch((registrationError) => {
-              console.log('SW registration failed: ', registrationError);
+            .catch((error) => {
+              console.warn('SW registration failed (this is ok in dev):', error);
             });
         });
       }
