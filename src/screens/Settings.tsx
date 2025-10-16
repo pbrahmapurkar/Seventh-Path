@@ -27,13 +27,22 @@ export function Settings() {
     refreshScheduledCount,
     sendTest,
   } = useNotificationsStore();
-  const { factoryReset } = useHabitsStore();
+  const { factoryReset, habitsById, statsById, habitDaysByKey, addHabit, updateHabit } = useHabitsStore();
 
   const [isTestingNotification, setIsTestingNotification] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState(userName);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('theme-preference');
+    return saved === 'dark';
+  });
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importResult, setImportResult] = useState<string>('');
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const version = packageInfo?.version ?? '1.0.7';
 
   const openLink = useCallback(async (url: string) => {
