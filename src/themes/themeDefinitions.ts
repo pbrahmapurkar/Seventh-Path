@@ -1,9 +1,7 @@
 /**
- * Theme Definitions for Seventh Path
- * Each theme includes color tokens for consistent theming across the app
+ * Emerald Night Theme - The Single Default Theme for Seventh Path
+ * A deep, sophisticated dark theme with emerald accents
  */
-
-export type ThemeName = 'light' | 'dark' | 'blue' | 'green';
 
 export interface ThemeColors {
   // Base colors
@@ -46,184 +44,75 @@ export interface ThemeColors {
 }
 
 export interface Theme {
-  name: ThemeName;
+  name: string;
   displayName: string;
   description: string;
   colors: ThemeColors;
-  isDark: boolean;
 }
 
 /**
- * Light Theme - Clean and eye-friendly
+ * Emerald Night - The one and only theme
+ * Deep slate backgrounds with vibrant emerald accents for a sophisticated, modern look
  */
-const lightTheme: Theme = {
-  name: 'light',
-  displayName: 'Light',
-  description: 'Clean light background with muted accents',
-  isDark: false,
+const emeraldNightTheme: Theme = {
+  name: 'emerald-night',
+  displayName: 'Emerald Night',
+  description: 'Deep slate with vibrant emerald accents',
   colors: {
-    background: 'hsl(210, 40%, 98%)',
-    foreground: 'hsl(222, 47%, 11%)',
-    card: 'hsl(0, 0%, 100%)',
-    cardForeground: 'hsl(222, 47%, 11%)',
-    popover: 'hsl(0, 0%, 100%)',
-    popoverForeground: 'hsl(222, 47%, 11%)',
-    primary: 'hsl(217, 91%, 60%)',
-    primaryForeground: 'hsl(0, 0%, 100%)',
-    secondary: 'hsl(210, 40%, 96%)',
-    secondaryForeground: 'hsl(222, 47%, 11%)',
-    muted: 'hsl(210, 40%, 96%)',
-    mutedForeground: 'hsl(215, 16%, 47%)',
-    accent: 'hsl(142, 76%, 73%)',
-    accentForeground: 'hsl(222, 47%, 11%)',
-    destructive: 'hsl(0, 84%, 60%)',
-    destructiveForeground: 'hsl(0, 0%, 100%)',
-    success: 'hsl(142, 76%, 36%)',
-    successForeground: 'hsl(0, 0%, 100%)',
-    warning: 'hsl(38, 92%, 50%)',
-    warningForeground: 'hsl(0, 0%, 100%)',
-    info: 'hsl(199, 89%, 48%)',
-    infoForeground: 'hsl(0, 0%, 100%)',
-    border: 'hsl(214, 32%, 91%)',
-    input: 'hsl(214, 32%, 91%)',
-    ring: 'hsl(217, 91%, 60%)',
-    gradient: 'linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(142, 76%, 73%) 100%)',
+    // Base - Deep cool slate background
+    background: '#111827',
+    foreground: '#F9FAFB',
+    
+    // Surface - Slightly lighter charcoal for cards
+    card: '#1F2937',
+    cardForeground: '#F9FAFB',
+    popover: '#1F2937',
+    popoverForeground: '#F9FAFB',
+    
+    // Primary - Vibrant emerald for main actions
+    primary: '#10B981',
+    primaryForeground: '#FFFFFF',
+    
+    // Secondary - Subtle dark gray
+    secondary: '#374151',
+    secondaryForeground: '#F9FAFB',
+    
+    // Muted - For less prominent elements
+    muted: '#374151',
+    mutedForeground: '#9CA3AF',
+    
+    // Accent - Emerald for highlights
+    accent: '#10B981',
+    accentForeground: '#FFFFFF',
+    
+    // Semantic colors
+    destructive: '#EF4444',
+    destructiveForeground: '#FFFFFF',
+    success: '#10B981',
+    successForeground: '#FFFFFF',
+    warning: '#F59E0B',
+    warningForeground: '#000000',
+    info: '#3B82F6',
+    infoForeground: '#FFFFFF',
+    
+    // UI elements - Subtle borders
+    border: '#374151',
+    input: '#374151',
+    ring: '#10B981',
+    
+    // Gradient
+    gradient: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
   },
 };
 
 /**
- * Dark Theme - Polished dark surfaces
+ * Default theme - always Emerald Night
  */
-const darkTheme: Theme = {
-  name: 'dark',
-  displayName: 'Dark',
-  description: 'Polished dark surfaces with subtle highlights',
-  isDark: true,
-  colors: {
-    background: 'hsl(222, 47%, 11%)',
-    foreground: 'hsl(210, 40%, 98%)',
-    card: 'hsl(222, 47%, 13%)',
-    cardForeground: 'hsl(210, 40%, 98%)',
-    popover: 'hsl(222, 47%, 13%)',
-    popoverForeground: 'hsl(210, 40%, 98%)',
-    primary: 'hsl(217, 91%, 60%)',
-    primaryForeground: 'hsl(222, 47%, 11%)',
-    secondary: 'hsl(217, 33%, 17%)',
-    secondaryForeground: 'hsl(210, 40%, 98%)',
-    muted: 'hsl(223, 47%, 11%)',
-    mutedForeground: 'hsl(215, 20%, 65%)',
-    accent: 'hsl(142, 76%, 73%)',
-    accentForeground: 'hsl(222, 47%, 11%)',
-    destructive: 'hsl(0, 63%, 31%)',
-    destructiveForeground: 'hsl(210, 40%, 98%)',
-    success: 'hsl(142, 76%, 36%)',
-    successForeground: 'hsl(210, 40%, 98%)',
-    warning: 'hsl(38, 92%, 50%)',
-    warningForeground: 'hsl(222, 47%, 11%)',
-    info: 'hsl(199, 89%, 48%)',
-    infoForeground: 'hsl(0, 0%, 100%)',
-    border: 'hsl(217, 33%, 17%)',
-    input: 'hsl(217, 33%, 17%)',
-    ring: 'hsl(224, 71%, 4%)',
-    gradient: 'linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(142, 76%, 73%) 100%)',
-  },
-};
+export const defaultTheme: Theme = emeraldNightTheme;
 
 /**
- * Blue Theme - Calming blues with neutral backgrounds
+ * Get the default theme (always returns Emerald Night)
  */
-const blueTheme: Theme = {
-  name: 'blue',
-  displayName: 'Blue',
-  description: 'Calming blues with neutral backgrounds',
-  isDark: false,
-  colors: {
-    background: 'hsl(210, 100%, 97%)',
-    foreground: 'hsl(215, 25%, 27%)',
-    card: 'hsl(0, 0%, 100%)',
-    cardForeground: 'hsl(215, 25%, 27%)',
-    popover: 'hsl(0, 0%, 100%)',
-    popoverForeground: 'hsl(215, 25%, 27%)',
-    primary: 'hsl(210, 100%, 50%)',
-    primaryForeground: 'hsl(0, 0%, 100%)',
-    secondary: 'hsl(210, 40%, 96%)',
-    secondaryForeground: 'hsl(215, 25%, 27%)',
-    muted: 'hsl(210, 40%, 96%)',
-    mutedForeground: 'hsl(215, 16%, 47%)',
-    accent: 'hsl(200, 98%, 39%)',
-    accentForeground: 'hsl(0, 0%, 100%)',
-    destructive: 'hsl(0, 84%, 60%)',
-    destructiveForeground: 'hsl(0, 0%, 100%)',
-    success: 'hsl(142, 76%, 36%)',
-    successForeground: 'hsl(0, 0%, 100%)',
-    warning: 'hsl(38, 92%, 50%)',
-    warningForeground: 'hsl(0, 0%, 100%)',
-    info: 'hsl(199, 89%, 48%)',
-    infoForeground: 'hsl(0, 0%, 100%)',
-    border: 'hsl(210, 50%, 90%)',
-    input: 'hsl(210, 50%, 90%)',
-    ring: 'hsl(210, 100%, 50%)',
-    gradient: 'linear-gradient(135deg, hsl(210, 100%, 50%) 0%, hsl(200, 98%, 39%) 100%)',
-  },
-};
-
-/**
- * Green Theme - Fresh greens with balanced neutrals
- */
-const greenTheme: Theme = {
-  name: 'green',
-  displayName: 'Green',
-  description: 'Fresh greens with balanced neutrals',
-  isDark: false,
-  colors: {
-    background: 'hsl(120, 40%, 97%)',
-    foreground: 'hsl(120, 25%, 15%)',
-    card: 'hsl(0, 0%, 100%)',
-    cardForeground: 'hsl(120, 25%, 15%)',
-    popover: 'hsl(0, 0%, 100%)',
-    popoverForeground: 'hsl(120, 25%, 15%)',
-    primary: 'hsl(142, 76%, 36%)',
-    primaryForeground: 'hsl(0, 0%, 100%)',
-    secondary: 'hsl(120, 40%, 96%)',
-    secondaryForeground: 'hsl(120, 25%, 15%)',
-    muted: 'hsl(120, 40%, 96%)',
-    mutedForeground: 'hsl(120, 16%, 47%)',
-    accent: 'hsl(142, 76%, 73%)',
-    accentForeground: 'hsl(120, 25%, 15%)',
-    destructive: 'hsl(0, 84%, 60%)',
-    destructiveForeground: 'hsl(0, 0%, 100%)',
-    success: 'hsl(142, 76%, 36%)',
-    successForeground: 'hsl(0, 0%, 100%)',
-    warning: 'hsl(38, 92%, 50%)',
-    warningForeground: 'hsl(0, 0%, 100%)',
-    info: 'hsl(199, 89%, 48%)',
-    infoForeground: 'hsl(0, 0%, 100%)',
-    border: 'hsl(120, 30%, 88%)',
-    input: 'hsl(120, 30%, 88%)',
-    ring: 'hsl(142, 76%, 36%)',
-    gradient: 'linear-gradient(135deg, hsl(142, 76%, 36%) 0%, hsl(142, 76%, 73%) 100%)',
-  },
-};
-
-export const themes: Record<ThemeName, Theme> = {
-  light: lightTheme,
-  dark: darkTheme,
-  blue: blueTheme,
-  green: greenTheme,
-};
-
-export const defaultTheme: ThemeName = 'light';
-
-/**
- * Get theme by name
- */
-export function getTheme(name: ThemeName): Theme {
-  return themes[name];
-}
-
-/**
- * Get all available themes
- */
-export function getAllThemes(): Theme[] {
-  return Object.values(themes);
+export function getTheme(): Theme {
+  return defaultTheme;
 }
