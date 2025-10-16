@@ -4,33 +4,32 @@
 
 @layer base {
   :root {
-    /* Theme colors will be injected dynamically via ThemeContext */
-    /* Default to light theme */
-    --background: hsl(210, 40%, 98%);
-    --foreground: hsl(222, 47%, 11%);
-    --card: hsl(0, 0%, 100%);
-    --card-foreground: hsl(222, 47%, 11%);
-    --popover: hsl(0, 0%, 100%);
-    --popover-foreground: hsl(222, 47%, 11%);
-    --primary: hsl(217, 91%, 60%);
-    --primary-foreground: hsl(0, 0%, 100%);
-    --secondary: hsl(210, 40%, 96%);
-    --secondary-foreground: hsl(222, 47%, 11%);
-    --muted: hsl(210, 40%, 96%);
-    --muted-foreground: hsl(215, 16%, 47%);
-    --accent: hsl(142, 76%, 73%);
-    --accent-foreground: hsl(222, 47%, 11%);
-    --destructive: hsl(0, 84%, 60%);
-    --destructive-foreground: hsl(0, 0%, 100%);
-    --success: hsl(142, 76%, 36%);
-    --success-foreground: hsl(0, 0%, 100%);
-    --warning: hsl(38, 92%, 50%);
-    --warning-foreground: hsl(0, 0%, 100%);
-    --info: hsl(199, 89%, 48%);
-    --info-foreground: hsl(0, 0%, 100%);
-    --border: hsl(214, 32%, 91%);
-    --input: hsl(214, 32%, 91%);
-    --ring: hsl(217, 91%, 60%);
+    /* Emerald Night Theme - Deep slate with vibrant emerald accents */
+    --background: #111827;
+    --foreground: #F9FAFB;
+    --card: #1F2937;
+    --card-foreground: #F9FAFB;
+    --popover: #1F2937;
+    --popover-foreground: #F9FAFB;
+    --primary: #10B981;
+    --primary-foreground: #FFFFFF;
+    --secondary: #374151;
+    --secondary-foreground: #F9FAFB;
+    --muted: #374151;
+    --muted-foreground: #9CA3AF;
+    --accent: #10B981;
+    --accent-foreground: #FFFFFF;
+    --destructive: #EF4444;
+    --destructive-foreground: #FFFFFF;
+    --success: #10B981;
+    --success-foreground: #FFFFFF;
+    --warning: #F59E0B;
+    --warning-foreground: #000000;
+    --info: #3B82F6;
+    --info-foreground: #FFFFFF;
+    --border: #374151;
+    --input: #374151;
+    --ring: #10B981;
     --radius: 0.75rem;
   }
 }
@@ -57,35 +56,19 @@
     line-height: 1.6;
   }
   
-  /* Smooth theme transitions */
-  body,
-  body * {
-    transition-property: background-color, border-color, color, fill, stroke;
-    transition-duration: 200ms;
+  /* Smooth transitions for interactive elements */
+  button,
+  a,
+  [role="button"] {
+    transition-property: background-color, border-color, color, transform;
+    transition-duration: 150ms;
     transition-timing-function: ease-in-out;
   }
-  
-  /* Disable transitions for elements that shouldn't animate */
-  input,
-  textarea,
-  select,
-  [role="slider"],
-  [role="progressbar"] {
-    transition: none !important;
-  }
 }
 
-/* Theme transition overlay */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+/* Emerald gradient utilities */
+.bg-gradient-emerald {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
 }
 
-.theme-transitioning {
-  animation: fadeIn 200ms ease-in-out;
-}
 
