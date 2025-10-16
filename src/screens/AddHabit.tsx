@@ -57,13 +57,20 @@ export function AddHabit() {
   const [hasReminder, setHasReminder] = useState(false);
   const [reminderTimes, setReminderTimes] = useState<string[]>(['08:00']);
   const [weeklyDays, setWeeklyDays] = useState<number[]>([]); // 0-6 Sun-Sat
+  const [timerConfig, setTimerConfig] = useState<TimerConfig>({
+    enabled: false,
+    mode: 'countdown',
+    defaultDuration: 1800, // 30 minutes default
+    autoCompleteHabit: true
+  });
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const isDirty = Boolean(
     title.trim() ||
     (hasReminder && reminderTimes.length > 0 && !(reminderTimes.length === 1 && reminderTimes[0] === '08:00')) ||
     emoji !== '🎯' ||
-    frequency !== 'daily'
+    frequency !== 'daily' ||
+    timerConfig.enabled
   );
 
   const handleSave = async () => {
