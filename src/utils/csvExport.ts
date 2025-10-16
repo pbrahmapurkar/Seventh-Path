@@ -253,11 +253,13 @@ export function parseCSV(csvContent: string): { habits: HabitExportData[]; schem
 }
 
 /**
- * Validate imported habit data
+ * Validate imported habit data with detailed error reporting
  */
-export function validateHabitData(habit: HabitExportData): { valid: boolean; errors: string[] } {
+export function validateHabitData(habit: HabitExportData): { valid: boolean; errors: string[]; warnings: string[] } {
   const errors: string[] = [];
+  const warnings: string[] = [];
 
+  // Required fields
   if (!habit.id || typeof habit.id !== 'string') {
     errors.push('Invalid or missing habit ID');
   }
@@ -266,17 +268,38 @@ export function validateHabitData(habit: HabitExportData): { valid: boolean; err
     errors.push('Invalid or missing habit name');
   }
 
+  // Frequency validation
   if (habit.frequency && !['daily', 'weekly'].includes(habit.frequency)) {
     errors.push('Invalid frequency (must be daily or weekly)');
   }
 
+  // Reminder times validation
   if (habit.reminderTimes && !Array.isArray(habit.reminderTimes)) {
     errors.push('Invalid reminder times format');
   }
 
+  // Timer validation
+  if (habit.timerEnabled) {
+    if (habit.timerMode && !['countdown', 'stopwatch'].includes(habit.timerMode)) {
+      warnings.push('Invalid timer mode, will default to countdown');
+    }
+    if (habit.timerDefaultDuration && (habit.timerDefaultDuration < 0 || habit.timerDefaultDuration > 86400)) {
+      warnings.push('Timer duration out of range (0-24 hours)');
+    }
+  }
+
+  // Date validation
+  if (habit.createdAt) {
+    const date = new Date(habit.createdAt);
+    if (isNaN(date.getTime())) {
+      warnings.push('Invalid createdAt timestamp, will use current time');
+    }
+  }
+
   return {
     valid: errors.length === 0,
-    errors
+    errors,
+    warnings
   };
 }
 
