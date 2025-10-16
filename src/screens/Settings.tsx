@@ -553,8 +553,75 @@ export function Settings() {
         </SettingsSection>
 
 
+        {/* Data Management Section - NEW */}
+        <SettingsSection title="Data Management" icon={<Database className="w-4 h-4 text-primary" />}>
+          <SettingsRow
+            icon={<Download className="w-5 h-5" />}
+            title="Export Data"
+            description="Download all your habits and history as CSV"
+            action={
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleExportData}
+                disabled={isExporting || Object.keys(habitsById).length === 0}
+                className="hover:scale-105 transition-transform"
+              >
+                {isExporting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 mr-1" />
+                    Export
+                  </>
+                )}
+              </Button>
+            }
+          />
+
+          <SettingsRow
+            icon={<Upload className="w-5 h-5" />}
+            title="Import Data"
+            description="Import habits from a CSV file"
+            action={
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv"
+                  onChange={handleImportData}
+                  style={{ display: 'none' }}
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isImporting}
+                  className="hover:scale-105 transition-transform"
+                >
+                  {isImporting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                      Importing...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 mr-1" />
+                      Import
+                    </>
+                  )}
+                </Button>
+              </>
+            }
+          />
+        </SettingsSection>
+
+
         {/* Enhanced Data Section */}
-        <SettingsSection title="Data & Storage" icon={<RotateCcw className="w-4 h-4 text-primary" />}>
+        <SettingsSection title="Reset Options" icon={<RotateCcw className="w-4 h-4 text-primary" />}>
           <SettingsRow
             icon={<RotateCcw className="w-5 h-5" />}
             title="Reset Onboarding"
