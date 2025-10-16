@@ -186,10 +186,12 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AppShellProvider>
-      <NotificationProvider>
-        <AppContent />
-      </NotificationProvider>
-    </AppShellProvider>
+    <ThemeProvider>
+      <AppShellProvider>
+        <NotificationProvider>
+          <AppContent />
+        </NotificationProvider>
+      </AppShellProvider>
+    </ThemeProvider>
   );
 }
