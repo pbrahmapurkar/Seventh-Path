@@ -5,8 +5,9 @@ import { Button } from '../../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Badge } from '../../components/ui/badge';
 import { Skeleton, SkeletonCard, SkeletonStats, SkeletonTabs } from '../../components/ui/skeleton';
-import { Edit, Trash2, Plus, Clock, Check, Home, BarChart3, Settings, History, CheckCircle2 } from 'lucide-react';
+import { Edit, Trash2, Plus, Clock, Check, Home, BarChart3, Settings, History, CheckCircle2, Timer } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { TimerTab } from './TimerTab';
 // removed Snooze action; no LocalNotifications import needed here
 
 function formatSinceDays(iso: string): number {
