@@ -1,48 +1,17 @@
 /**
  * Theme Context Provider
- * Manages theme state and provides theme switching functionality
+ * Provides the single Emerald Night theme to the entire app
  */
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import type { ThemeName, Theme } from '../themes/themeDefinitions';
-import { getTheme, defaultTheme } from '../themes/themeDefinitions';
+import React, { createContext, useContext, useEffect } from 'react';
+import type { Theme } from '../themes/themeDefinitions';
+import { defaultTheme } from '../themes/themeDefinitions';
 
 interface ThemeContextValue {
   theme: Theme;
-  themeName: ThemeName;
-  setTheme: (name: ThemeName) => void;
-  isTransitioning: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
-
-const THEME_STORAGE_KEY = 'seventh-path-theme';
-
-/**
- * Load theme preference from storage
- */
-function loadThemePreference(): ThemeName {
-  try {
-    const stored = localStorage.getItem(THEME_STORAGE_KEY);
-    if (stored && ['light', 'dark', 'blue', 'green'].includes(stored)) {
-      return stored as ThemeName;
-    }
-  } catch (error) {
-    console.error('Failed to load theme preference:', error);
-  }
-  return defaultTheme;
-}
-
-/**
- * Save theme preference to storage
- */
-function saveThemePreference(themeName: ThemeName): void {
-  try {
-    localStorage.setItem(THEME_STORAGE_KEY, themeName);
-  } catch (error) {
-    console.error('Failed to save theme preference:', error);
-  }
-}
 
 /**
  * Apply theme colors to CSS variables
@@ -58,48 +27,23 @@ function applyThemeToDOM(theme: Theme): void {
     root.style.setProperty(`--${cssVarName}`, value);
   });
 
-  // Apply dark class for dark theme
-  if (theme.isDark) {
-    root.classList.add('dark');
-  } else {
-    root.classList.remove('dark');
-  }
+  // Always apply dark class for Emerald Night theme
+  root.classList.add('dark');
 
   // Set data attribute for theme name
   root.setAttribute('data-theme', theme.name);
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [themeName, setThemeNameState] = useState<ThemeName>(loadThemePreference);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const theme = getTheme(themeName);
+  const theme = defaultTheme;
 
-  // Apply theme to DOM whenever theme changes
+  // Apply theme to DOM on mount
   useEffect(() => {
     applyThemeToDOM(theme);
   }, [theme]);
 
-  const setTheme = useCallback(async (name: ThemeName) => {
-    // Start transition
-    setIsTransitioning(true);
-
-    // Small delay to allow transition to start
-    await new Promise(resolve => setTimeout(resolve, 50));
-
-    // Update theme
-    setThemeNameState(name);
-
-    // Save to storage
-    saveThemePreference(name);
-
-    // End transition after animation
-    setTimeout(() => {
-      setIsTransitioning(false);
-    }, 300);
-  }, []);
-
   return (
-    <ThemeContext.Provider value={{ theme, themeName, setTheme, isTransitioning }}>
+    <ThemeContext.Provider value={{ theme }}>
       {children}
     </ThemeContext.Provider>
   );
