@@ -123,6 +123,128 @@ export function Settings() {
     setIsEditingName(false);
   };
 
+  const handleToggleTheme = () => {
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    localStorage.setItem('theme-preference', newDarkMode ? 'dark' : 'light');
+    const root = document.documentElement;
+    if (newDarkMode) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  };
+
+  const handleExportData = async () => {
+    try {
+      setIsExporting(true);
+      const result = exportHabitsToCSV(habitsById, statsById, habitDaysByKey);
+      
+      if (result.success && result.csv) {
+        const filename = generateFilename();
+        downloadCSV(result.csv, filename);
+        
+        // Show success message
+        try {
+          if (Capacitor.getPlatform() !== 'web') {
+            const toastMod = await import('@capacitor/toast');
+            await toastMod?.Toast?.show?.({ text: `Exported ${Object.keys(habitsById).length} habits successfully!` });
+          } else {
+            alert(`Exported ${Object.keys(habitsById).length} habits successfully!`);
+          }
+        } catch {}
+      } else {
+        throw new Error(result.error || 'Export failed');
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      try {
+        if (Capacitor.getPlatform() !== 'web') {
+          const toastMod = await import('@capacitor/toast');
+          await toastMod?.Toast?.show?.({ text: 'Export failed. Please try again.' });
+        } else {
+          alert('Export failed. Please try again.');
+        }
+      } catch {}
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleImportData = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsImporting(true);
+      const text = await file.text();
+      const habits = parseCSV(text);
+      
+      let imported = 0;
+      let skipped = 0;
+      const errors: string[] = [];
+
+      for (const habitData of habits) {
+        const validation = validateHabitData(habitData);
+        
+        if (!validation.valid) {
+          errors.push(`${habitData.name}: ${validation.errors.join(', ')}`);
+          skipped++;
+          continue;
+        }
+
+        try {
+          // Check if habit already exists
+          const existingHabit = habitsById[habitData.id];
+          
+          if (existingHabit) {
+            // Update existing habit
+            await updateHabit(habitData.id, {
+              name: habitData.name,
+              emoji: habitData.emoji,
+              frequency: habitData.frequency,
+              weeklyDays: habitData.weeklyDays,
+              reminderTimes: habitData.reminderTimes,
+            });
+          } else {
+            // Create new habit
+            await addHabit({
+              id: habitData.id,
+              name: habitData.name,
+              emoji: habitData.emoji,
+              frequency: habitData.frequency,
+              weeklyDays: habitData.weeklyDays || [],
+              reminderTimes: habitData.reminderTimes || [],
+              createdAt: habitData.createdAt || new Date().toISOString(),
+            });
+          }
+          
+          imported++;
+        } catch (error) {
+          console.error(`Error importing habit ${habitData.name}:`, error);
+          errors.push(`${habitData.name}: Import failed`);
+          skipped++;
+        }
+      }
+
+      // Show result
+      const resultMessage = `Import complete:\\n✓ Imported: ${imported}\\n${skipped > 0 ? `⚠ Skipped: ${skipped}` : ''}${errors.length > 0 ? `\\n\\nErrors:\\n${errors.join('\\n')}` : ''}`;
+      setImportResult(resultMessage);
+      setShowImportDialog(true);
+
+    } catch (error) {
+      console.error('Import error:', error);
+      setImportResult(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setShowImportDialog(true);
+    } finally {
+      setIsImporting(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   React.useEffect(() => {
     hydrate();
   }, [hydrate]);
