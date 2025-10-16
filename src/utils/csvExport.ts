@@ -190,9 +190,9 @@ export function exportHabitsToCSV(
 }
 
 /**
- * Parse CSV content and extract habit data
+ * Parse CSV content and extract habit data with validation
  */
-export function parseCSV(csvContent: string): HabitExportData[] {
+export function parseCSV(csvContent: string): { habits: HabitExportData[]; schemaVersion: string } {
   const lines = csvContent.trim().split('\n');
   if (lines.length < 2) {
     throw new Error('CSV file is empty or invalid');
@@ -200,6 +200,10 @@ export function parseCSV(csvContent: string): HabitExportData[] {
 
   const headers = lines[0].split(',').map(h => h.trim());
   const habits: HabitExportData[] = [];
+  let schemaVersion = '1.0';
+
+  // Check if schemaVersion is in headers
+  const hasSchemaVersion = headers.includes('schemaVersion');
 
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
@@ -207,7 +211,7 @@ export function parseCSV(csvContent: string): HabitExportData[] {
 
     const cells = parseCSVLine(line);
     if (cells.length !== headers.length) {
-      console.warn(`Skipping malformed row ${i + 1}`);
+      console.warn(`Skipping malformed row ${i + 1}: expected ${headers.length} columns, got ${cells.length}`);
       continue;
     }
 
@@ -215,11 +219,16 @@ export function parseCSV(csvContent: string): HabitExportData[] {
     headers.forEach((header, index) => {
       const value = cells[index];
       
+      if (header === 'schemaVersion' && i === 1) {
+        schemaVersion = value || '1.0';
+      }
+      
       // Parse JSON fields
       if (['weeklyDays', 'reminderTimes', 'completionHistory', 'timerSessions'].includes(header)) {
         try {
           habit[header] = JSON.parse(value || (header === 'completionHistory' ? '{}' : '[]'));
-        } catch {
+        } catch (e) {
+          console.warn(`Failed to parse ${header} for row ${i + 1}:`, e);
           habit[header] = ['completionHistory', 'timerSessions'].includes(header) ? {} : [];
         }
       } else if (['currentStreak', 'bestStreak', 'completionRate', 'totalCompletions', 'timerDefaultDuration'].includes(header)) {
@@ -231,10 +240,16 @@ export function parseCSV(csvContent: string): HabitExportData[] {
       }
     });
 
+    // Validate required fields
+    if (!habit.id || !habit.name) {
+      console.warn(`Skipping row ${i + 1}: missing required fields (id or name)`);
+      continue;
+    }
+
     habits.push(habit as HabitExportData);
   }
 
-  return habits;
+  return { habits, schemaVersion };
 }
 
 /**
