@@ -32,7 +32,16 @@ export function Settings() {
     refreshScheduledCount,
     sendTest,
   } = useNotificationsStore();
-  const { factoryReset, habitsById, statsById, habitDaysByKey, addHabit, editHabit } = useHabitsStore();
+  const { 
+    factoryReset, 
+    habitsById, 
+    statsById, 
+    habitDaysByKey, 
+    addHabit, 
+    editHabit,
+    clearAllHabits,
+    hydrate: hydrateHabits 
+  } = useHabitsStore();
   const { theme: currentTheme } = useTheme();
   const toast = useToast();
 
@@ -45,6 +54,12 @@ export function Settings() {
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<string>('');
   const [showImportDialog, setShowImportDialog] = useState(false);
+  
+  // Enhanced import state
+  const [pendingImportFile, setPendingImportFile] = useState<File | null>(null);
+  const [pendingHabits, setPendingHabits] = useState<any[]>([]);
+  const [showEnhancedImportDialog, setShowEnhancedImportDialog] = useState(false);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const version = packageInfo?.version ?? '1.0.7';
 
