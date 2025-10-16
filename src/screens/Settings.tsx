@@ -138,10 +138,6 @@ export function Settings() {
     setIsEditingName(false);
   };
 
-  const handleThemeChange = (themeName: string) => {
-    toast.theme(`Theme changed to ${themeName.charAt(0).toUpperCase() + themeName.slice(1)}`, 2000);
-  };
-
   const handleExportData = async () => {
     try {
       setIsExporting(true);
