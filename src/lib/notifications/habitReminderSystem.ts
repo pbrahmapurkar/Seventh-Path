@@ -153,6 +153,7 @@ async function isHabitCompletedForDate(habitId: string, ymd: string): Promise<bo
 }
 
 // Schedule N upcoming one-off notifications for a reminder
+// Will skip notifications for dates where habit is already completed
 export async function scheduleReminderInstances(
   habit: HabitDef,
   time: string,
@@ -166,8 +167,18 @@ export async function scheduleReminderInstances(
   const sound = getNativeSoundName();
   const scheduled: { id: number; title: string; body: string; schedule: { at: Date }; channelId: string; sound?: string; extra: any; actionTypeId?: string }[] = [];
   const ids: number[] = [];
+  
   for (const at of dates) {
     const ymd = `${at.getFullYear()}-${String(at.getMonth() + 1).padStart(2, '0')}-${String(at.getDate()).padStart(2, '0')}`;
+    
+    // Check if habit is already completed for this date
+    const isCompleted = await isHabitCompletedForDate(habit.id, ymd);
+    
+    if (isCompleted) {
+      console.log(`[NOTIFICATIONS] Skipping notification for ${habit.name} on ${ymd} - already completed`);
+      continue;
+    }
+    
     const key = `${habit.id}|${ymd}|${time}`;
     const id = toJavaIntId(key);
     ids.push(id);
