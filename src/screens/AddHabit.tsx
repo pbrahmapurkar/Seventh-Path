@@ -10,6 +10,8 @@ import { useNotifications } from '../providers/notificationProvider';
 import { createHabit } from '../lib/habits';
 import { useHabitsStore } from '../store/HabitsStore';
 import { MultiTimePicker } from '../components/MultiTimePicker';
+import { TimerConfiguration } from '../components/Timer';
+import type { TimerConfig } from '../types/timer';
 import { Bell, BellOff, Plus, Target, Sparkles, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
 
 const emojiOptions = [
