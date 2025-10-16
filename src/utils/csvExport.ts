@@ -304,10 +304,10 @@ export function validateHabitData(habit: HabitExportData): { valid: boolean; err
 }
 
 /**
- * Escape CSV cell content
+ * Escape CSV cell content properly
  */
 function escapeCSVCell(cell: string): string {
-  if (cell.includes(',') || cell.includes('"') || cell.includes('\n')) {
+  if (cell.includes(',') || cell.includes('"') || cell.includes('\n') || cell.includes('\r')) {
     return `"${cell.replace(/"/g, '""')}"`;
   }
   return cell;
