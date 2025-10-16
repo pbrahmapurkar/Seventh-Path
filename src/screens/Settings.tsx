@@ -1,5 +1,5 @@
-import React, { useCallback, useState } from 'react';
-import { ChevronRight, User, Bell, RotateCcw, Info, Settings as SettingsIcon, TestTube, Trash2, FileText, Shield, Edit2, Check, X, Sparkles, Zap, Heart, ShieldCheck, AlertTriangle, CheckCircle2, History, BarChart3, Plus } from 'lucide-react';
+import React, { useCallback, useState, useRef } from 'react';
+import { ChevronRight, User, Bell, RotateCcw, Info, Settings as SettingsIcon, TestTube, Trash2, FileText, Shield, Edit2, Check, X, Sparkles, Zap, Heart, ShieldCheck, AlertTriangle, CheckCircle2, History, BarChart3, Plus, Download, Upload, Database, Moon, Sun } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Switch } from '../components/ui/switch';
 import { Input } from '../components/ui/input';
@@ -11,6 +11,7 @@ import { useHabitsStore } from '../store/HabitsStore';
 import { useNotificationsStore } from '../store/NotificationsStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Capacitor } from '@capacitor/core';
+import { exportHabitsToCSV, parseCSV, validateHabitData, downloadCSV, generateFilename } from '../utils/csvExport';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore - vite json import allowed
 import packageInfo from '../../package.json';
