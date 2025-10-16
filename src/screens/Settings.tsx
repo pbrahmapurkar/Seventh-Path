@@ -455,19 +455,11 @@ export function Settings() {
           )}
         </SettingsSection>
 
-        {/* Appearance Section */}
+        {/* Appearance Section - Updated with Theme Selector */}
         <SettingsSection title="Appearance" icon={<Sparkles className="w-4 h-4 text-primary" />}>
-          <SettingsRow
-            icon={darkMode ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-            title="Dark Mode"
-            description={darkMode ? 'Switch to light theme' : 'Switch to dark theme'}
-            action={
-              <Switch
-                checked={darkMode}
-                onCheckedChange={handleToggleTheme}
-              />
-            }
-          />
+          <div className="p-6">
+            <ThemeSelector onThemeChange={handleThemeChange} />
+          </div>
         </SettingsSection>
 
         {/* Enhanced Notifications Section */}
