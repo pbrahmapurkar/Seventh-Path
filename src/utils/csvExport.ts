@@ -66,7 +66,7 @@ export interface CSVImportOptions {
 const CSV_SCHEMA_VERSION = '1.0';
 
 /**
- * Convert habit data to CSV format
+ * Convert habit data to CSV format with complete fidelity
  */
 export function exportHabitsToCSV(
   habitsById: Record<string, HabitDef>,
@@ -77,11 +77,15 @@ export function exportHabitsToCSV(
     const habits = Object.values(habitsById);
     
     if (habits.length === 0) {
-      return { success: false, error: 'No habits to export' };
+      return { 
+        success: false, 
+        error: 'No habits to export. Create some habits first!' 
+      };
     }
 
-    // Build CSV header
+    // Build CSV header with schema version
     const headers = [
+      'schemaVersion',
       'id',
       'name',
       'emoji',
@@ -98,11 +102,14 @@ export function exportHabitsToCSV(
       'timerDefaultDuration',
       'timerAutoComplete',
       'completionHistory',
-      'timerSessions'
+      'timerSessions',
+      'notes',
+      'exportedAt' // ISO timestamp of export
     ];
 
     // Build CSV rows
     const rows: string[][] = [];
+    const exportedAt = new Date().toISOString();
     
     for (const habit of habits) {
       const stats = statsById[habit.id] || {
@@ -112,25 +119,29 @@ export function exportHabitsToCSV(
         totalCompletions: 0
       };
 
-      // Get completion history for this habit
+      // Get completion history for this habit with full timestamps
       const completionHistory: Record<string, any> = {};
-      const timerSessions: any[] = [];
-      
       Object.entries(habitDaysByKey).forEach(([key, dayEntry]) => {
         if (key.startsWith(`habit:${habit.id}:day:`)) {
           const date = key.split(':day:')[1];
           completionHistory[date] = {
             reminders: dayEntry.reminders,
-            updatedAt: dayEntry.updatedAt
+            updatedAt: dayEntry.updatedAt || new Date().toISOString(),
+            timerSessions: dayEntry.timerSessions || []
           };
-          // Collect timer sessions
-          if (dayEntry.timerSessions && dayEntry.timerSessions.length > 0) {
-            timerSessions.push(...dayEntry.timerSessions);
-          }
+        }
+      });
+
+      // Collect timer sessions
+      const timerSessions: any[] = [];
+      Object.values(completionHistory).forEach((day: any) => {
+        if (day.timerSessions && day.timerSessions.length > 0) {
+          timerSessions.push(...day.timerSessions);
         }
       });
 
       const row = [
+        CSV_SCHEMA_VERSION,
         habit.id,
         habit.name,
         habit.emoji || '',
@@ -147,7 +158,9 @@ export function exportHabitsToCSV(
         habit.timerConfig?.defaultDuration?.toString() || '',
         habit.timerConfig?.autoCompleteHabit ? 'true' : 'false',
         JSON.stringify(completionHistory),
-        JSON.stringify(timerSessions)
+        JSON.stringify(timerSessions),
+        '', // notes placeholder for future
+        exportedAt
       ];
 
       rows.push(row);
@@ -159,7 +172,14 @@ export function exportHabitsToCSV(
       ...rows.map(row => row.map(cell => escapeCSVCell(cell)).join(','))
     ].join('\n');
 
-    return { success: true, csv: csvContent };
+    const filename = generateFilename();
+
+    return { 
+      success: true, 
+      csv: csvContent,
+      filename,
+      habitCount: habits.length
+    };
   } catch (error) {
     console.error('CSV export error:', error);
     return {
