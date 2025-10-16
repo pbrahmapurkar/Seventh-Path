@@ -46,6 +46,8 @@ export interface DayEntry {
   reminders: DayReminderState[]; // snapshot for the day
   // optional activity metadata
   updatedAt?: string; // ISO
+  // Timer sessions for this day
+  timerSessions?: TimerSession[];
 }
 
 export interface HabitActivityItem {
