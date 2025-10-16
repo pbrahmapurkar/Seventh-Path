@@ -101,7 +101,6 @@ export function HabitLeaderboard({ habits, maxItems = 5, className = '' }: Habit
               {/* Progress Bar */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Completion</span>
                   <span className="font-medium">{habit.completionRate}%</span>
                 </div>
                 <Progress 

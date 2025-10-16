@@ -16,7 +16,7 @@ export function startDayRolloverService() {
       const store = useHabitsStore.getState();
       // Re-hydrate if not ready or hydrate date < today
       if (store.hydrationState !== 'ready' || store.lastHydratedYMD !== today) {
-        await store.hydrateAll();
+        await store.hydrateAll(true);
       }
       // Emit day change via event bus by toggling a flag in store (indirect). Consumers can subscribe via store events if needed.
       // We reuse stats recomputation through hydrateAll which ensures today entries exist.
@@ -29,7 +29,7 @@ export function startDayRolloverService() {
       localStorage.setItem(tzKey, String(cur));
       // Reschedule all habit notifications for new timezone
       const store = useHabitsStore.getState();
-      if (store.hydrationState !== 'ready') await store.hydrateAll();
+      if (store.hydrationState !== 'ready') await store.hydrateAll(true);
       const ids = Object.keys(store.habitsById);
       for (const id of ids) await store.rescheduleNotifications(id);
     }

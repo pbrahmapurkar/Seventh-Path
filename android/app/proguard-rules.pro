@@ -5,17 +5,55 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Capacitor specific rules
+-keep class com.capacitorjs.** { *; }
+-keep class com.getcapacitor.** { *; }
+-keep class com.getcapacitorjs.** { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Keep native methods
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Keep JavaScript interface methods
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
+
+# Keep WebView related classes
+-keep class android.webkit.** { *; }
+
+# Keep Capacitor plugins
+-keep class com.capacitorjs.plugins.** { *; }
+
+# Keep notification related classes
+-keep class androidx.core.app.NotificationCompat { *; }
+-keep class androidx.core.app.NotificationManagerCompat { *; }
+
+# Keep Capacitor core classes
+-keep class com.getcapacitor.Bridge { *; }
+-keep class com.getcapacitor.Plugin { *; }
+-keep class com.getcapacitor.PluginCall { *; }
+-keep class com.getcapacitor.PluginResult { *; }
+
+# Obfuscation settings
+-optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*
+-optimizationpasses 5
+-allowaccessmodification
+-dontpreverify
+
+# Rename source file attribute
+-renamesourcefileattribute SourceFile
+
+# Keep line numbers for debugging (optional)
+-keepattributes SourceFile,LineNumberTable
+
+# Remove logging
+-assumenosideeffects class android.util.Log {
+    public static boolean isLoggable(java.lang.String, int);
+    public static int v(...);
+    public static int i(...);
+    public static int w(...);
+    public static int d(...);
+    public static int e(...);
+}

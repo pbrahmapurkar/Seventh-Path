@@ -1,21 +1,22 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { ChevronRight, User, Bell, Palette, RotateCcw, Info, Sun, Moon, Monitor, Settings as SettingsIcon, TestTube, Trash2, FileText, Shield, Edit2, Check, X, Sparkles, Zap, Heart, ShieldCheck, AlertTriangle, CheckCircle2, History, BarChart3, Plus } from 'lucide-react';
+import React, { useCallback, useState } from 'react';
+import { ChevronRight, User, Bell, RotateCcw, Info, Settings as SettingsIcon, TestTube, Trash2, FileText, Shield, Edit2, Check, X, Sparkles, Zap, Heart, ShieldCheck, AlertTriangle, CheckCircle2, History, BarChart3, Plus } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Switch } from '../components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Input } from '../components/ui/input';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { AppBar } from '../components/AppShell';
 import { useAppShell } from '../components/AppShell';
+import { useHabitsStore } from '../store/HabitsStore';
 import { useNotificationsStore } from '../store/NotificationsStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Capacitor } from '@capacitor/core';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore - vite json import allowed
-import pkg from '../../package.json';
+import packageInfo from '../../package.json';
 
 export function Settings() {
-  const { userName, theme, setTheme, setIsOnboarded, navigate, setUserName } = useAppShell();
+  const { userName, setIsOnboarded, navigate, setUserName } = useAppShell();
   const {
     permission,
     enabled,
@@ -25,12 +26,14 @@ export function Settings() {
     refreshScheduledCount,
     sendTest,
   } = useNotificationsStore();
+  const { factoryReset } = useHabitsStore();
 
   const [isTestingNotification, setIsTestingNotification] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState(userName);
-  const version = useMemo(() => (pkg?.version as string) || '1.0.0', []);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const version = packageInfo?.version ?? '1.0.7';
 
   const openLink = useCallback(async (url: string) => {
     try {
@@ -45,10 +48,18 @@ export function Settings() {
   }, []);
 
   const handleResetOnboarding = () => {
-    if (confirm('This will clear your profile and habits. Are you sure?')) {
-      setIsOnboarded(false);
-      navigate('/onboarding');
+    setShowResetConfirm(true);
+  };
+
+  const handleConfirmReset = async () => {
+    setShowResetConfirm(false);
+    try {
+      await factoryReset();
+    } catch (error) {
+      console.error('Factory reset failed', error);
     }
+    setIsOnboarded(false);
+    navigate('/onboarding');
   };
 
   const handleRemoveAllHabits = () => {
@@ -68,6 +79,16 @@ export function Settings() {
       setIsTestingNotification(true);
       await sendTest();
       await refreshScheduledCount();
+      try {
+        if (Capacitor.getPlatform() !== 'web') {
+          const toastMod = await import('@capacitor/toast');
+          await toastMod?.Toast?.show?.({ text: 'You will receive the notification within 2 minutes.' });
+        } else if (typeof window !== 'undefined' && typeof window.alert === 'function') {
+          window.alert('You will receive the notification within 2 minutes.');
+        }
+      } catch (toastErr) {
+        console.warn('Failed to show toast', toastErr);
+      }
     } catch (error) {
       console.error('Error sending test notification:', error);
     } finally {
@@ -102,16 +123,16 @@ export function Settings() {
   }, [userName]);
 
   const SettingsSection = ({ title, children, icon }: { title: string; children: React.ReactNode; icon?: React.ReactNode }) => (
-    <div className="mb-8">
-      <div className="flex items-center gap-3 mb-6 px-2">
+    <div className="mb-8 w-full">
+      <div className="flex items-center gap-4 mb-6 px-2">
         {icon && (
-          <div className="w-8 h-8 bg-gradient-to-br from-primary/20 to-primary/10 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl flex items-center justify-center">
             {icon}
           </div>
         )}
-        <h3 className="font-semibold text-lg text-foreground">{title}</h3>
+        <h3 className="text-xl font-bold text-foreground">{title}</h3>
       </div>
-      <Card className="bg-gradient-to-br from-card to-card/50 border border-border shadow-sm">
+      <Card className="bg-gradient-to-br from-card to-card/50 border border-border shadow-sm rounded-2xl">
         <CardContent className="p-0">
           {children}
         </CardContent>
@@ -147,12 +168,12 @@ export function Settings() {
 
     return (
       <div 
-        className={`flex items-center gap-4 p-5 border-b border-border last:border-b-0 transition-all duration-200 ${
-          onClick ? `cursor-pointer ${getVariantStyles()}` : ''
+        className={`flex items-center gap-4 p-6 border-b border-border last:border-b-0 transition-all duration-300 ${
+          onClick ? `cursor-pointer active:scale-[0.98] ${getVariantStyles()}` : ''
         }`}
         onClick={onClick}
       >
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
           variant === 'danger' ? 'bg-red-100 dark:bg-red-900/30' :
           variant === 'success' ? 'bg-green-100 dark:bg-green-900/30' :
           'bg-muted/50'
@@ -166,13 +187,13 @@ export function Settings() {
           </div>
         </div>
         <div className="flex-1 min-w-0">
-          <p className={`font-semibold text-base ${
+          <p className={`font-bold text-lg ${
             variant === 'danger' ? 'text-red-700 dark:text-red-300' :
             variant === 'success' ? 'text-green-700 dark:text-green-300' :
             'text-foreground'
           }`}>{title}</p>
           {description && (
-            <p className={`text-sm mt-1 ${
+            <p className={`text-sm mt-1 font-medium ${
               variant === 'danger' ? 'text-red-600 dark:text-red-400' :
               variant === 'success' ? 'text-green-600 dark:text-green-400' :
               'text-muted-foreground'
@@ -190,37 +211,45 @@ export function Settings() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div 
+      className="flex flex-col min-h-screen bg-background w-full"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+      }}
+    >
       <AppBar title="Settings" />
 
-      <div className="flex-1 px-6 py-6 pb-32 pb-safe-area-bottom overflow-y-auto">
+      <div className="flex-1 px-6 py-6 pt-20 pb-24 w-full overflow-x-hidden overflow-y-auto">
         {/* Enhanced Profile Header */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-primary/3 to-transparent border border-primary/20 rounded-2xl mb-8 p-6">
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-primary/3 to-transparent border border-primary/20 rounded-3xl mb-8 p-8 w-full">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5" />
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/10 to-transparent rounded-full -translate-y-16 translate-x-16" />
+          <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-primary/10 to-transparent rounded-full -translate-y-20 translate-x-20" />
           
           <div className="relative">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl flex items-center justify-center shadow-lg">
-                <User className="w-8 h-8 text-primary" />
+            <div className="flex items-center gap-6 mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-3xl flex items-center justify-center shadow-lg">
+                <User className="w-10 h-10 text-primary" />
               </div>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-foreground mb-1">
+                <h2 className="text-3xl font-bold text-foreground mb-2">
                   {userName ? `Hello, ${userName}!` : 'Welcome!'}
                 </h2>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground font-medium text-base">
                   {userName ? 'Manage your account and preferences' : 'Set up your profile to get started'}
                 </p>
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
-              <Badge variant="secondary" className="px-3 py-1">
-                <Sparkles className="w-3 h-3 mr-1" />
+            <div className="flex items-center gap-4">
+              <Badge variant="secondary" className="px-4 py-2 rounded-full font-semibold">
+                <Sparkles className="w-4 h-4 mr-2" />
                 Seventh Path
               </Badge>
-              <Badge variant="outline" className="px-3 py-1">
-                <ShieldCheck className="w-3 h-3 mr-1" />
+              <Badge variant="outline" className="px-4 py-2 rounded-full font-semibold">
+                <ShieldCheck className="w-4 h-4 mr-2" />
                 Privacy First
               </Badge>
             </div>
@@ -354,48 +383,14 @@ export function Settings() {
           />
         </SettingsSection>
 
-        {/* Enhanced Preferences Section */}
-        <SettingsSection title="Preferences" icon={<Palette className="w-4 h-4 text-primary" />}>
-          <SettingsRow
-            icon={<Palette className="w-5 h-5" />}
-            title="Theme"
-            description="Choose your preferred appearance"
-            action={
-              <Select value={theme} onValueChange={setTheme}>
-                <SelectTrigger className="w-36 h-10">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="system">
-                    <div className="flex items-center gap-2">
-                      <Monitor className="w-4 h-4" />
-                      System
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="light">
-                    <div className="flex items-center gap-2">
-                      <Sun className="w-4 h-4" />
-                      Light
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="dark">
-                    <div className="flex items-center gap-2">
-                      <Moon className="w-4 h-4" />
-                      Dark
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            }
-          />
-        </SettingsSection>
 
         {/* Enhanced Data Section */}
         <SettingsSection title="Data & Storage" icon={<RotateCcw className="w-4 h-4 text-primary" />}>
           <SettingsRow
             icon={<RotateCcw className="w-5 h-5" />}
             title="Reset Onboarding"
-            description="Go through the setup process again"
+            description="Erase all habits, stats, and start fresh"
+            variant="danger"
             onClick={handleResetOnboarding}
           />
         </SettingsSection>
@@ -486,6 +481,28 @@ export function Settings() {
         </div>
       </div>
 
+      <Dialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
+        <DialogContent className="max-w-md rounded-3xl border border-red-200 dark:border-red-900/40">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-red-600 dark:text-red-400">
+              Are you sure?
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm text-muted-foreground">
+            <p>This action will permanently delete all of your habits, progress, and statistics. This cannot be undone.</p>
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 rounded-2xl p-4 text-red-700 dark:text-red-300 text-xs">
+              You’ll be returned to onboarding and must set everything up again.
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row sm:justify-end sm:gap-3 gap-2 pt-6">
+            <Button variant="outline" onClick={() => setShowResetConfirm(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleConfirmReset} className="bg-red-600 hover:bg-red-700">
+              Confirm Reset
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* About Modal */}
       <Dialog open={aboutOpen} onOpenChange={setAboutOpen}>
         <DialogContent className="p-0 max-w-md w-[92vw] overflow-hidden">
@@ -493,130 +510,150 @@ export function Settings() {
             {/* Sticky Header */}
             <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border">
               <div className="px-5 pt-5 pb-3 text-center">
-                <div className="mx-auto mb-3" style={{ width: 'min(100px, 28vw)' }}>
+                <div className="mx-auto mb-4" style={{ width: 'min(100px, 28vw)' }}>
                   <img src="/icon-192.png" alt="Seventh Path Logo" className="w-full h-auto mx-auto" />
                 </div>
                 <DialogHeader>
-                  <DialogTitle className="text-lg font-semibold">About Seventh Path</DialogTitle>
+                  <DialogTitle className="text-xl font-bold text-foreground">About Seventh Path</DialogTitle>
                 </DialogHeader>
-                <p className="text-sm text-muted-foreground">Journey of mindful habits</p>
-                <p className="text-xs text-muted-foreground mt-1">Version {version} (build 1)</p>
+                <p className="text-lg text-muted-foreground font-medium mt-2">Mindful habits. Meaningful change.</p>
+                <p className="text-sm text-muted-foreground mt-2">Version {version}</p>
               </div>
             </div>
 
             {/* Scrollable Body */}
             <div className="px-5 py-4 overflow-auto">
-              <section className="mb-4">
-                <h4 className="font-medium mb-1">What is Seventh Path?</h4>
-                <p className="text-sm text-muted-foreground">
-                  Seventh Path is a mindful habit tracker that turns small, consistent actions into long-term change. It helps you set clear reminders, build streaks, and see your progress at a glance—without clutter or distractions.
+              <section className="mb-6">
+                <h4 className="text-lg font-bold text-foreground mb-3">What is Seventh Path?</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Seventh Path is a mindful habit tracker that transforms small, consistent actions into lasting growth.
+                  With clear reminders, streak tracking, and simple progress insights, it helps you focus—without clutter or distractions.
                 </p>
               </section>
 
-              <section className="mb-4">
-                <h4 className="font-medium mb-1">Key Features</h4>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Track Progress: Daily/weekly habits with a simple completion flow.</li>
-                  <li>• Smart Reminders: Multiple custom times per habit (e.g., 08:00, 14:00, 21:00).</li>
-                  <li>• Streaks & Best Streak: Stay motivated with current and all-time best streaks.</li>
-                  <li>• Weekly Insights: Quick view of last 7 days and completion rates.</li>
-                  <li>• Offline-first: Works without internet; data is stored on your device.</li>
-                  <li>• Privacy-friendly: No account required by default.</li>
+              <section className="mb-6">
+                <h4 className="text-lg font-bold text-foreground mb-3">Key Features</h4>
+                <ul className="text-sm text-muted-foreground space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary font-bold">→</span>
+                    <span><strong>Track Progress</strong> → Daily & weekly habits with a clean completion flow.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary font-bold">→</span>
+                    <span><strong>Smart Reminders</strong> → Set multiple custom times per habit (e.g., 08:00, 14:00, 21:00).</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary font-bold">→</span>
+                    <span><strong>Streaks & Motivation</strong> → Build current streaks and celebrate your all-time best.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary font-bold">→</span>
+                    <span><strong>Weekly Insights</strong> → At-a-glance view of 7-day progress & completion rates.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary font-bold">→</span>
+                    <span><strong>Offline-First</strong> → Works without internet; your data stays on your device.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary font-bold">→</span>
+                    <span><strong>Privacy-Friendly</strong> → No account required. No data selling.</span>
+                  </li>
                 </ul>
               </section>
 
-              <section className="mb-4">
-                <h4 className="font-medium mb-1">How Reminders Work</h4>
-                <p className="text-sm text-muted-foreground">
-                  Set one or more times for each habit. When you mark a reminder as done, the app cancels that time’s notification for today. If you don’t mark it, the notification still fires at the scheduled time so you don’t miss it.
+              <section className="mb-6">
+                <h4 className="text-lg font-bold text-foreground mb-3">How Reminders Work</h4>
+                <div className="text-sm text-muted-foreground space-y-2">
+                  <p>Set one or more times for each habit.</p>
+                  <p>If you mark it done → That day's notification is cleared.</p>
+                  <p>If not → The reminder still fires at its scheduled time, so you never miss it.</p>
+                </div>
+              </section>
+
+              <section className="mb-6">
+                <h4 className="text-lg font-bold text-foreground mb-3">Streaks & Completion</h4>
+                <div className="text-sm text-muted-foreground space-y-2">
+                  <p>A day counts as complete when all reminders for a habit are done.</p>
+                  <p><strong>Current Streak</strong> → increases with each consecutive day.</p>
+                  <p><strong>Best Streak</strong> → your longest run ever.</p>
+                </div>
+              </section>
+
+              <section className="mb-6">
+                <h4 className="text-lg font-bold text-foreground mb-3">Data & Privacy</h4>
+                <div className="text-sm text-muted-foreground space-y-2">
+                  <p>Habits stored locally with @capacitor/preferences.</p>
+                  <p>Notifications via @capacitor/local-notifications (requires permission).</p>
+                  <p>No accounts, no tracking, no sharing.</p>
+                  <p>Resetting or uninstalling clears all local data.</p>
+                </div>
+              </section>
+
+              <section className="mb-6">
+                <h4 className="text-lg font-bold text-foreground mb-3">Permissions Used</h4>
+                <div className="text-sm text-muted-foreground">
+                  <p><strong>Notifications</strong> → To send habit reminders at your chosen times.</p>
+                </div>
+              </section>
+
+              <section className="mb-6">
+                <h4 className="text-lg font-bold text-foreground mb-3">Credits</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Seventh Path is designed and built by Pratik Prakash Brahmapurkar, blending mindful living with minimal, distraction-free design.
                 </p>
               </section>
 
-              <section className="mb-4">
-                <h4 className="font-medium mb-1">Streaks & Completion</h4>
-                <p className="text-sm text-muted-foreground">
-                  A day counts as completed when all reminders for that habit are done. Your current streak increases with each consecutive completed day; best streak is your longest run ever.
-                </p>
-              </section>
-
-              <section className="mb-4">
-                <h4 className="font-medium mb-1">Data & Privacy</h4>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Your habit data is stored locally using @capacitor/preferences.</li>
-                  <li>• Notifications use @capacitor/local-notifications and require your permission.</li>
-                  <li>• We do not sell or share your data.</li>
-                  <li>• If you reset or uninstall the app, local data is removed from the device.</li>
-                </ul>
-              </section>
-
-              <section className="mb-4">
-                <h4 className="font-medium mb-1">Permissions Used</h4>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Notifications: To send scheduled reminders at your chosen times.</li>
-                </ul>
-              </section>
-
-              <section className="mb-4">
-                <h4 className="font-medium mb-1">Credits</h4>
-                <p className="text-sm text-muted-foreground">
-                  Seventh Path is designed and built by Pratik Prakash Brahmapurkar. Brand, UI, and product strategy are crafted with care to support mindful living.
-                </p>
-              </section>
-
-              {/* New: About the Author */}
-              <section className="mb-4">
-                <h4 className="font-medium mb-1">About the Author</h4>
-                <div className="text-sm text-muted-foreground space-y-1">
-                  <p>Author: Pratik Prakash Brahmapurkar</p>
+              <section className="mb-6">
+                <h4 className="text-lg font-bold text-foreground mb-3">About the Author</h4>
+                <div className="text-sm text-muted-foreground space-y-2">
                   <p>Pratik is a product strategist, developer, and yoga teacher passionate about creating calm, useful software.</p>
-                  <p>Creator of Seventh Path—blending mindful living with minimal UX.</p>
+                  <p>Creator of Seventh Path.</p>
                   <p>
-                    Connect at{' '}
-                    <button
+                    Connect: <button
                       onClick={() => openLink('https://misterpb.in')}
-                      className="underline underline-offset-2 decoration-primary text-primary hover:opacity-90"
+                      className="underline underline-offset-2 decoration-primary text-primary hover:opacity-90 font-medium"
                       aria-label="Open website misterpb.in"
                       role="link"
                     >
                       misterpb.in
-                    </button>
-                    {' '}or{' '}
+                    </button> | Instagram{' '}
                     <button
                       onClick={() => openLink('https://instagram.com/mister.pb')}
-                      className="underline underline-offset-2 decoration-primary text-primary hover:opacity-90"
+                      className="underline underline-offset-2 decoration-primary text-primary hover:opacity-90 font-medium"
                       aria-label="Open Instagram profile @mister.pb"
                       role="link"
                     >
-                      Instagram @mister.pb
+                      @mister.pb
                     </button>
-                    .
                   </p>
                 </div>
               </section>
 
-              <section className="mb-4">
-                <h4 className="font-medium mb-1">Support & Feedback</h4>
-                <p className="text-sm text-muted-foreground">
-                  Questions or suggestions? Reach out at{' '}
-                  <button
-                    onClick={() => openLink('mailto:pbrahmapurkar@gmail.com')}
-                    className="underline underline-offset-2 decoration-primary text-primary hover:opacity-90"
-                    aria-label="Email support at pbrahmapurkar@gmail.com"
-                    role="link"
-                  >
-                    pbrahmapurkar@gmail.com
-                  </button>
-                  {' '}or visit{' '}
-                  <button
-                    onClick={() => openLink('https://misterpb.in')}
-                    className="underline underline-offset-2 decoration-primary text-primary hover:opacity-90"
-                    aria-label="Open misterpb.in website"
-                    role="link"
-                  >
-                    misterpb.in
-                  </button>
-                  . We’d love to hear from you.
-                </p>
+              <section className="mb-6">
+                <h4 className="text-lg font-bold text-foreground mb-3">Support & Feedback</h4>
+                <div className="text-sm text-muted-foreground space-y-2">
+                  <p>Questions or suggestions?</p>
+                  <p>
+                    📧 Email: <button
+                      onClick={() => openLink('mailto:pbrahmapurkar@gmail.com')}
+                      className="underline underline-offset-2 decoration-primary text-primary hover:opacity-90 font-medium"
+                      aria-label="Email support at pbrahmapurkar@gmail.com"
+                      role="link"
+                    >
+                      pbrahmapurkar@gmail.com
+                    </button>
+                  </p>
+                  <p>
+                    🌐 Website: <button
+                      onClick={() => openLink('https://misterpb.in')}
+                      className="underline underline-offset-2 decoration-primary text-primary hover:opacity-90 font-medium"
+                      aria-label="Open misterpb.in website"
+                      role="link"
+                    >
+                      misterpb.in
+                    </button>
+                  </p>
+                </div>
               </section>
 
               

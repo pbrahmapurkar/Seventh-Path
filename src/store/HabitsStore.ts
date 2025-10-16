@@ -1,11 +1,31 @@
-import { create } from 'zustand';
+import { create, type StateCreator } from 'zustand';
 import type { HabitDef as Habit, DayEntry as HabitDay, HabitStats } from '../lib/habits/types';
-import { toYMD, ensureDayEntry, getDayEntry, setDayEntry, getHabit, listHabits, updateHabit as repoUpdateHabit, createHabit as repoCreateHabit, deleteHabit as repoDeleteHabit, computeStats, addReminderTime, editReminderTime, deleteReminderTime, isDayComplete } from '../lib/habits';
-import { cancelTodayAtTime, rescheduleForHabit, scheduleNext7Days } from '../lib/notifications';
+import {
+  toYMD,
+  ensureDayEntry,
+  getDayEntry,
+  setDayEntry,
+  getHabit,
+  listHabits,
+  updateHabit as repoUpdateHabit,
+  createHabit as repoCreateHabit,
+  deleteHabit as repoDeleteHabit,
+  computeStats,
+  addReminderTime,
+  editReminderTime,
+  deleteReminderTime,
+  isDayComplete,
+  daysBetween,
+} from '../lib/habits';
+import { cancelTodayAtTime, rescheduleForHabit } from '../lib/notifications';
 import * as EventBus from '../lib/eventBus';
 import { Capacitor } from '@capacitor/core';
+import { clearCompletionCaches } from '../lib/completion';
 
-// Simple Preferences-backed JSON helpers
+// ---------------------------------------------------------------------------
+// Persistence helpers
+// ---------------------------------------------------------------------------
+
 async function setJSON(key: string, value: any): Promise<void> {
   const str = JSON.stringify(value);
   const anyWin: any = globalThis as any;
@@ -16,32 +36,28 @@ async function setJSON(key: string, value: any): Promise<void> {
     localStorage.setItem(key, str);
   }
 }
+
 async function getJSON<T = any>(key: string): Promise<T | null> {
   const anyWin: any = globalThis as any;
   const prefs = anyWin?.Capacitor?.Plugins?.Preferences;
   if (prefs && Capacitor.getPlatform() !== 'web') {
     const res = await prefs.get({ key });
-    return res?.value ? JSON.parse(res.value) as T : null;
+    return res?.value ? (JSON.parse(res.value) as T) : null;
   }
   const raw = localStorage.getItem(key);
-  return raw ? JSON.parse(raw) as T : null;
-}
-async function removeKey(key: string): Promise<void> {
-  const anyWin: any = globalThis as any;
-  const prefs = anyWin?.Capacitor?.Plugins?.Preferences;
-  if (prefs && Capacitor.getPlatform() !== 'web') {
-    await prefs.remove({ key });
-  } else {
-    localStorage.removeItem(key);
-  }
+  return raw ? (JSON.parse(raw) as T) : null;
 }
 
 // Keys
 const statsKey = (id: string) => `habit:${id}:stats`;
 const dayKey = (id: string, ymd: string) => `habit:${id}:day:${ymd}`;
+const completionLogKey = 'habit:completion-log';
 
-// Events
-export type HabitEventName = 
+// ---------------------------------------------------------------------------
+// Event system
+// ---------------------------------------------------------------------------
+
+export type HabitEventName =
   | 'habit.created'
   | 'habit.updated'
   | 'habit.reminders.updated'
@@ -62,16 +78,34 @@ const subscribers: Record<HabitEventName, Set<Handler>> = {
   'notifications.rescheduled': new Set(),
   'day.changed': new Set(),
 };
+
 export function on(event: HabitEventName, handler: Handler) {
   subscribers[event].add(handler);
   return () => subscribers[event].delete(handler);
 }
+
 function emit(event: HabitEventName, payload?: any) {
-  for (const h of subscribers[event]) try { h(payload); } catch { /* ignore */ }
+  for (const h of subscribers[event]) {
+    try {
+      h(payload);
+    } catch {
+      // ignore handler failures
+    }
+  }
 }
 
-// Store
+// ---------------------------------------------------------------------------
+// State definition
+// ---------------------------------------------------------------------------
+
 export type HydrationState = 'idle' | 'hydrating' | 'ready';
+
+export interface CompletionLogEntry {
+  habitId: string;
+  date: string;
+  action: 'completed' | 'uncompleted';
+  timestamp: string;
+}
 
 interface HabitsStoreState {
   hydrationState: HydrationState;
@@ -79,243 +113,524 @@ interface HabitsStoreState {
   habitsById: Record<string, Habit>;
   habitDaysByKey: Record<string, HabitDay>;
   statsById: Record<string, HabitStats>;
-  hydrateAll: () => Promise<void>;
+  completionLog: CompletionLogEntry[];
+  _completionCacheVersion: number;
+  _hasHydrated: boolean;
+  hydrateAll: (force?: boolean) => Promise<void>;
   addHabit: (habit: Habit) => Promise<void>;
   toggleTime: (habitId: string, time: string, date?: string) => Promise<void>;
   markAllDone: (habitId: string, date?: string) => Promise<void>;
+  toggleCompletionForDate: (habitId: string, ymd: string) => Promise<void>;
   addReminder: (habitId: string, time: string) => Promise<void>;
   editReminder: (habitId: string, oldTime: string, newTime: string) => Promise<void>;
   removeReminder: (habitId: string, time: string) => Promise<void>;
   editHabit: (patch: Partial<Habit> & { id: string }) => Promise<void>;
   deleteHabit: (habitId: string) => Promise<void>;
-  recomputeStats: (habitId: string) => Promise<void>;
   rescheduleNotifications: (habitId: string) => Promise<void>;
   clearAllHabits: () => Promise<void>;
+  factoryReset: () => Promise<void>;
 }
 
-export const useHabitsStore = create<HabitsStoreState>()((set, get) => ({
-  hydrationState: 'idle',
-  lastHydratedYMD: null,
-  habitsById: {},
-  habitDaysByKey: {},
-  statsById: {},
+// ---------------------------------------------------------------------------
+// Pure helpers
+// ---------------------------------------------------------------------------
 
-  hydrateAll: async () => {
-    if (get().hydrationState === 'hydrating') return;
-    set({ hydrationState: 'hydrating' });
-    const habits = await listHabits();
-    const habitsById: Record<string, Habit> = {};
-    const statsById: Record<string, HabitStats> = {};
-    const habitDaysByKey: Record<string, HabitDay> = {};
-    const today = toYMD(new Date());
-    for (const h of habits) {
-      habitsById[h.id] = h;
-      const s = await getJSON<HabitStats>(statsKey(h.id));
-      statsById[h.id] = s ?? await computeStats(h);
-      // Ensure today entry exists
-      const entry = await ensureDayEntry(h, today);
-      habitDaysByKey[dayKey(h.id, today)] = entry;
+function createEmptyDayEntry(habit: Habit, ymd: string): HabitDay {
+  const reminders =
+    habit.reminderTimes && habit.reminderTimes.length > 0
+      ? habit.reminderTimes.map((time) => ({ time, done: false }))
+      : [{ time: 'default', done: false }];
+
+  return {
+    habitId: habit.id,
+    date: ymd,
+    reminders,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function computeStatsFromSnapshot(habit: Habit, days: Record<string, HabitDay>): HabitStats {
+  const today = new Date();
+  const createdAt = new Date(habit.createdAt);
+  const totalDays = Math.max(1, daysBetween(createdAt, today) + 1);
+
+  let totalCompletedDays = 0;
+  let bestStreak = 0;
+  let rollingStreak = 0;
+  let currentStreak = 0;
+
+  for (let i = 0; i < totalDays; i += 1) {
+    const d = new Date(createdAt.getTime() + i * 24 * 60 * 60 * 1000);
+    const ymd = toYMD(d);
+    const entry = days[dayKey(habit.id, ymd)];
+    const complete = entry ? isDayComplete(entry) : false;
+
+    if (complete) {
+      rollingStreak += 1;
+      totalCompletedDays += 1;
+      bestStreak = Math.max(bestStreak, rollingStreak);
+    } else {
+      rollingStreak = 0;
     }
-    set({ habitsById, statsById, habitDaysByKey, hydrationState: 'ready', lastHydratedYMD: today });
-  },
 
-  addHabit: async (habit) => {
-    const state = get();
-    const today = toYMD(new Date());
-    
-    // Add habit to store
-    const updatedHabitsById = { ...state.habitsById, [habit.id]: habit };
-    
-    // Compute initial stats for the new habit
-    const stats = await computeStats(habit);
-    const updatedStatsById = { ...state.statsById, [habit.id]: stats };
-    
-    // Ensure today entry exists for the new habit
-    const entry = await ensureDayEntry(habit, today);
-    const updatedHabitDaysByKey = { ...state.habitDaysByKey, [dayKey(habit.id, today)]: entry };
-    
-    // Update store state
-    set({ 
-      habitsById: updatedHabitsById, 
-      statsById: updatedStatsById, 
-      habitDaysByKey: updatedHabitDaysByKey 
+    if (toYMD(d) === toYMD(today)) {
+      currentStreak = complete ? rollingStreak : 0;
+    }
+  }
+
+  const weeklyProgress: HabitStats['weeklyProgress'] = [];
+  for (let i = 6; i >= 0; i -= 1) {
+    const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+    const ymd = toYMD(d);
+    const entry = days[dayKey(habit.id, ymd)];
+    weeklyProgress.push({ date: ymd, complete: entry ? isDayComplete(entry) : false });
+  }
+
+  const completionRate = Math.round((totalCompletedDays / totalDays) * 100);
+
+  return {
+    currentStreak,
+    bestStreak,
+    completionRate,
+    totalCompletedDays,
+    weeklyProgress,
+  };
+}
+
+async function persistStateSnapshot(state: HabitsStoreState): Promise<void> {
+  const statWrites = Object.entries(state.statsById).map(([habitId, stats]) => setJSON(statsKey(habitId), stats));
+  const dayWrites = Object.values(state.habitDaysByKey).map((entry) => setDayEntry(entry));
+  const logWrite = setJSON(completionLogKey, state.completionLog);
+  await Promise.all([...statWrites, ...dayWrites, logWrite]);
+}
+
+// ---------------------------------------------------------------------------
+// Store implementation
+// ---------------------------------------------------------------------------
+
+const createHabitsStore: StateCreator<HabitsStoreState> = (set, get) => {
+  const commitHabitDayUpdate = async (habit: Habit, entry: HabitDay, logEntry?: CompletionLogEntry) => {
+    let completedTimes: string[] = [];
+    let snapshot: HabitsStoreState | null = null;
+
+    set((current) => {
+      const nextHabitDays = { ...current.habitDaysByKey, [dayKey(habit.id, entry.date)]: entry };
+      const nextStatsById = { ...current.statsById };
+      nextStatsById[habit.id] = computeStatsFromSnapshot(habit, nextHabitDays);
+      completedTimes = entry.reminders.filter((r) => r.done).map((r) => r.time);
+      const nextCompletionLog = logEntry
+        ? [...current.completionLog, logEntry]
+        : current.completionLog;
+
+      const nextState: HabitsStoreState = {
+        ...current,
+        habitDaysByKey: nextHabitDays,
+        statsById: nextStatsById,
+        completionLog: nextCompletionLog,
+        _completionCacheVersion: current._completionCacheVersion + 1,
+      };
+
+      snapshot = nextState;
+      return nextState;
     });
-    
-    // Emit events for UI updates
-    emit('habit.created', { habitId: habit.id });
-    EventBus.emit('habit:created', { habit });
-    
-    // Save stats to persistence
-    await setJSON(statsKey(habit.id), stats);
-  },
 
-  toggleTime: async (habitId, time, date) => {
-    const state = get();
-    const d = date ?? toYMD(new Date());
-    const habit = state.habitsById[habitId] || await getHabit(habitId);
-    if (!habit) return;
-    const entry = (await getDayEntry(habit.id, d)) ?? await ensureDayEntry(habit, d);
-    const hasAny = (habit.reminderTimes?.length ?? 0) > 0;
-    const actualTime = hasAny ? time : 'default';
-    const nextReminders = (() => {
-      const existing = entry.reminders.find(r => r.time === actualTime);
-      if (existing) {
-        return entry.reminders.map(r => r.time === actualTime ? { ...r, done: !r.done } : r);
+    const finalState = snapshot ?? get();
+    await persistStateSnapshot(finalState);
+
+    emit('habit.day.updated', { habitId: habit.id, date: entry.date, entry });
+    EventBus.emit('habit:completion-changed', {
+      habitId: habit.id,
+      date: entry.date,
+      completedTimes,
+    });
+    clearCompletionCaches();
+  };
+
+  return {
+    hydrationState: 'idle',
+    lastHydratedYMD: null,
+    habitsById: {},
+    habitDaysByKey: {},
+    statsById: {},
+    completionLog: [],
+    _completionCacheVersion: 0,
+    _hasHydrated: false,
+
+    hydrateAll: async (force = false) => {
+      const state = get();
+      if (!force && (state.hydrationState === 'hydrating' || state._hasHydrated)) return;
+      set({ hydrationState: 'hydrating' });
+
+      const habits = await listHabits();
+      const habitsById: Record<string, Habit> = {};
+      const statsById: Record<string, HabitStats> = {};
+      const habitDaysByKey: Record<string, HabitDay> = {};
+      const todayDate = new Date();
+      const today = toYMD(todayDate);
+      const persistedLog = (await getJSON<CompletionLogEntry[]>(completionLogKey)) ?? [];
+      const lookbackDays = 90;
+      const dateWindow: string[] = [];
+
+      for (let offset = 0; offset < lookbackDays; offset += 1) {
+        const d = new Date(todayDate);
+        d.setDate(todayDate.getDate() - offset);
+        dateWindow.push(toYMD(d));
       }
-      return [...entry.reminders, { time: actualTime, done: true }];
-    })();
-    const nextEntry: HabitDay = { ...entry, reminders: nextReminders, updatedAt: new Date().toISOString() };
-    // Optimistic update
-    set({ habitDaysByKey: { ...state.habitDaysByKey, [dayKey(habit.id, d)]: nextEntry } });
-    await setDayEntry(nextEntry);
-    emit('habit.day.updated', { habitId, date: d, entry: nextEntry });
-    // Emit public event for app-wide sync
-    EventBus.emit('habit:completion-changed', { habitId, date: d, completedTimes: nextEntry.reminders.filter(r=>r.done).map(r=>r.time) });
-    // Cancel today's single notification if marking done
-    const nowChecked = nextReminders.find(r => r.time === actualTime)?.done;
-    if (nowChecked && d === toYMD(new Date())) await cancelTodayAtTime(habit.id, actualTime);
-    await get().recomputeStats(habitId);
-  },
 
-  markAllDone: async (habitId, date) => {
-    const state = get();
-    const d = date ?? toYMD(new Date());
-    const habit = state.habitsById[habitId] || await getHabit(habitId);
-    if (!habit) return;
-    const entry = (await getDayEntry(habit.id, d)) ?? await ensureDayEntry(habit, d);
-    const reminders = entry.reminders.length > 0 ? entry.reminders : [{ time: 'default', done: true }];
-    const next: HabitDay = { ...entry, reminders: reminders.map(r => ({ ...r, done: true })), updatedAt: new Date().toISOString() };
-    set({ habitDaysByKey: { ...state.habitDaysByKey, [dayKey(habit.id, d)]: next } });
-    await setDayEntry(next);
-    emit('habit.day.updated', { habitId, date: d, entry: next });
-    EventBus.emit('habit:completion-changed', { habitId, date: d, completedTimes: next.reminders.filter(r=>r.done).map(r=>r.time) });
-    if (d === toYMD(new Date())) {
-      for (const r of next.reminders) await cancelTodayAtTime(habit.id, r.time);
-    }
-    await get().recomputeStats(habitId);
-  },
+      for (const habit of habits) {
+        habitsById[habit.id] = habit;
+        const storedStats = await getJSON<HabitStats>(statsKey(habit.id));
+        statsById[habit.id] = storedStats ?? (await computeStats(habit));
+        for (const ymd of dateWindow) {
+          const entry =
+            ymd === today
+              ? await ensureDayEntry(habit, ymd)
+              : await getDayEntry(habit.id, ymd);
+          if (entry) {
+            habitDaysByKey[dayKey(habit.id, ymd)] = entry;
+          }
+        }
+      }
 
-  addReminder: async (habitId, time) => {
-    const state = get();
-    const habit = state.habitsById[habitId];
-    if (!habit) return;
-    const updated = await addReminderTime(habit, time);
-    set({ habitsById: { ...state.habitsById, [habitId]: updated } });
-    emit('habit.reminders.updated', { habitId });
-    EventBus.emit('habit:updated', { habit: updated });
-    // Ensure today's entry reflects new time
-    const ymd = toYMD(new Date());
-    const entry = await ensureDayEntry(updated, ymd);
-    set({ habitDaysByKey: { ...state.habitDaysByKey, [dayKey(habitId, ymd)]: entry } });
-    await get().recomputeStats(habitId);
-    await get().rescheduleNotifications(habitId);
-  },
+      set((current) => ({
+        hydrationState: 'ready',
+        lastHydratedYMD: today,
+        habitsById,
+        habitDaysByKey,
+        statsById,
+        completionLog: persistedLog,
+        _completionCacheVersion: 0,
+        _hasHydrated: true,
+      }));
+    },
 
-  editReminder: async (habitId, oldTime, newTime) => {
-    const state = get();
-    const habit = state.habitsById[habitId];
-    if (!habit) return;
-    const updated = await editReminderTime(habit, oldTime, newTime);
-    set({ habitsById: { ...state.habitsById, [habitId]: updated } });
-    emit('habit.reminders.updated', { habitId });
-    EventBus.emit('habit:updated', { habit: updated });
-    const ymd = toYMD(new Date());
-    const entry = await ensureDayEntry(updated, ymd);
-    set({ habitDaysByKey: { ...state.habitDaysByKey, [dayKey(habitId, ymd)]: entry } });
-    await get().recomputeStats(habitId);
-    await get().rescheduleNotifications(habitId);
-  },
+    addHabit: async (habit) => {
+      const today = toYMD(new Date());
+      const entry = await ensureDayEntry(habit, today);
+      const stats = await computeStatsFromSnapshot(habit, {
+        [dayKey(habit.id, today)]: entry,
+      });
 
-  removeReminder: async (habitId, time) => {
-    const state = get();
-    const habit = state.habitsById[habitId];
-    if (!habit) return;
-    const updated = await deleteReminderTime(habit, time);
-    set({ habitsById: { ...state.habitsById, [habitId]: updated } });
-    emit('habit.reminders.updated', { habitId });
-    EventBus.emit('habit:updated', { habit: updated });
-    const ymd = toYMD(new Date());
-    const entry = await ensureDayEntry(updated, ymd);
-    set({ habitDaysByKey: { ...state.habitDaysByKey, [dayKey(habitId, ymd)]: entry } });
-    await get().recomputeStats(habitId);
-    await get().rescheduleNotifications(habitId);
-  },
+      set((current) => ({
+        habitsById: { ...current.habitsById, [habit.id]: habit },
+        habitDaysByKey: { ...current.habitDaysByKey, [dayKey(habit.id, today)]: entry },
+        statsById: { ...current.statsById, [habit.id]: stats },
+        _completionCacheVersion: current._completionCacheVersion + 1,
+      }));
 
-  editHabit: async (patch) => {
-    const state = get();
-    const current = state.habitsById[patch.id] || await getHabit(patch.id);
-    if (!current) return;
-    const updated = await repoUpdateHabit(patch.id, patch as Partial<Habit>);
-    if (!updated) return;
-    set({ habitsById: { ...state.habitsById, [patch.id]: updated } });
-    emit('habit.updated', { habitId: patch.id });
-    EventBus.emit('habit:updated', { habit: updated });
-    await get().recomputeStats(patch.id);
-    // If scheduling-related fields changed, reschedule
-    if (patch.hasOwnProperty('reminderTimes') || patch.hasOwnProperty('frequency') || (patch as any).hasOwnProperty('weeklyDays')) {
-      await get().rescheduleNotifications(patch.id);
-    }
-  },
+      await persistStateSnapshot(get());
+      emit('habit.created', { habitId: habit.id });
+      EventBus.emit('habit:created', { habit });
+      clearCompletionCaches();
+    },
 
-  deleteHabit: async (habitId) => {
-    const state = get();
-    const { [habitId]: _, ...rest } = state.habitsById;
-    set({ habitsById: rest });
-    await repoDeleteHabit(habitId);
-    // Clear days and stats in memory
-    const nextDays = { ...state.habitDaysByKey };
-    Object.keys(nextDays).forEach(k => { if (k.startsWith(`habit:${habitId}:day:`)) delete nextDays[k]; });
-    const nextStats = { ...state.statsById }; delete nextStats[habitId];
-    set({ habitDaysByKey: nextDays, statsById: nextStats });
-    emit('habit.deleted', { habitId });
-    EventBus.emit('habit:deleted', { habitId });
-  },
+    toggleTime: async (habitId, time, date) => {
+      const state = get();
+      const targetDate = date ?? toYMD(new Date());
+      const habit = state.habitsById[habitId] || (await getHabit(habitId));
+      if (!habit) return;
 
-  recomputeStats: async (habitId) => {
-    const habit = get().habitsById[habitId] || await getHabit(habitId);
-    if (!habit) return;
-    const stats = await computeStats(habit);
-    set({ statsById: { ...get().statsById, [habitId]: stats } });
-    await setJSON(statsKey(habitId), stats);
-    emit('stats.updated', { habitId });
-    // no external event; stats are derived but screens can recompute on completion-changed
-  },
+      const key = dayKey(habitId, targetDate);
+      const existing = state.habitDaysByKey[key] ?? createEmptyDayEntry(habit, targetDate);
+      const baseReminders =
+        existing.reminders.length > 0 ? existing.reminders : createEmptyDayEntry(habit, targetDate).reminders;
 
-  rescheduleNotifications: async (habitId) => {
-    const habit = get().habitsById[habitId] || await getHabit(habitId);
-    if (!habit) return;
-    await rescheduleForHabit(habit);
-    // Cancel today's completed slots
-    const today = toYMD(new Date());
-    const entry = await getDayEntry(habitId, today);
-    if (entry) {
-      for (const r of entry.reminders) if (r.done) await cancelTodayAtTime(habitId, r.time);
-    }
-    emit('notifications.rescheduled', { habitId });
-  },
+      const hasAnyConfigured = (habit.reminderTimes?.length ?? 0) > 0;
+      const targetTime = hasAnyConfigured ? time : 'default';
 
-  clearAllHabits: async () => {
-    // Reset in-memory state
-    set({ habitsById: {}, habitDaysByKey: {}, statsById: {}, hydrationState: 'ready', lastHydratedYMD: toYMD(new Date()) });
-    // Clear persistence
-    try {
-      const { clearAllHabitsPersistent } = await import('../lib/habits');
-      await clearAllHabitsPersistent();
-    } catch {}
-    // Emit events that everything is gone
-    emit('habit.deleted');
-    emit('stats.updated');
-    EventBus.emit('habits:cleared');
-  },
-}));
+      const nextReminders = baseReminders.map((r) =>
+        r.time === targetTime ? { ...r, done: !r.done } : r,
+      );
+      const updatedEntry: HabitDay = {
+        ...existing,
+        reminders: nextReminders,
+        updatedAt: new Date().toISOString(),
+      };
 
-// Helper for consumers to compute today progress quickly
-export function getTodayProgress(habitId: string, state?: HabitsStoreState): { total: number; done: number; complete: boolean } {
-  const s = state || useHabitsStore.getState();
+      const wasComplete = baseReminders.length > 0 && baseReminders.every((r) => r.done);
+      const isComplete = nextReminders.length > 0 && nextReminders.every((r) => r.done);
+      const logEntry: CompletionLogEntry | undefined =
+        wasComplete !== isComplete
+          ? {
+              habitId,
+              date: targetDate,
+              action: isComplete ? 'completed' : 'uncompleted',
+              timestamp: new Date().toISOString(),
+            }
+          : undefined;
+
+      await commitHabitDayUpdate(habit, updatedEntry, logEntry);
+
+      const flipped = nextReminders.find((r) => r.time === targetTime);
+      if (flipped?.done && targetDate === toYMD(new Date())) {
+        await cancelTodayAtTime(habitId, targetTime);
+      }
+    },
+
+    markAllDone: async (habitId, date) => {
+      const state = get();
+      const targetDate = date ?? toYMD(new Date());
+      const habit = state.habitsById[habitId] || (await getHabit(habitId));
+      if (!habit) return;
+
+      const key = dayKey(habitId, targetDate);
+      const existing = state.habitDaysByKey[key] ?? createEmptyDayEntry(habit, targetDate);
+      const baseReminders =
+        existing.reminders.length > 0 ? existing.reminders : createEmptyDayEntry(habit, targetDate).reminders;
+
+      const nextReminders = baseReminders.map((r) => ({ ...r, done: true }));
+      const updatedEntry: HabitDay = {
+        ...existing,
+        reminders: nextReminders,
+        updatedAt: new Date().toISOString(),
+      };
+
+      const logEntry: CompletionLogEntry = {
+        habitId,
+        date: targetDate,
+        action: 'completed',
+        timestamp: new Date().toISOString(),
+      };
+
+      await commitHabitDayUpdate(habit, updatedEntry, logEntry);
+
+      if (targetDate === toYMD(new Date())) {
+        for (const reminder of nextReminders) {
+          await cancelTodayAtTime(habitId, reminder.time);
+        }
+      }
+    },
+
+    toggleCompletionForDate: async (habitId, ymd) => {
+      const state = get();
+      const habit = state.habitsById[habitId] || (await getHabit(habitId));
+      if (!habit) return;
+
+      const key = dayKey(habitId, ymd);
+      const existing = state.habitDaysByKey[key] ?? createEmptyDayEntry(habit, ymd);
+      const baseReminders =
+        existing.reminders.length > 0 ? existing.reminders : createEmptyDayEntry(habit, ymd).reminders;
+      const shouldComplete = !baseReminders.every((r) => r.done);
+
+      const nextReminders = baseReminders.map((r) => ({ ...r, done: shouldComplete }));
+      const updatedEntry: HabitDay = {
+        ...existing,
+        reminders: nextReminders,
+        updatedAt: new Date().toISOString(),
+      };
+
+      const logEntry: CompletionLogEntry = {
+        habitId,
+        date: ymd,
+        action: shouldComplete ? 'completed' : 'uncompleted',
+        timestamp: new Date().toISOString(),
+      };
+
+      await commitHabitDayUpdate(habit, updatedEntry, logEntry);
+    },
+
+    addReminder: async (habitId, time) => {
+      const state = get();
+      const habit = state.habitsById[habitId];
+      if (!habit) return;
+      const updatedHabit = await addReminderTime(habit, time);
+
+      set((current) => ({
+        habitsById: { ...current.habitsById, [habitId]: updatedHabit },
+      }));
+
+      const ymd = toYMD(new Date());
+      const entry = await ensureDayEntry(updatedHabit, ymd);
+      await commitHabitDayUpdate(updatedHabit, entry);
+
+      emit('habit.reminders.updated', { habitId });
+      EventBus.emit('habit:updated', { habit: updatedHabit });
+    },
+
+    editReminder: async (habitId, oldTime, newTime) => {
+      const state = get();
+      const habit = state.habitsById[habitId];
+      if (!habit) return;
+      const updatedHabit = await editReminderTime(habit, oldTime, newTime);
+
+      set((current) => ({
+        habitsById: { ...current.habitsById, [habitId]: updatedHabit },
+      }));
+
+      const ymd = toYMD(new Date());
+      const entry = await ensureDayEntry(updatedHabit, ymd);
+      await commitHabitDayUpdate(updatedHabit, entry);
+
+      emit('habit.reminders.updated', { habitId });
+      EventBus.emit('habit:updated', { habit: updatedHabit });
+      await get().rescheduleNotifications(habitId);
+    },
+
+    removeReminder: async (habitId, time) => {
+      const state = get();
+      const habit = state.habitsById[habitId];
+      if (!habit) return;
+      const updatedHabit = await deleteReminderTime(habit, time);
+
+      set((current) => ({
+        habitsById: { ...current.habitsById, [habitId]: updatedHabit },
+      }));
+
+      const ymd = toYMD(new Date());
+      const entry = await ensureDayEntry(updatedHabit, ymd);
+      await commitHabitDayUpdate(updatedHabit, entry);
+
+      emit('habit.reminders.updated', { habitId });
+      EventBus.emit('habit:updated', { habit: updatedHabit });
+      await get().rescheduleNotifications(habitId);
+    },
+
+    editHabit: async (patch) => {
+      const state = get();
+      const currentHabit = state.habitsById[patch.id] || (await getHabit(patch.id));
+      if (!currentHabit) return;
+      const updated = await repoUpdateHabit(patch.id, patch as Partial<Habit>);
+      if (!updated) return;
+
+      set((current) => ({
+        habitsById: { ...current.habitsById, [patch.id]: updated },
+      }));
+
+      const ymd = toYMD(new Date());
+      const entry = state.habitDaysByKey[dayKey(patch.id, ymd)];
+      if (entry) {
+        await commitHabitDayUpdate(updated, entry);
+      } else {
+        await persistStateSnapshot(get());
+      }
+
+      emit('habit.updated', { habitId: patch.id });
+      EventBus.emit('habit:updated', { habit: updated });
+
+      if (
+        Object.prototype.hasOwnProperty.call(patch, 'reminderTimes') ||
+        Object.prototype.hasOwnProperty.call(patch, 'frequency') ||
+        Object.prototype.hasOwnProperty.call(patch, 'weeklyDays')
+      ) {
+        await get().rescheduleNotifications(patch.id);
+      }
+    },
+
+    deleteHabit: async (habitId) => {
+      set((current) => {
+        const { [habitId]: _, ...rest } = current.habitsById;
+        return { habitsById: rest };
+      });
+      await repoDeleteHabit(habitId);
+
+      set((current) => {
+        const nextDays = { ...current.habitDaysByKey };
+        Object.keys(nextDays)
+          .filter((key) => key.startsWith(`habit:${habitId}:day:`))
+          .forEach((key) => delete nextDays[key]);
+
+        const nextStats = { ...current.statsById };
+        delete nextStats[habitId];
+
+        return {
+          habitDaysByKey: nextDays,
+          statsById: nextStats,
+          _completionCacheVersion: current._completionCacheVersion + 1,
+        };
+      });
+
+      await persistStateSnapshot(get());
+      emit('habit.deleted', { habitId });
+      EventBus.emit('habit:deleted', { habitId });
+    },
+
+    rescheduleNotifications: async (habitId) => {
+      const habit = get().habitsById[habitId] || (await getHabit(habitId));
+      if (!habit) return;
+      await rescheduleForHabit(habit);
+      const today = toYMD(new Date());
+      const entry = await getDayEntry(habitId, today);
+      if (entry) {
+        for (const reminder of entry.reminders) {
+          if (reminder.done) {
+            await cancelTodayAtTime(habitId, reminder.time);
+          }
+        }
+      }
+      emit('notifications.rescheduled', { habitId });
+    },
+
+    clearAllHabits: async () => {
+      set({
+        habitsById: {},
+        habitDaysByKey: {},
+        statsById: {},
+        completionLog: [],
+        hydrationState: 'ready',
+        lastHydratedYMD: toYMD(new Date()),
+        _completionCacheVersion: 0,
+        _hasHydrated: true,
+      });
+      await persistStateSnapshot(get());
+      emit('habit.deleted');
+      emit('stats.updated');
+      EventBus.emit('habits:cleared');
+    },
+
+    factoryReset: async () => {
+      const today = toYMD(new Date());
+      set({
+        hydrationState: 'idle',
+        lastHydratedYMD: today,
+        habitsById: {},
+        habitDaysByKey: {},
+        statsById: {},
+        completionLog: [],
+        _completionCacheVersion: 0,
+        _hasHydrated: false,
+      });
+      await persistStateSnapshot(get());
+      clearCompletionCaches();
+      emit('habit.deleted');
+      emit('stats.updated');
+      EventBus.emit('habits:cleared');
+    },
+  };
+};
+
+const withWriteAudit = (creator: StateCreator<HabitsStoreState>): StateCreator<HabitsStoreState> => {
+  return (set, get, api) => {
+    const auditedSet: typeof set = (partial, replace) => {
+      const before = get().habitDaysByKey;
+      set(partial as any, replace);
+      const after = get().habitDaysByKey;
+      if (before !== after) {
+        const frame = (new Error()).stack?.split('\n')[2]?.trim() ?? 'unknown';
+        console.log('[AUDIT] habitDaysByKey changed by:', frame, 'replace=', !!replace);
+      }
+      if (replace) {
+        console.warn('[AUDIT] replace=true used; verify it does not drop slices');
+      }
+    };
+    return creator(auditedSet, get, api);
+  };
+};
+
+export const useHabitsStore = create<HabitsStoreState>()(withWriteAudit(createHabitsStore));
+
+// ---------------------------------------------------------------------------
+// Selectors
+// ---------------------------------------------------------------------------
+
+export function getTodayProgress(
+  habitId: string,
+  state?: HabitsStoreState,
+): { total: number; done: number; complete: boolean } {
+  const snapshot = state ?? useHabitsStore.getState();
   const today = toYMD(new Date());
-  const entry = s.habitDaysByKey[dayKey(habitId, today)];
+  const entry = snapshot.habitDaysByKey[dayKey(habitId, today)];
   if (!entry) return { total: 0, done: 0, complete: false };
   const total = entry.reminders.length;
-  const done = entry.reminders.filter(r => r.done).length;
+  const done = entry.reminders.filter((r) => r.done).length;
   return { total, done, complete: total > 0 && done === total };
 }

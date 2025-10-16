@@ -5,9 +5,10 @@ import { Switch } from '../components/ui/switch';
 import { useAppShell } from '../components/AppShell';
 import { useNotifications } from '../providers/notificationProvider';
 import { NotificationPermissionBanner } from '../components/ReminderTimePicker';
-import { getOnboardingSelected, getHabit, setOnboardingComplete } from '../lib/habits';
+import { getOnboardingSelected, setOnboardingComplete } from '../lib/habits';
 import { useHabitsStore } from '../store/HabitsStore';
 import { Bell, BellOff, CheckCircle, AlertCircle, Plus, Clock, ArrowRight, Sparkles, Zap } from 'lucide-react';
+import '../styles/onboarding.css';
 
 export function OnboardingReminder() {
   const { navigate, setIsOnboarded } = useAppShell();
@@ -129,57 +130,64 @@ export function OnboardingReminder() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div
+      className="onboarding-intro bg-background min-h-screen w-full flex flex-col"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+      }}
+    >
       {/* Progress Header */}
-      <div className="flex items-center justify-between px-6 py-4 pt-safe-area-top">
-        <div className="flex gap-2">
-          <div className="w-8 h-1 bg-primary rounded-full" />
-          <div className="w-8 h-1 bg-primary rounded-full" />
-          <div className="w-8 h-1 bg-primary rounded-full" />
-          <div className="w-8 h-1 bg-primary rounded-full" />
+      <div className="intro-header flex-shrink-0">
+        <div className="intro-progress-bars" aria-hidden="true">
+          <span className="bar bar-active" />
+          <span className="bar bar-active" />
+          <span className="bar bar-active" />
+          <span className="bar bar-active" />
         </div>
-        <span className="text-sm text-muted-foreground">4 of 4</span>
+        <span className="intro-step text-muted-foreground">4 of 4</span>
       </div>
       {/* Content */}
-      <div className="flex-1 px-6 py-6">
-        {/* Header Section */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-2xl mb-4">
-            <Bell className="w-8 h-8 text-primary" />
-          </div>
-          <h1 className="text-3xl font-bold mb-4">Set your reminder time</h1>
-          <p className="text-muted-foreground text-lg">
-            Choose when you'd like to be reminded about your habits each day.
-          </p>
-        </div>
-
-        {/* Enable/Disable Reminders */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between p-6 bg-gradient-to-r from-card to-card/50 border border-border rounded-2xl shadow-sm">
-            <div className="flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
-                enableReminders ? 'bg-primary/20' : 'bg-muted/50'
-              }`}>
-                {enableReminders ? (
-                  <Bell className="w-6 h-6 text-primary" />
-                ) : (
-                  <BellOff className="w-6 h-6 text-muted-foreground" />
-                )}
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg">Enable daily reminders</h3>
-                <p className="text-sm text-muted-foreground">
-                  Get gentle notifications to stay on track
-                </p>
-              </div>
+      <div className="intro-scroll flex-1 overflow-y-auto">
+        <div className="w-full max-w-2xl mx-auto">
+          {/* Header Section */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-2xl mb-4 motion-scale-in">
+              <Bell className="w-8 h-8 text-primary" />
             </div>
-            <Switch
-              checked={enableReminders}
-              onCheckedChange={setEnableReminders}
-              className="scale-110"
-            />
+            <h1 className="text-3xl font-bold mb-4 motion-fade-up" style={{ animationDelay: '60ms' }}>
+              Set your reminder time
+            </h1>
+            <p className="text-muted-foreground text-lg motion-fade-up" style={{ animationDelay: '120ms' }}>
+              Choose when you'd like to be reminded about your habits each day.
+            </p>
           </div>
-        </div>
+
+          {/* Enable/Disable Reminders */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between p-6 bg-gradient-to-r from-card to-card/50 border border-border rounded-2xl shadow-sm">
+              <div className="flex items-center gap-4">
+                <div
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
+                    enableReminders ? 'bg-primary/20' : 'bg-muted/50'
+                  }`}
+                >
+                  {enableReminders ? (
+                    <Bell className="w-6 h-6 text-primary" />
+                  ) : (
+                    <BellOff className="w-6 h-6 text-muted-foreground" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">Enable daily reminders</h3>
+                  <p className="text-sm text-muted-foreground">Get gentle notifications to stay on track</p>
+                </div>
+              </div>
+              <Switch checked={enableReminders} onCheckedChange={setEnableReminders} className="scale-110" />
+            </div>
+          </div>
 
         {/* Permission Banner */}
         {enableReminders && !isPermissionGranted && (
@@ -282,88 +290,93 @@ export function OnboardingReminder() {
           </div>
         )}
 
-        {/* Summary */}
-        <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-2xl p-6 mb-8">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-primary" />
-            </div>
-            <h3 className="font-semibold text-lg">Reminder summary</h3>
-          </div>
-          <p className="text-muted-foreground">
-            {enableReminders ? (
-              selectedTimes.length > 0 ? (
-                <>You'll receive reminders at <strong className="text-primary">{selectedTimes.map(formatTime).join(', ')}</strong> daily.</>
-              ) : (
-                <>No time selected. We'll default to <strong className="text-primary">9:00 AM</strong>.</>
-              )
-            ) : (
-              <>Notifications are disabled. You can enable them anytime in settings.</>
-            )}
-          </p>
-        </div>
-
-        {/* Error Display */}
-        {error && (
-          <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
-            <div className="flex items-center gap-2 mb-2">
-              <AlertCircle size={16} className="text-red-600 dark:text-red-400" />
-              <h3 className="font-medium text-red-900 dark:text-red-100">Setup Error</h3>
-            </div>
-            <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
-          </div>
-        )}
-
-        {/* Success State */}
-        {enableReminders && isPermissionGranted && (
-          <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border border-green-200 dark:border-green-800 rounded-2xl p-6 mb-6">
-            <div className="flex items-center gap-4 mb-3">
-              <div className="w-10 h-10 bg-green-100 dark:bg-green-800 rounded-xl flex items-center justify-center">
-                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+          {/* Summary */}
+          <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-2xl p-6 mb-8">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="font-semibold text-lg text-green-900 dark:text-green-100">Notifications Ready!</h3>
+              <h3 className="font-semibold text-lg">Reminder summary</h3>
             </div>
-            <p className="text-sm text-green-800 dark:text-green-200">
-              You'll receive reminders at {selectedTimes.length > 0 ? selectedTimes.map(formatTime).join(', ') : '9:00 AM'} daily.
+            <p className="text-muted-foreground">
+              {enableReminders ? (
+                selectedTimes.length > 0 ? (
+                  <>
+                    You'll receive reminders at{' '}
+                    <strong className="text-primary">{selectedTimes.map(formatTime).join(', ')}</strong> daily.
+                  </>
+                ) : (
+                  <>
+                    No time selected. We'll default to <strong className="text-primary">9:00 AM</strong>.
+                  </>
+                )
+              ) : (
+                <>Notifications are disabled. You can enable them anytime in settings.</>
+              )}
             </p>
           </div>
-        )}
 
-        {/* Final Motivation */}
-        <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/30 rounded-2xl p-6">
-          <div className="flex items-center gap-4 mb-3">
-            <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-primary" />
+          {/* Error Display */}
+          {error && (
+            <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertCircle size={16} className="text-red-600 dark:text-red-400" />
+                <h3 className="font-medium text-red-900 dark:text-red-100">Setup Error</h3>
+              </div>
+              <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
             </div>
-            <h3 className="font-bold text-xl text-primary">Almost ready!</h3>
+          )}
+
+          {/* Success State */}
+          {enableReminders && isPermissionGranted && (
+            <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border border-green-200 dark:border-green-800 rounded-2xl p-6 mb-6">
+              <div className="flex items-center gap-4 mb-3">
+                <div className="w-10 h-10 bg-green-100 dark:bg-green-800 rounded-xl flex items-center justify-center">
+                  <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                </div>
+                <h3 className="font-semibold text-lg text-green-900 dark:text-green-100">Notifications Ready!</h3>
+              </div>
+              <p className="text-sm text-green-800 dark:text-green-200">
+                You'll receive reminders at{' '}
+                {selectedTimes.length > 0 ? selectedTimes.map(formatTime).join(', ') : '9:00 AM'} daily.
+              </p>
+            </div>
+          )}
+
+          {/* Final Motivation */}
+          <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/30 rounded-2xl p-6 mb-10">
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-primary" />
+              </div>
+              <h3 className="font-bold text-xl text-primary">Almost ready!</h3>
+            </div>
+            <p className="text-primary/90 text-lg">
+              You're all set to start building amazing habits. Let's begin your journey!
+            </p>
           </div>
-          <p className="text-primary/90 text-lg">
-            You're all set to start building amazing habits. Let's begin your journey!
-          </p>
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="px-6 py-6 pt-0 pb-safe-area-bottom space-y-3">
-        <Button
-          onClick={handleFinish}
-          disabled={finishing}
-          className="w-full h-14 text-lg font-medium group"
-        >
-          {finishing ? 'Setting up...' : 'Finish Setup'}
-          <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-        </Button>
-        <Button
-          variant="outline"
-          onClick={async () => {
-            setEnableReminders(false);
-            await handleFinish();
-          }}
-          disabled={finishing}
-          className="w-full h-12"
-        >
-          Skip for now
-        </Button>
+      {/* Sticky Footer */}
+      <div className="intro-footer pb-safe-area-bottom">
+        <div className="px-6 pb-6 space-y-3">
+          <Button onClick={handleFinish} disabled={finishing} className="w-full h-14 text-lg font-medium group rounded-2xl">
+            {finishing ? 'Setting up...' : 'Finish Setup'}
+            <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+          </Button>
+          <Button
+            variant="outline"
+            onClick={async () => {
+              setEnableReminders(false);
+              await handleFinish();
+            }}
+            disabled={finishing}
+            className="w-full h-12 rounded-xl"
+          >
+            Skip for now
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -1,18 +1,13 @@
 import React, { useEffect, useState, createContext, useContext } from 'react';
 import { Home, Plus, BarChart3, Settings, History } from 'lucide-react';
 
-type BackHandler = () => boolean | Promise<boolean>;
-
 interface AppShellContextType {
   currentRoute: string;
   navigate: (route: string) => void;
   goBack: () => void;
-  registerBackHandler: (handler: BackHandler) => () => void;
-  handleBack: () => Promise<boolean>;
   isOnboarded: boolean;
   setIsOnboarded: (value: boolean) => void;
-  theme: 'light' | 'dark' | 'system';
-  setTheme: (theme: 'light' | 'dark' | 'system') => void;
+  theme: 'dark';
   userName: string;
   setUserName: (name: string) => void;
 }
@@ -34,7 +29,6 @@ interface AppShellProviderProps {
 export function AppShellProvider({ children }: AppShellProviderProps) {
   const [currentRoute, setCurrentRoute] = useState('/boot');
   const [routeStack, setRouteStack] = useState<string[]>(['/boot']);
-  const [backHandlers, setBackHandlers] = useState<BackHandler[]>([]);
   const [isOnboarded, setIsOnboarded] = useState<boolean>(() => {
     try {
       const stored = localStorage.getItem('onboarding-complete');
@@ -43,13 +37,8 @@ export function AppShellProvider({ children }: AppShellProviderProps) {
       return false;
     }
   });
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(() => {
-    try {
-      return (localStorage.getItem('app-theme') as 'light' | 'dark' | 'system') || 'system';
-    } catch {
-      return 'system';
-    }
-  });
+  // Always use dark theme - no theme switching
+  const theme = 'dark' as const;
   const [userName, setUserName] = useState<string>(() => {
     try {
       return localStorage.getItem('user-name') || '';
@@ -76,23 +65,6 @@ export function AppShellProvider({ children }: AppShellProviderProps) {
     });
   };
 
-  const registerBackHandler = (handler: BackHandler) => {
-    setBackHandlers((prev) => [...prev, handler]);
-    return () => setBackHandlers((prev) => prev.filter((h) => h !== handler));
-  };
-
-  const handleBack = async () => {
-    const handler = backHandlers[backHandlers.length - 1];
-    if (handler) {
-      try {
-        const res = await Promise.resolve(handler());
-        if (res) return true; // handled
-      } catch {}
-    }
-    goBack();
-    return true;
-  };
-
   // Persist onboarding flag
   useEffect(() => {
     try {
@@ -100,12 +72,7 @@ export function AppShellProvider({ children }: AppShellProviderProps) {
     } catch {}
   }, [isOnboarded]);
 
-  // Persist theme
-  useEffect(() => {
-    try {
-      localStorage.setItem('app-theme', theme);
-    } catch {}
-  }, [theme]);
+  // No theme persistence needed - always dark
 
   // Persist user name
   useEffect(() => {
@@ -120,12 +87,9 @@ export function AppShellProvider({ children }: AppShellProviderProps) {
         currentRoute,
         navigate,
         goBack,
-        registerBackHandler,
-        handleBack,
         isOnboarded,
         setIsOnboarded,
         theme,
-        setTheme,
         userName,
         setUserName,
       }}
@@ -151,31 +115,50 @@ export function BottomNav({ currentRoute, onNavigate }: BottomNavProps) {
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-card/95 border-t border-border backdrop-blur supports-[backdrop-filter]:bg-card/80 z-40">
       {/* Safe area bottom padding */}
-      <div className="pb-safe-area-bottom">
-        <div className="flex h-16 max-w-md mx-auto px-2">
+      <div 
+        style={{
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }}
+      >
+        <div className="flex h-20 w-full px-1">
           {navItems.map(({ route, icon: Icon, label }) => {
             const isActive = currentRoute === route;
             return (
               <button
                 key={route}
                 onClick={() => onNavigate(route)}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[48px] transition-all duration-200 ${
+                className={`flex-1 flex flex-col items-center justify-center gap-1 py-3 px-2 min-h-[64px] transition-all duration-300 ease-out ${
                   isActive
                     ? 'text-primary'
-                    : 'text-muted-foreground hover:text-foreground'
+                    : 'text-muted-foreground hover:text-foreground active:scale-95'
                 }`}
                 aria-label={label}
               >
-                <div className={`p-2 rounded-full transition-all duration-200 ${
-                  isActive ? 'bg-primary/10 scale-110' : 'hover:bg-muted/50'
+                <div className={`p-3 rounded-2xl transition-all duration-300 ease-out ${
+                  isActive 
+                    ? 'bg-primary/15 scale-110 shadow-lg shadow-primary/20' 
+                    : 'hover:bg-muted/50 active:bg-muted/70'
                 }`}>
-                  <Icon size={20} className={isActive ? 'text-primary' : ''} />
+                  <Icon 
+                    size={22} 
+                    className={`transition-all duration-300 ${
+                      isActive 
+                        ? 'text-primary drop-shadow-sm' 
+                        : 'text-muted-foreground'
+                    }`} 
+                  />
                 </div>
-                <span className={`text-xs font-medium transition-colors duration-200 ${
-                  isActive ? 'text-primary' : 'text-muted-foreground'
+                <span className={`text-xs font-semibold transition-all duration-300 ${
+                  isActive 
+                    ? 'text-primary font-bold' 
+                    : 'text-muted-foreground font-medium'
                 }`}>
                   {label}
                 </span>
+                {/* Active indicator */}
+                {isActive && (
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-primary rounded-full" />
+                )}
               </button>
             );
           })}
@@ -194,15 +177,19 @@ interface AppBarProps {
 
 export function AppBar({ title, showBack = false, onBack, actions }: AppBarProps) {
   return (
-    <div className="sticky top-0 z-30 bg-card/95 border-b border-border backdrop-blur supports-[backdrop-filter]:bg-card/80">
+    <div className="fixed top-0 left-0 right-0 z-30 bg-card/95 border-b border-border backdrop-blur supports-[backdrop-filter]:bg-card/80 w-full">
       {/* Safe area top padding */}
-      <div className="pt-safe-area-top">
-        <div className="flex items-center justify-between min-h-[56px] px-4 py-4">
-          <div className="flex items-center gap-4">
+      <div 
+        style={{
+          paddingTop: 'env(safe-area-inset-top)',
+        }}
+      >
+        <div className="flex items-center justify-between min-h-[64px] px-6 py-4 w-full">
+          <div className="flex items-center gap-4 flex-1">
             {showBack && (
               <button
                 onClick={onBack}
-                className="touch-target rounded-full hover:bg-muted transition-colors"
+                className="p-2 rounded-full hover:bg-muted/50 active:bg-muted/70 transition-all duration-200 active:scale-95"
                 aria-label="Go back"
               >
                 <svg
@@ -222,7 +209,7 @@ export function AppBar({ title, showBack = false, onBack, actions }: AppBarProps
                 </svg>
               </button>
             )}
-            <h1 className="text-xl font-medium leading-none">{title}</h1>
+            <h1 className="text-xl font-semibold leading-tight text-foreground">{title}</h1>
           </div>
           {actions && <div className="flex items-center">{actions}</div>}
         </div>

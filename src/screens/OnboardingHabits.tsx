@@ -7,10 +7,11 @@ import { createHabit, makeHabitId, setOnboardingSelected } from '../lib/habits';
 import { useHabitsStore } from '../store/HabitsStore';
 import * as EventBus from '../lib/eventBus';
 import { CheckCircle, ArrowRight, Target, Plus } from 'lucide-react';
+import '../styles/onboarding.css';
 
 export function OnboardingHabits() {
   const { navigate } = useAppShell();
-  const { hydrateAll } = useHabitsStore();
+  const { hydrateAll, addHabit } = useHabitsStore();
   const [selectedHabits, setSelectedHabits] = useState<typeof starterHabits>([]);
 
   const toggleHabit = (habit: typeof starterHabits[0]) => {
@@ -29,70 +30,68 @@ export function OnboardingHabits() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div
+      className="onboarding-intro bg-background min-h-screen w-full flex flex-col"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+      }}
+    >
       {/* Progress Header */}
-      <div className="flex items-center justify-between px-6 py-4 pt-safe-area-top">
-        <div className="flex gap-2">
-          <div className="w-8 h-1 bg-primary rounded-full" />
-          <div className="w-8 h-1 bg-primary rounded-full" />
-          <div className="w-8 h-1 bg-primary rounded-full" />
-          <div className="w-8 h-1 bg-muted rounded-full" />
+      <div className="intro-header flex-shrink-0">
+        <div className="intro-progress-bars" aria-hidden="true">
+          <span className="bar bar-active" />
+          <span className="bar bar-active" />
+          <span className="bar bar-active" />
+          <span className="bar" />
         </div>
-        <span className="text-sm text-muted-foreground">3 of 4</span>
+        <span className="intro-step text-muted-foreground">3 of 4</span>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 px-6 py-6">
-        {/* Header Section */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-2xl mb-4">
+      {/* Scrollable content */}
+      <div className="intro-scroll flex-1 overflow-y-auto">
+        <div className="w-full max-w-2xl mx-auto text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-2xl mb-4 motion-scale-in">
             <Target className="w-8 h-8 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold mb-4">Choose your starter habits</h1>
-          <p className="text-muted-foreground text-lg">
+          <h1 className="text-3xl font-bold mb-4 motion-fade-up" style={{ animationDelay: '60ms' }}>
+            Choose your starter habits
+          </h1>
+          <p className="text-muted-foreground text-lg motion-fade-up" style={{ animationDelay: '120ms' }}>
             Select a few habits to get started. You can always add more later.
           </p>
         </div>
 
-        {/* Habits Grid */}
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="w-full max-w-2xl mx-auto mt-8 mb-10 grid grid-cols-2 gap-4">
           {starterHabits.map((habit, index) => (
             <button
               key={habit.title}
               onClick={() => toggleHabit(habit)}
-              className={`group relative flex flex-col items-center p-6 rounded-2xl border-2 transition-all duration-300 ${
-                isSelected(habit)
-                  ? 'border-primary bg-primary/5 scale-105 shadow-lg'
-                  : 'border-border bg-card hover:bg-muted/50 hover:border-primary/50 hover:scale-102'
-              }`}
-              style={{ animationDelay: `${index * 100}ms` }}
+              className={`group relative flex flex-col items-center p-6 rounded-2xl border-2 transition-all duration-300 motion-fade-in`}
+              style={{ animationDelay: `${200 + index * 80}ms` }}
             >
-              {/* Selection Indicator */}
               {isSelected(habit) && (
                 <div className="absolute -top-2 -right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-lg">
                   <CheckCircle className="w-4 h-4 text-white" />
                 </div>
               )}
-              
-              {/* Habit Icon */}
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-all ${
-                isSelected(habit) ? 'bg-primary/20' : 'bg-muted/50'
-              }`}>
+              <div
+                className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-all ${
+                  isSelected(habit) ? 'bg-primary/20' : 'bg-muted/50'
+                }`}
+              >
                 <span className="text-2xl">{habit.emoji}</span>
               </div>
-              
-              {/* Habit Title */}
-              <span className="text-sm font-semibold text-center leading-tight">{habit.title}</span>
-              
-              {/* Hover Effect */}
+              <span className="text-sm font-semibold text-center leading-tight text-foreground">{habit.title}</span>
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </button>
           ))}
         </div>
 
-        {/* Selected Habits Summary */}
-        {selectedHabits.length > 0 && (
-          <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-2xl p-6 mb-8 animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
+        {selectedHabits.length > 0 ? (
+          <div className="w-full max-w-2xl mx-auto bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-2xl p-6 mb-10 motion-fade-in">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
                 <Plus className="w-4 h-4 text-primary" />
@@ -110,11 +109,8 @@ export function OnboardingHabits() {
               Great choices! These habits will help you build a strong foundation.
             </p>
           </div>
-        )}
-
-        {/* Motivational Message */}
-        {selectedHabits.length === 0 && (
-          <div className="bg-muted/30 border border-border rounded-2xl p-6 mb-6 text-center">
+        ) : (
+          <div className="w-full max-w-2xl mx-auto bg-muted/30 border border-border rounded-2xl p-6 mb-10 text-center motion-fade-in">
             <div className="w-12 h-12 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-3">
               <Target className="w-6 h-6 text-muted-foreground" />
             </div>
@@ -125,37 +121,41 @@ export function OnboardingHabits() {
         )}
       </div>
 
-      {/* Footer */}
-      <div className="px-6 py-6 pt-0 pb-safe-area-bottom space-y-3">
-        <Button
-          onClick={async () => {
-            // Persist selected habits in order and update in-memory store immediately
-            const ids: string[] = [];
-            const created: any[] = [];
-            for (const h of selectedHabits) {
-              const id = makeHabitId(h.title);
-              ids.push(id);
-              const habit = await createHabit({ id, name: h.title, emoji: h.emoji, frequency: 'daily', reminderTimes: [] });
-              created.push(habit);
-              EventBus.emit('habit:created', { habit });
-            }
-            await setOnboardingSelected(ids);
-            try { await hydrateAll(); } catch {}
-            navigate('/onboarding/reminder');
-          }}
-          disabled={selectedHabits.length === 0}
-          className="w-full h-14 text-lg font-medium group"
-        >
-          Continue with {selectedHabits.length} habit{selectedHabits.length !== 1 ? 's' : ''}
-          <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-        </Button>
-        <Button
-          variant="outline"
-          onClick={() => navigate('/onboarding/reminder')}
-          className="w-full h-12"
-        >
-          Skip for now
-        </Button>
+      {/* Sticky footer */}
+      <div className="intro-footer pb-safe-area-bottom">
+        <div className="px-6 pb-6 space-y-3">
+          <Button
+            onClick={async () => {
+              const ids: string[] = [];
+              const created: any[] = [];
+              for (const h of selectedHabits) {
+                const id = makeHabitId(h.title);
+                ids.push(id);
+                const habit = await createHabit({ id, name: h.title, emoji: h.emoji, frequency: 'daily', reminderTimes: [] });
+                created.push(habit);
+                await addHabit(habit);
+                EventBus.emit('habit:created', { habit });
+              }
+              await setOnboardingSelected(ids);
+              try {
+                await hydrateAll(true);
+              } catch {}
+              navigate('/onboarding/reminder');
+            }}
+            disabled={selectedHabits.length === 0}
+            className="w-full h-14 text-lg font-medium group rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
+          >
+            Continue with {selectedHabits.length} habit{selectedHabits.length !== 1 ? 's' : ''}
+            <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/onboarding/reminder')}
+            className="w-full h-12 rounded-xl"
+          >
+            Skip for now
+          </Button>
+        </div>
       </div>
     </div>
   );

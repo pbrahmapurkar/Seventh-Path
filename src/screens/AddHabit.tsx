@@ -40,12 +40,13 @@ const emojiOptions = [
 ];
 
 export function AddHabit() {
-  const { navigate, registerBackHandler, handleBack } = useAppShell();
+  const { navigate } = useAppShell();
   const { addHabit } = useHabitsStore();
   const { 
     scheduleHabitReminder, 
     isPermissionGranted, 
-    isLoading: notificationLoading 
+    isLoading: notificationLoading,
+    checkAndRequestPermission,
   } = useNotifications();
   
   const [title, setTitle] = useState('');
@@ -62,20 +63,6 @@ export function AddHabit() {
     emoji !== '🎯' ||
     frequency !== 'daily'
   );
-
-  React.useEffect(() => {
-    const unregister = registerBackHandler(() => {
-      if (isDirty && !isSaving) {
-        const confirmLeave = window.confirm('Discard changes?');
-        if (confirmLeave) {
-          navigate('/home');
-        }
-        return true; // handled
-      }
-      return false; // let default
-    });
-    return unregister;
-  }, [isDirty, isSaving, navigate, registerBackHandler]);
 
   const handleSave = async () => {
     if (!title.trim()) return;
@@ -147,13 +134,25 @@ export function AddHabit() {
     }
   };
 
-  const handleReminderToggle = (enabled: boolean) => {
+  const handleReminderToggle = async (enabled: boolean) => {
+    if (enabled) {
+      const allowed = await checkAndRequestPermission();
+      if (!allowed) return;
+    }
     setHasReminder(enabled);
     if (!enabled) setReminderTimes([]);
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div 
+      className="flex flex-col min-h-screen bg-background w-full"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+      }}
+    >
       <AppBar
         title="Add Habit"
         showBack
@@ -167,8 +166,8 @@ export function AddHabit() {
       />
 
       {/* Enhanced Form Content */}
-      <div className="flex-1 px-6 py-6 pb-40 pb-safe-area-bottom">
-        <div className="space-y-8">
+      <div className="flex-1 px-6 py-6 pt-20 pb-24 w-full overflow-y-auto">
+        <div className="space-y-8 w-full">
           {/* Habit Title Section */}
           <div className="bg-gradient-to-r from-card to-card/50 border border-border rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-6">

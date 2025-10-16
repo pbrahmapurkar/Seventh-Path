@@ -1,7 +1,7 @@
 {
   "name": "seventh-path-habit-tracker",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.7",
   "type": "module",
   "description": "A beautiful habit tracking app with notification reminders",
   "scripts": {
@@ -47,6 +47,8 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
+    "date-fns": "^4.1.0",
+    "framer-motion": "^12.23.16",
     "lucide-react": "^0.294.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

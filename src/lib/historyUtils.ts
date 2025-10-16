@@ -71,7 +71,8 @@ export function generateRollingHistory(
     const dayHabits = activeHabits.map(habit => {
       const dayKey = `habit:${habit.id}:day:${dateStr}`;
       const dayEntry = habitDaysByKey[dayKey];
-      const completed = dayEntry ? dayEntry.complete : false;
+      // Use the same completion logic as Insights screen for consistency
+      const completed = dayEntry ? (dayEntry.reminders.length > 0 && dayEntry.reminders.every(r => r.done)) : false;
       
       return {
         id: habit.id,
@@ -83,7 +84,7 @@ export function generateRollingHistory(
       };
     });
 
-    // Calculate completion rate
+    // Calculate completion rate using the same logic as Insights screen
     const completedCount = dayHabits.filter(h => h.completed).length;
     const completionRate = activeHabits.length > 0 ? (completedCount / activeHabits.length) * 100 : 0;
 
