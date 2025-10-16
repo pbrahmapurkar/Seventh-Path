@@ -314,7 +314,7 @@ function escapeCSVCell(cell: string): string {
 }
 
 /**
- * Parse a single CSV line handling quoted values
+ * Parse a single CSV line handling quoted values and edge cases
  */
 function parseCSVLine(line: string): string[] {
   const cells: string[] = [];
