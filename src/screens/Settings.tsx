@@ -197,6 +197,14 @@ export function Settings() {
           // Check if habit already exists
           const existingHabit = habitsById[habitData.id];
           
+          // Build timer config if available
+          const timerConfig = habitData.timerEnabled ? {
+            enabled: true,
+            mode: habitData.timerMode as 'countdown' | 'stopwatch' || 'countdown',
+            defaultDuration: habitData.timerDefaultDuration || 1800,
+            autoCompleteHabit: habitData.timerAutoComplete ?? true
+          } : undefined;
+          
           if (existingHabit) {
             // Update existing habit
             await editHabit({
@@ -206,6 +214,7 @@ export function Settings() {
               frequency: habitData.frequency,
               weeklyDays: habitData.weeklyDays,
               reminderTimes: habitData.reminderTimes,
+              timerConfig,
             });
           } else {
             // Create new habit
@@ -217,6 +226,7 @@ export function Settings() {
               weeklyDays: habitData.weeklyDays || [],
               reminderTimes: habitData.reminderTimes || [],
               createdAt: habitData.createdAt || new Date().toISOString(),
+              timerConfig,
             });
           }
           
