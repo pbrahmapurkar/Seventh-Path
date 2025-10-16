@@ -124,16 +124,8 @@ export function Settings() {
     setIsEditingName(false);
   };
 
-  const handleToggleTheme = () => {
-    const newDarkMode = !darkMode;
-    setDarkMode(newDarkMode);
-    localStorage.setItem('theme-preference', newDarkMode ? 'dark' : 'light');
-    const root = document.documentElement;
-    if (newDarkMode) {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
+  const handleThemeChange = (themeName: string) => {
+    toast.theme(`Theme changed to ${themeName.charAt(0).toUpperCase() + themeName.slice(1)}`, 2000);
   };
 
   const handleExportData = async () => {
