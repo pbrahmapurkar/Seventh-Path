@@ -76,7 +76,12 @@ export function exportHabitsToCSV(
       'bestStreak',
       'completionRate',
       'totalCompletions',
-      'completionHistory'
+      'timerEnabled',
+      'timerMode',
+      'timerDefaultDuration',
+      'timerAutoComplete',
+      'completionHistory',
+      'timerSessions'
     ];
 
     // Build CSV rows
