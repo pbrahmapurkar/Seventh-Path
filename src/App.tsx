@@ -36,10 +36,17 @@ function AppContent() {
   useEffect(() => { navigateRef.current = navigate; }, [navigate]);
   useEffect(() => { goBackRef.current = goBack; }, [goBack]);
 
-  // Always apply dark theme
+  // Theme is now set to light by default
+  // Users can enable dark mode in settings if needed
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.add('dark');
+    // Check if user has a theme preference stored
+    const savedTheme = localStorage.getItem('theme-preference');
+    if (savedTheme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
   }, []);
 
   // Hydrate habits store on app start and start rollover service
