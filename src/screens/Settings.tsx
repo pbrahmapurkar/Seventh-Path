@@ -199,7 +199,8 @@ export function Settings() {
           
           if (existingHabit) {
             // Update existing habit
-            await updateHabit(habitData.id, {
+            await editHabit({
+              id: habitData.id,
               name: habitData.name,
               emoji: habitData.emoji,
               frequency: habitData.frequency,
