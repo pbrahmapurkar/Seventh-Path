@@ -739,6 +739,27 @@ export function Settings() {
         </DialogContent>
       </Dialog>
 
+      {/* Import Result Dialog */}
+      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+        <DialogContent className="max-w-md rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">
+              Import Results
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            <pre className="whitespace-pre-wrap text-sm bg-muted/30 p-4 rounded-lg">
+              {importResult}
+            </pre>
+          </div>
+          <div className="flex justify-end pt-4">
+            <Button onClick={() => setShowImportDialog(false)}>
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* About Modal */}
       <Dialog open={aboutOpen} onOpenChange={setAboutOpen}>
         <DialogContent className="p-0 max-w-md w-[92vw] overflow-hidden">
