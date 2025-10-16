@@ -36,18 +36,22 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Activate event
+// Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
+  console.log('Service Worker: Activating...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('Deleting old cache:', cacheName);
+            console.log('Service Worker: Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
+    }).then(() => {
+      // Take control of all clients immediately
+      return self.clients.claim();
     })
   );
 });
