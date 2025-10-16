@@ -40,7 +40,6 @@ export function Settings() {
     clearAllHabits,
     hydrate: hydrateHabits 
   } = useHabitsStore();
-  const { theme: currentTheme } = useTheme();
   const toast = useToast();
 
   const [isTestingNotification, setIsTestingNotification] = useState(false);
