@@ -27,7 +27,7 @@ export function Settings() {
     refreshScheduledCount,
     sendTest,
   } = useNotificationsStore();
-  const { factoryReset, habitsById, statsById, habitDaysByKey, addHabit, updateHabit } = useHabitsStore();
+  const { factoryReset, habitsById, statsById, habitDaysByKey, addHabit, editHabit } = useHabitsStore();
 
   const [isTestingNotification, setIsTestingNotification] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
