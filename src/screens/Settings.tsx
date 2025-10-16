@@ -902,6 +902,9 @@ export function Settings() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toast.toasts} onClose={toast.closeToast} />
     </div>
   );
 }
