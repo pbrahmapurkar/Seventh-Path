@@ -560,13 +560,6 @@ export function Settings() {
           )}
         </SettingsSection>
 
-        {/* Appearance Section - Updated with Theme Selector */}
-        <SettingsSection title="Appearance" icon={<Sparkles className="w-4 h-4 text-primary" />}>
-          <div className="p-6">
-            <ThemeSelector onThemeChange={handleThemeChange} />
-          </div>
-        </SettingsSection>
-
         {/* Enhanced Notifications Section */}
         <SettingsSection title="Notifications" icon={<Bell className="w-4 h-4 text-primary" />}>
           <SettingsRow
