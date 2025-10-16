@@ -31,16 +31,14 @@ export function Settings() {
     sendTest,
   } = useNotificationsStore();
   const { factoryReset, habitsById, statsById, habitDaysByKey, addHabit, editHabit } = useHabitsStore();
+  const { theme: currentTheme } = useTheme();
+  const toast = useToast();
 
   const [isTestingNotification, setIsTestingNotification] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState(userName);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('theme-preference');
-    return saved === 'dark';
-  });
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<string>('');
