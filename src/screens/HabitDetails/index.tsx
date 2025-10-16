@@ -225,8 +225,14 @@ export function HabitDetails({ habitId }: { habitId: string }) {
 
         {/* Tabs - Enhanced */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-muted/30 rounded-2xl p-1">
+          <TabsList className={`grid w-full ${habit.timerConfig?.enabled ? 'grid-cols-3' : 'grid-cols-2'} bg-muted/30 rounded-2xl p-1`}>
             <TabsTrigger value="overview" className="rounded-xl font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Overview</TabsTrigger>
+            {habit.timerConfig?.enabled && (
+              <TabsTrigger value="timer" className="rounded-xl font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Timer className="w-4 h-4 mr-2" />
+                Timer
+              </TabsTrigger>
+            )}
             <TabsTrigger value="history" className="rounded-xl font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">History</TabsTrigger>
           </TabsList>
 
