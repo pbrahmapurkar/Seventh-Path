@@ -6,7 +6,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import type { ThemeName, Theme } from '../themes/themeDefinitions';
 import { getTheme, defaultTheme } from '../themes/themeDefinitions';
-import { Capacitor } from '@capacitor/core';
 
 interface ThemeContextValue {
   theme: Theme;
@@ -24,16 +23,9 @@ const THEME_STORAGE_KEY = 'seventh-path-theme';
  */
 function loadThemePreference(): ThemeName {
   try {
-    if (Capacitor.getPlatform() !== 'web') {
-      // For native apps, use Capacitor Preferences
-      // Will be loaded async, so return default for now
-      return defaultTheme;
-    } else {
-      // For web, use localStorage
-      const stored = localStorage.getItem(THEME_STORAGE_KEY);
-      if (stored && ['light', 'dark', 'blue', 'green'].includes(stored)) {
-        return stored as ThemeName;
-      }
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    if (stored && ['light', 'dark', 'blue', 'green'].includes(stored)) {
+      return stored as ThemeName;
     }
   } catch (error) {
     console.error('Failed to load theme preference:', error);
@@ -44,19 +36,9 @@ function loadThemePreference(): ThemeName {
 /**
  * Save theme preference to storage
  */
-async function saveThemePreference(themeName: ThemeName): Promise<void> {
+function saveThemePreference(themeName: ThemeName): void {
   try {
-    if (Capacitor.getPlatform() !== 'web') {
-      // For native apps
-      const { Preferences } = await import('@capacitor/preferences');
-      await Preferences.set({
-        key: THEME_STORAGE_KEY,
-        value: themeName,
-      });
-    } else {
-      // For web
-      localStorage.setItem(THEME_STORAGE_KEY, themeName);
-    }
+    localStorage.setItem(THEME_STORAGE_KEY, themeName);
   } catch (error) {
     console.error('Failed to save theme preference:', error);
   }
@@ -92,24 +74,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const theme = getTheme(themeName);
 
-  // Load theme from native storage on mount
-  useEffect(() => {
-    async function loadNativeTheme() {
-      if (Capacitor.getPlatform() !== 'web') {
-        try {
-          const { Preferences } = await import('@capacitor/preferences');
-          const result = await Preferences.get({ key: THEME_STORAGE_KEY });
-          if (result.value && ['light', 'dark', 'blue', 'green'].includes(result.value)) {
-            setThemeNameState(result.value as ThemeName);
-          }
-        } catch (error) {
-          console.error('Failed to load native theme:', error);
-        }
-      }
-    }
-    loadNativeTheme();
-  }, []);
-
   // Apply theme to DOM whenever theme changes
   useEffect(() => {
     applyThemeToDOM(theme);
@@ -126,7 +90,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setThemeNameState(name);
 
     // Save to storage
-    await saveThemePreference(name);
+    saveThemePreference(name);
 
     // End transition after animation
     setTimeout(() => {
