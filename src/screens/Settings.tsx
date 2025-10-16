@@ -821,7 +821,7 @@ export function Settings() {
         </DialogContent>
       </Dialog>
 
-      {/* Import Result Dialog */}
+      {/* Import Result Dialog - OLD (Remove this) */}
       <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
         <DialogContent className="max-w-md rounded-3xl">
           <DialogHeader>
@@ -841,6 +841,22 @@ export function Settings() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Enhanced Import Dialog - NEW */}
+      <ImportDialog
+        open={showEnhancedImportDialog}
+        onClose={() => {
+          setShowEnhancedImportDialog(false);
+          setPendingImportFile(null);
+          setPendingHabits([]);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+        }}
+        onImport={handleImportExecution}
+        fileName={pendingImportFile?.name}
+        habitCount={pendingHabits.length}
+      />
 
       {/* About Modal */}
       <Dialog open={aboutOpen} onOpenChange={setAboutOpen}>
