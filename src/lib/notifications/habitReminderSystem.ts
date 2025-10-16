@@ -120,6 +120,38 @@ export function buildBody(habit: HabitDef): string {
   return `Time for your ${habit.name}!`;
 }
 
+/**
+ * Check if habit is completed for a given date
+ * Used to suppress notifications for already-completed habits
+ */
+async function isHabitCompletedForDate(habitId: string, ymd: string): Promise<boolean> {
+  try {
+    const anyWin: any = globalThis as any;
+    const prefs = anyWin?.Capacitor?.Plugins?.Preferences;
+    const key = `habit:${habitId}:day:${ymd}`;
+    
+    let dayDataStr: string | null = null;
+    
+    if (prefs && Capacitor.getPlatform() !== 'web') {
+      const res = await prefs.get({ key });
+      dayDataStr = res.value;
+    } else {
+      dayDataStr = localStorage.getItem(key);
+    }
+    
+    if (!dayDataStr) return false;
+    
+    const dayData = JSON.parse(dayDataStr);
+    const reminders = dayData?.reminders || [];
+    
+    // Habit is completed if all reminders are marked as done
+    return reminders.length > 0 && reminders.every((r: any) => r.done === true);
+  } catch (error) {
+    console.error('Error checking habit completion:', error);
+    return false;
+  }
+}
+
 // Schedule N upcoming one-off notifications for a reminder
 export async function scheduleReminderInstances(
   habit: HabitDef,
