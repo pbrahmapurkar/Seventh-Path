@@ -292,6 +292,19 @@ export function HabitDetails({ habitId }: { habitId: string }) {
             </div>
           </TabsContent>
 
+          {/* Timer Tab - NEW */}
+          {habit.timerConfig?.enabled && (
+            <TabsContent value="timer" className="mt-8 w-full">
+              <TimerTab 
+                habit={habit}
+                onHabitComplete={async () => {
+                  // Refresh the habit details after auto-completion
+                  window.location.reload();
+                }}
+              />
+            </TabsContent>
+          )}
+
           <TabsContent value="history" className="space-y-8 mt-8 w-full">
             <div className="bg-card border border-border rounded-2xl p-6 w-full shadow-sm">
               <div className="flex items-center gap-3 mb-6">
