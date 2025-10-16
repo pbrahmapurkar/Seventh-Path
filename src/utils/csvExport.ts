@@ -22,8 +22,17 @@ export interface HabitExportData {
   completionRate: number;
   totalCompletions: number;
   
+  // Timer configuration
+  timerEnabled?: boolean;
+  timerMode?: string;
+  timerDefaultDuration?: number;
+  timerAutoComplete?: boolean;
+  
   // Completion history (JSON string)
   completionHistory: string;
+  
+  // Timer sessions (JSON string)
+  timerSessions?: string;
 }
 
 export interface CSVExportResult {
