@@ -33,4 +33,59 @@
     --ring: hsl(217, 91%, 60%);
     --radius: 0.75rem;
   }
-}\n\n@layer base {\n  * {\n    @apply border-border;\n  }\n  \n  body {\n    @apply bg-background text-foreground;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;\n    -webkit-font-smoothing: antialiased;\n    -moz-osx-font-smoothing: grayscale;\n  }\n  \n  /* Improved readability */\n  h1, h2, h3, h4, h5, h6 {\n    @apply font-semibold;\n    letter-spacing: -0.02em;\n  }\n  \n  p {\n    line-height: 1.6;\n  }\n  \n  /* Smooth theme transitions */\n  body,\n  body * {\n    transition-property: background-color, border-color, color, fill, stroke;\n    transition-duration: 200ms;\n    transition-timing-function: ease-in-out;\n  }\n  \n  /* Disable transitions for elements that shouldn't animate */\n  input,\n  textarea,\n  select,\n  [role=\"slider\"],\n  [role=\"progressbar\"] {\n    transition: none !important;\n  }\n}\n\n/* Theme transition overlay */\n@keyframes fadeIn {\n  from {\n    opacity: 0;\n  }\n  to {\n    opacity: 1;\n  }\n}\n\n.theme-transitioning {\n  animation: fadeIn 200ms ease-in-out;\n}\n
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Improved readability */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold;
+    letter-spacing: -0.02em;
+  }
+  
+  p {
+    line-height: 1.6;
+  }
+  
+  /* Smooth theme transitions */
+  body,
+  body * {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-duration: 200ms;
+    transition-timing-function: ease-in-out;
+  }
+  
+  /* Disable transitions for elements that shouldn't animate */
+  input,
+  textarea,
+  select,
+  [role="slider"],
+  [role="progressbar"] {
+    transition: none !important;
+  }
+}
+
+/* Theme transition overlay */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.theme-transitioning {
+  animation: fadeIn 200ms ease-in-out;
+}
+
