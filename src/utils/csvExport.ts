@@ -97,6 +97,8 @@ export function exportHabitsToCSV(
 
       // Get completion history for this habit
       const completionHistory: Record<string, any> = {};
+      const timerSessions: any[] = [];
+      
       Object.entries(habitDaysByKey).forEach(([key, dayEntry]) => {
         if (key.startsWith(`habit:${habit.id}:day:`)) {
           const date = key.split(':day:')[1];
@@ -104,6 +106,10 @@ export function exportHabitsToCSV(
             reminders: dayEntry.reminders,
             updatedAt: dayEntry.updatedAt
           };
+          // Collect timer sessions
+          if (dayEntry.timerSessions && dayEntry.timerSessions.length > 0) {
+            timerSessions.push(...dayEntry.timerSessions);
+          }
         }
       });
 
@@ -119,7 +125,12 @@ export function exportHabitsToCSV(
         stats.bestStreak?.toString() || '0',
         stats.completionRate?.toString() || '0',
         stats.totalCompletions?.toString() || '0',
-        JSON.stringify(completionHistory)
+        habit.timerConfig?.enabled ? 'true' : 'false',
+        habit.timerConfig?.mode || '',
+        habit.timerConfig?.defaultDuration?.toString() || '',
+        habit.timerConfig?.autoCompleteHabit ? 'true' : 'false',
+        JSON.stringify(completionHistory),
+        JSON.stringify(timerSessions)
       ];
 
       rows.push(row);
