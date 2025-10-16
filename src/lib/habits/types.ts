@@ -2,6 +2,26 @@
 
 export type Frequency = 'daily' | 'weekly';
 
+export type TimerMode = 'countdown' | 'stopwatch';
+
+export interface TimerConfig {
+  enabled: boolean;
+  mode: TimerMode;
+  defaultDuration?: number; // in seconds, for countdown mode
+  autoCompleteHabit?: boolean; // complete habit when timer finishes
+}
+
+export interface TimerSession {
+  id: string;
+  habitId: string;
+  startTime: string; // ISO timestamp
+  endTime?: string; // ISO timestamp
+  duration: number; // actual duration in seconds
+  targetDuration?: number; // for countdown mode
+  mode: TimerMode;
+  completed: boolean;
+}
+
 export interface HabitDef {
   id: string;
   name: string;
@@ -11,6 +31,8 @@ export interface HabitDef {
   // For weekly frequency, selected weekdays (0-6, Sunday=0)
   weeklyDays?: number[];
   createdAt: string; // ISO date string
+  // Timer configuration (optional)
+  timerConfig?: TimerConfig;
 }
 
 export interface DayReminderState {
