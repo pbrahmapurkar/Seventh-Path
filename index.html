@@ -20,36 +20,23 @@
     <!-- Favicon -->
     <link rel="apple-touch-icon" href="/icon-192.png" />
     
-    <!-- Service Worker Registration -->
+    <!-- Service Worker Registration - DISABLED IN DEVELOPMENT -->
+    <!-- Service worker is only needed for production PWA functionality -->
     <script>
-      // Only register service worker in production or if explicitly enabled
-      const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const enableSWInDev = false; // Set to true to test SW in development
-      
-      if ('serviceWorker' in navigator && (!isDev || enableSWInDev)) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then((registration) => {
-              console.log('SW registered:', registration.scope);
-              // Update service worker if available
-              registration.addEventListener('updatefound', () => {
-                const newWorker = registration.installing;
-                if (newWorker) {
-                  newWorker.addEventListener('statechange', () => {
-                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                      console.log('New service worker available, refreshing...');
-                      window.location.reload();
-                    }
-                  });
-                }
-              });
-            })
-            .catch((error) => {
-              console.warn('SW registration failed:', error);
-            });
-        });
-      } else if (isDev) {
-        console.log('Service Worker disabled in development mode');
+      // Unregister any existing service workers in development
+      if ('serviceWorker' in navigator) {
+        const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        
+        if (isDev) {
+          // Unregister all service workers in development
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for(let registration of registrations) {
+              registration.unregister();
+              console.log('🧹 Unregistered service worker:', registration.scope);
+            }
+          });
+          console.log('🔧 Development mode: Service workers disabled');
+        }
       }
     </script>
   </head>
