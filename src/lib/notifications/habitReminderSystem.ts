@@ -80,6 +80,13 @@ export function computeNextOccurrences(
     const diff = target.getTime() - now.getTime();
     return diff >= 60_000 || (diff >= 0 && diff < 5 * 60_000);
   };
+  console.log('[NOTIFICATIONS computeNextOccurrences] input', {
+    time,
+    frequency,
+    weekdays,
+    count,
+    now,
+  });
 
   if (frequency === 'daily' || !weekdays || weekdays.length === 0) {
     let d = new Date();
@@ -100,6 +107,7 @@ export function computeNextOccurrences(
       i++;
     }
   }
+  console.log('[NOTIFICATIONS computeNextOccurrences] output', dates);
   return dates;
 }
 
@@ -147,7 +155,22 @@ export async function scheduleReminderInstances(
       actionTypeId: 'HABIT_REM',
     });
   }
-  if (scheduled.length) await LocalNotifications.schedule({ notifications: scheduled });
+  if (scheduled.length) {
+    console.log('[NOTIFICATIONS scheduleReminderInstances]', {
+      habitId: habit.id,
+      time,
+      frequency,
+      weekdays,
+      count: scheduled.length,
+      notifications: scheduled.map((n) => ({
+        id: n.id,
+        at: n.schedule.at,
+        channelId: n.channelId,
+        extra: n.extra,
+      })),
+    });
+    await LocalNotifications.schedule({ notifications: scheduled });
+  }
   return ids;
 }
 

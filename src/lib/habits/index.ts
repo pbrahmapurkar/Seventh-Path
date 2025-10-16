@@ -81,6 +81,7 @@ export async function getHabitIds(): Promise<string[]> {
 
 async function saveHabitIds(ids: string[]): Promise<void> {
   await prefsSet(INDEX_KEY, JSON.stringify(ids));
+  postMutated([INDEX_KEY]);
 }
 
 // CRUD for HabitDef
@@ -123,6 +124,7 @@ export async function createHabit(input: Omit<HabitDef, 'id' | 'createdAt'> & { 
     await saveHabitIds(ids);
   }
   await prefsSet(habitKey(id), JSON.stringify(habit));
+  postMutated([habitKey(id)]);
   return habit;
 }
 

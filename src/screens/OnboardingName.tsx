@@ -17,9 +17,17 @@ export function OnboardingName() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div 
+      className="flex flex-col min-h-screen bg-background w-full"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+      }}
+    >
       {/* Progress Header */}
-      <div className="flex items-center justify-between px-6 py-4 pt-safe-area-top">
+      <div className="flex items-center justify-between px-6 py-4 flex-shrink-0">
         <div className="flex gap-2">
           <div className="w-8 h-1 bg-primary rounded-full" />
           <div className="w-8 h-1 bg-primary rounded-full" />
@@ -30,7 +38,7 @@ export function OnboardingName() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col justify-center px-6 py-6">
+      <div className="flex-1 flex flex-col justify-center px-6 py-6 w-full">
         {/* Welcome Section */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-2xl mb-4">

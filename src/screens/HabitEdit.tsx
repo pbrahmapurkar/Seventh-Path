@@ -17,7 +17,7 @@ const emojiOptions = [
 ];
 
 export function HabitEdit({ habitId }: { habitId: string }) {
-  const { navigate, registerBackHandler } = useAppShell();
+  const { navigate } = useAppShell();
   const store = useHabitsStore();
   const habit = store.habitsById[habitId];
 
@@ -29,13 +29,25 @@ export function HabitEdit({ habitId }: { habitId: string }) {
   const [isSaving, setIsSaving] = useState(false);
   const [weeklyDays, setWeeklyDays] = useState<number[]>(habit?.weeklyDays || []);
   const [error, setError] = useState<string | null>(null);
-  const { updateHabitReminder, cancelHabitReminders, isPermissionGranted } = useNotifications();
+  const { updateHabitReminder, cancelHabitReminders, isPermissionGranted, checkAndRequestPermission } = useNotifications();
 
   if (!habit) {
     return (
-      <div className="flex flex-col min-h-screen bg-background">
+      <div 
+        className="flex flex-col min-h-screen bg-background w-full"
+        style={{
+          paddingTop: 'env(safe-area-inset-top)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+          paddingLeft: 'env(safe-area-inset-left)',
+          paddingRight: 'env(safe-area-inset-right)',
+        }}
+      >
         <AppBar title="Edit Habit" showBack onBack={() => navigate('/home')} />
-        <div className="p-6">Habit not found.</div>
+        <div className="flex-1 flex items-center justify-center p-6 pt-20 w-full">
+          <div className="text-center">
+            <p className="text-muted-foreground">Habit not found.</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -88,7 +100,11 @@ export function HabitEdit({ habitId }: { habitId: string }) {
     }
   };
 
-  const handleReminderToggle = (enabled: boolean) => {
+  const handleReminderToggle = async (enabled: boolean) => {
+    if (enabled) {
+      const allowed = await checkAndRequestPermission();
+      if (!allowed) return;
+    }
     setHasReminder(enabled);
     if (!enabled) setReminderTimes([]);
   };
@@ -109,32 +125,31 @@ export function HabitEdit({ habitId }: { habitId: string }) {
     JSON.stringify(initial.weeklyDays) !== JSON.stringify(weeklyDays)
   );
 
-  React.useEffect(() => {
-    const unregister = registerBackHandler(() => {
-      if (isDirty && !isSaving) {
-        const confirmLeave = window.confirm('Discard changes?');
-        if (confirmLeave) {
-          navigate(`/habit/${habit?.id}`);
-        }
-        return true;
-      }
-      return false;
-    });
-    return unregister;
-  }, [isDirty, isSaving, navigate, habit?.id, registerBackHandler]);
-
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <AppBar title="Edit Habit" showBack onBack={() => {
-        if (isDirty && !isSaving) {
-          const ok = window.confirm('Discard changes?');
-          if (!ok) return;
-        }
-        navigate(`/habit/${habit.id}`);
-      }} />
+    <div 
+      className="flex flex-col min-h-screen bg-background w-full"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+      }}
+    >
+      <AppBar
+        title="Edit Habit"
+        showBack
+        onBack={() => {
+          if (isDirty && !isSaving) {
+            const ok = window.confirm('Discard changes?');
+            if (!ok) return;
+          }
+          navigate(`/habit/${habit.id}`);
+        }}
+      />
 
-      <div className="flex-1 p-6">
-        <div className="space-y-6">
+      <div className="flex-1 flex flex-col">
+        <div className="flex-1 px-6 pt-20 pb-30 overflow-y-auto">
+          <div className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="title">Habit name</Label>
             <Input
@@ -190,22 +205,34 @@ export function HabitEdit({ habitId }: { habitId: string }) {
             onChange={setReminderTimes}
             defaultTime="08:00"
             disabled={isSaving}
+            onAutoSave={async (times) => {
+              // Auto-save reminder times immediately
+              await store.editHabit({
+                id: habit.id,
+                name: habit.name,
+                emoji: habit.emoji,
+                frequency: habit.frequency,
+                reminderTimes: times,
+                weeklyDays: habit.weeklyDays,
+              });
+            }}
           />
-          <div className="text-sm text-muted-foreground -mt-2">
-            {hasReminder ? (
-              <div className="flex items-center gap-2"><Bell size={16} /> Reminder enabled</div>
-            ) : (
-              <div className="flex items-center gap-2"><BellOff size={16} /> Reminder disabled</div>
-            )}
+            <div className="text-sm text-muted-foreground -mt-2">
+              {hasReminder ? (
+                <div className="flex items-center gap-2"><Bell size={16} /> Reminder enabled</div>
+              ) : (
+                <div className="flex items-center gap-2"><BellOff size={16} /> Reminder disabled</div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="p-6 border-t border-border">
-        {error && (<div className="text-sm text-red-600 dark:text-red-400 mb-2">{error}</div>)}
-        <Button onClick={handleSave} disabled={!title.trim() || isSaving} className="w-full h-12">
-          {isSaving ? 'Saving...' : 'Save Changes'}
-        </Button>
+        <div className="px-6 pb-safe-area-bottom pt-4 pb-6 border-t border-border bg-background">
+          {error && (<div className="text-sm text-red-600 dark:text-red-400 mb-2">{error}</div>)}
+          <Button onClick={handleSave} disabled={!title.trim() || isSaving} className="w-full h-12">
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
       </div>
     </div>
   );

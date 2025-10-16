@@ -5,46 +5,74 @@ import { useAppShell } from '../components/AppShell';
 export function TermsOfUse() {
   const { navigate } = useAppShell();
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div 
+      className="flex flex-col min-h-screen bg-background w-full"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+      }}
+    >
       <AppBar title="Terms of Use" showBack onBack={() => navigate('/settings')} />
-      <div className="p-6 space-y-4 text-sm text-muted-foreground">
-        <h1 className="text-xl font-semibold text-foreground">Terms of Use</h1>
-        <p>Last updated: 16 Sep 2025</p>
+      <div className="flex-1 px-6 py-6 pt-20 pb-24 w-full overflow-x-hidden overflow-y-auto">
+        <div className="space-y-6">
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-foreground mb-2">Terms of Use</h1>
+            <p className="text-muted-foreground">Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          </div>
 
-        <p>
-          Welcome to our Habit Tracking Application. By using this app, you agree to the following terms:
-        </p>
+          <div className="space-y-6 text-sm text-muted-foreground">
+            <section>
+              <p className="leading-relaxed">
+                Using Seventh Path signifies that you accept these terms; if you do not agree, please uninstall the app.
+              </p>
+            </section>
 
-        <h2 className="text-foreground font-medium mt-4">Use of the App</h2>
-        <ul className="list-disc pl-5 space-y-1">
-          <li>This app is intended for personal use only.</li>
-          <li>You agree not to misuse the app, attempt to disrupt its functionality, or access data without authorization.</li>
-        </ul>
+            <section>
+              <h2 className="text-lg font-bold text-foreground mb-3">App Purpose & Limitations</h2>
+              <p className="leading-relaxed">
+                The app is designed for habit tracking and mindful wellness support only; it is not medical advice, therapy, or a substitute for professional care.
+              </p>
+            </section>
 
-        <h2 className="text-foreground font-medium mt-4">User Responsibilities</h2>
-        <ul className="list-disc pl-5 space-y-1">
-          <li>You are responsible for the accuracy of the information you provide.</li>
-          <li>You agree to use the app in a way that complies with all applicable laws.</li>
-        </ul>
+            <section>
+              <h2 className="text-lg font-bold text-foreground mb-3">User Responsibilities</h2>
+              <p className="leading-relaxed">
+                You remain responsible for the accuracy of any information you enter (name, habits, reminders, notes) and for maintaining your device's security; the app operates offline, so loss, reset, or uninstalling will erase your data.
+              </p>
+            </section>
 
-        <h2 className="text-foreground font-medium mt-4">Intellectual Property</h2>
-        <ul className="list-disc pl-5 space-y-1">
-          <li>All content, designs, and features of this app are owned by the developers unless otherwise stated.</li>
-          <li>You may not copy, distribute, or reuse any part of the app without prior permission.</li>
-        </ul>
+            <section>
+              <h2 className="text-lg font-bold text-foreground mb-3">Notifications</h2>
+              <p className="leading-relaxed">
+                Notifications are delivered through your device's native system; you may adjust or revoke permission at any time, but doing so may limit reminder functionality.
+              </p>
+            </section>
 
-        <h2 className="text-foreground font-medium mt-4">Disclaimer</h2>
-        <ul className="list-disc pl-5 space-y-1">
-          <li>This app is provided “as is” without warranties of any kind.</li>
-          <li>We are not responsible for any data loss, health outcomes, or reliance on features of the app.</li>
-        </ul>
+            <section>
+              <h2 className="text-lg font-bold text-foreground mb-3">Disclaimer of Warranties</h2>
+              <p className="leading-relaxed">
+                Seventh Path is provided "as-is"; we do not guarantee uninterrupted operation, error-free behavior, or specific results, and we are not liable for indirect, incidental, or consequential damages arising from use.
+              </p>
+            </section>
 
-        <h2 className="text-foreground font-medium mt-4">Changes to Terms</h2>
-        <ul className="list-disc pl-5 space-y-1">
-          <li>We may update these Terms of Use from time to time.</li>
-          <li>Continued use of the app means you accept the updated terms.</li>
-          <li>If you do not agree with these terms, please stop using the app.</li>
-        </ul>
+            <section>
+              <h2 className="text-lg font-bold text-foreground mb-3">Changes to Terms</h2>
+              <p className="leading-relaxed">
+                We may update the app or these terms periodically; continued use after updates constitutes acceptance. If you have questions about the terms, contact Pratik Prakash Brahmapurkar at{' '}
+                <button
+                  onClick={() => window.open('https://misterpb.in', '_blank', 'noopener,noreferrer')}
+                  className="underline underline-offset-2 decoration-primary text-primary hover:opacity-90 font-medium"
+                  aria-label="Open website misterpb.in"
+                  role="link"
+                >
+                  misterpb.in
+                </button>.
+              </p>
+            </section>
+          </div>
+        </div>
       </div>
     </div>
   );

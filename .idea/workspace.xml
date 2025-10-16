@@ -5,62 +5,125 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="fc7d7127-35ab-47da-8294-25683046b3cd" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dist/assets/alarmNotifications-Cd2Gr59A.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dist/assets/alarmNotifications-Cd2Gr59A.js.map" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dist/assets/index-3acVOHUV.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dist/assets/index-DuirDGcQ.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dist/assets/index-DuirDGcQ.js.map" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dist/assets/web-D2BWe7V1.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dist/assets/web-D2BWe7V1.js.map" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/notifications/habitReminderSystem.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ASSET_GENERATION_SUMMARY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BOOT_SCREEN_IMPLEMENTATION.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EDIT_RECENT_DAYS_WORKFLOW_TEST.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HISTORY_CALENDAR_ENHANCEMENT.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HISTORY_CALENDAR_MOCKUPS.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HISTORY_COMPONENT_SPECS.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HISTORY_LIST_FILTERING.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HISTORY_LIST_MOCKUP.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HISTORY_QA_CHECKLIST.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HISTORY_SCREEN_MOCKUP.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HISTORY_SCREEN_REDESIGN.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HISTORY_STATE_MANAGEMENT.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SeventhPath_v10_1.0.0.apk" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SeventhPath_v11_1.0.0.apk" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SeventhPath_v12_1.0.0.apk" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SeventhPath_v13_modern_boot_1.0.0.apk" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SeventhPath_v14_charcoal_boot_1.0.0.apk" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SeventhPath_v15_safe_area_1.0.0.apk" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SeventhPath_v16_refined_boot_1.0.0.apk" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SeventhPath_v6_1.0.0.apk" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SeventhPath_v7_1.0.0.apk" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SeventhPath_v8_1.0.0.apk" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SeventhPath_v9_1.0.0.apk" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SeventhPath_v9_obfuscated_1.0.0.aab" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SeventhPath_v9_obfuscated_1.0.0.apk" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UNIFIED_COMPLETION_SYSTEM.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/resources/android/icon-mono.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/resources/icon.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/completion.test.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/completion.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/android/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/proguard-rules.pro" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/proguard-rules.pro" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/android/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/AndroidManifest.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/java/com/seventhpath/habittracker/BootReceiver.java" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/java/com/seventhpath/habittracker/BootReceiver.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/convert-icons.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/assets/index-DCTuj5q8.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/assets/index-DmiOZ0JV.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/assets/index-DmiOZ0JV.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/assets/index-DyBw8O8M.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/assets/index-DyBw8O8M.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/assets/web-CGQv0MdW.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/assets/web-CGQv0MdW.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/assets/web-KYAFHzeF.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/assets/web-KYAFHzeF.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/icon-192.png" beforeDir="false" afterPath="$PROJECT_DIR$/dist/icon-192.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/icon-192.svg" beforeDir="false" afterPath="$PROJECT_DIR$/dist/icon-192.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/icon-512.png" beforeDir="false" afterPath="$PROJECT_DIR$/dist/icon-512.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/icon-512.svg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/icon.svg" beforeDir="false" afterPath="$PROJECT_DIR$/dist/icon.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/drawable-land-hdpi/splash.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/drawable-land-hdpi/splash.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/drawable-land-mdpi/splash.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/drawable-land-mdpi/splash.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/drawable-land-xhdpi/splash.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/drawable-land-xhdpi/splash.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/drawable-land-xxhdpi/splash.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/drawable-land-xxhdpi/splash.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/drawable-land-xxxhdpi/splash.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/drawable-land-xxxhdpi/splash.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/drawable-port-hdpi/splash.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/drawable-port-hdpi/splash.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/drawable-port-mdpi/splash.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/drawable-port-mdpi/splash.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/drawable-port-xhdpi/splash.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/drawable-port-xhdpi/splash.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/drawable-port-xxhdpi/splash.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/drawable-port-xxhdpi/splash.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/drawable-port-xxxhdpi/splash.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/drawable-port-xxxhdpi/splash.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/drawable/splash.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/drawable/splash.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-hdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-hdpi/ic_launcher.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-mdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-mdpi/ic_launcher.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/values/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/values/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/capacitor.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/capacitor.config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/assets/alarmNotifications-Cj-6sLdD.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/assets/alarmNotifications-Cj-6sLdD.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/assets/index-3bxVUbq1.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/assets/index-3bxVUbq1.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/assets/index-DVlpFW7G.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/assets/index-DwNg7FAi.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/assets/index-DwNg7FAi.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/assets/web-6txfcPJ6.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/assets/web-6txfcPJ6.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/assets/web-CBZralnL.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/assets/web-CBZralnL.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/assets/web-CstEzK0t.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/assets/web-CstEzK0t.js.map" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/dist/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/dist/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/dist/manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/App/App.xcodeproj/project.pbxproj" beforeDir="false" afterPath="$PROJECT_DIR$/ios/App/App.xcodeproj/project.pbxproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png" beforeDir="false" afterPath="$PROJECT_DIR$/ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/App/App/Assets.xcassets/AppIcon.appiconset/Contents.json" beforeDir="false" afterPath="$PROJECT_DIR$/ios/App/App/Assets.xcassets/AppIcon.appiconset/Contents.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/App/App/Assets.xcassets/Splash.imageset/Contents.json" beforeDir="false" afterPath="$PROJECT_DIR$/ios/App/App/Assets.xcassets/Splash.imageset/Contents.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/App/App/Info.plist" beforeDir="false" afterPath="$PROJECT_DIR$/ios/App/App/Info.plist" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/App/Podfile" beforeDir="false" afterPath="$PROJECT_DIR$/ios/App/Podfile" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/icon-192.png" beforeDir="false" afterPath="$PROJECT_DIR$/public/icon-192.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/icon-192.svg" beforeDir="false" afterPath="$PROJECT_DIR$/public/icon-192.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/icon-512.png" beforeDir="false" afterPath="$PROJECT_DIR$/public/icon-512.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/icon-512.svg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/icon.svg" beforeDir="false" afterPath="$PROJECT_DIR$/public/icon.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/public/manifest.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/AppShell.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/AppShell.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/HabitCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/HabitCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Code-component-2-13.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Code-component-2-13.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/MultiTimePicker.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/MultiTimePicker.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ui/skeleton.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/skeleton.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ui/sonner.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/sonner.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/habits/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/habits/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/habits/types.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/habits/types.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/notifications/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/notifications/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/providers/notificationProvider.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/providers/notificationProvider.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/historyUtils.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/historyUtils.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/screens/AddHabit.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/AddHabit.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/screens/BootScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/BootScreen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/screens/Code-component-2-61.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/Code-component-2-61.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/screens/ErrorNotFound.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/ErrorNotFound.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/screens/HabitDetails/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/HabitDetails/index.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/screens/HabitEdit.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/HabitEdit.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/screens/History.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/History.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/screens/HomeToday.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/HomeToday.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/screens/Insights.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/Insights.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/screens/OnboardingHabits.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/OnboardingHabits.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/screens/OnboardingMain.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/OnboardingMain.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/screens/OnboardingName.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/OnboardingName.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/screens/OnboardingReminder.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/OnboardingReminder.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/screens/Privacy.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/Privacy.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/screens/Settings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/Settings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/services/NotificationService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/NotificationService.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/services/notifications.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/notifications.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/screens/Terms.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/Terms.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/store/HabitsStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/store/HabitsStore.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/store/NotificationsStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/store/NotificationsStore.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/vite.config.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -73,26 +136,26 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 0
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0
+}</component>
   <component name="ProjectId" id="32eIOkcPUXuoz1PeUep6MRjG2wq" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.cidr.known.project.marker": "true",
-    "RunOnceActivity.readMode.enableVisualFormatting": "true",
-    "cf.first.check.clang-format": "false",
-    "cidr.known.project.marker": "true",
-    "git-widget-placeholder": "main",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/Users/pratikbrahmapurkar/Seventh-Path"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/pratikbrahmapurkar/Seventh-Path&quot;
   }
-}]]></component>
+}</component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">

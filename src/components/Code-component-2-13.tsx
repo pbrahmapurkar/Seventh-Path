@@ -6,8 +6,7 @@ interface AppShellContextType {
   navigate: (route: string) => void;
   isOnboarded: boolean;
   setIsOnboarded: (value: boolean) => void;
-  theme: 'light' | 'dark' | 'system';
-  setTheme: (theme: 'light' | 'dark' | 'system') => void;
+  theme: 'dark';
   userName: string;
   setUserName: (name: string) => void;
 }
@@ -29,7 +28,7 @@ interface AppShellProviderProps {
 export function AppShellProvider({ children }: AppShellProviderProps) {
   const [currentRoute, setCurrentRoute] = useState('/boot');
   const [isOnboarded, setIsOnboarded] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
+  const theme = 'dark' as const;
   const [userName, setUserName] = useState('');
 
   const navigate = (route: string) => {
@@ -44,7 +43,6 @@ export function AppShellProvider({ children }: AppShellProviderProps) {
         isOnboarded,
         setIsOnboarded,
         theme,
-        setTheme,
         userName,
         setUserName,
       }}

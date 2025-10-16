@@ -90,7 +90,7 @@ export const useNotificationsStore = create<NotificationsState>()((set, get) => 
       const { toJavaIntId, getNativeSoundName } = await import('../lib/notifications/habitReminderSystem');
       const id = toJavaIntId(`test-${Date.now()}`);
       const at = new Date(Date.now() + 60 * 1000);
-      await LocalNotifications.schedule({ notifications: [{ id, title: '🔔 Test Notification', body: 'This is a test notification with sound', schedule: { at }, channelId: 'habit-reminders-ting', sound: getNativeSoundName() }] });
+      await LocalNotifications.schedule({ notifications: [{ id, title: '🔔 Test Notification', body: 'This is a test notification', schedule: { at }, channelId: 'habit-reminders-ting', sound: getNativeSoundName() }] });
     } catch {}
     await get().refreshScheduledCount();
   },

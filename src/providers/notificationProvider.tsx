@@ -31,6 +31,7 @@ interface NotificationContextType {
   // Notification management
   scheduledNotifications: { id: string; habitId: string; title: string; body: string; scheduledTime: string; frequency: 'daily' | 'weekly'; weekdays?: number[]; isActive: boolean; createdAt: Date }[];
   requestPermission: () => Promise<{ granted: boolean; canAskAgain: boolean; status: 'granted' | 'denied' | 'prompt' }>;
+  checkAndRequestPermission: () => Promise<boolean>;
   scheduleHabitReminder: (
     habitId: string,
     title: string,
@@ -83,10 +84,12 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       try {
         setIsLoading(true);
         const isNative = Capacitor.getPlatform() !== 'web';
+        console.log('[NOTIFICATIONS init] start', { platform: Capacitor.getPlatform(), isNative });
 
         if (isNative) {
           await runMigrationOnce();
           await ensureReminderChannel();
+          console.log('[NOTIFICATIONS init] reminder channel ensured');
 
           // Register action types (Snooze, Mark Done)
           try {
@@ -101,11 +104,13 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
                 },
               ],
             });
+            console.log('[NOTIFICATIONS init] action types registered');
           } catch {}
 
           // Check permission status
           const display = await checkNotifPermissions();
           const permObj = { granted: display === 'granted', canAskAgain: display !== 'denied', status: display } as const;
+          console.log('[NOTIFICATIONS init] permission status', permObj);
           setPermission(permObj);
           setScheduledNotifications([]);
           // After migration, reschedule from current habits if enabled + granted
@@ -148,13 +153,15 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     window.addEventListener('notification-action', handleNotificationAction as EventListener);
 
     // Native listener: actions
+    let removeActionListener: { remove: () => void } | undefined;
     try {
       LocalNotifications.addListener('localNotificationActionPerformed', async (action) => {
         try {
+          console.log('[NOTIFICATION ACTION]', JSON.stringify(action, null, 2));
           const info = action?.notification;
-          const extra = info?.extra || {};
-          const habitId: string | undefined = extra.habitId;
-          const time: string | undefined = extra.reminderTime;
+          const extra = (info?.extra || {}) as Record<string, unknown>;
+          const habitId: string | undefined = typeof extra.habitId === 'string' ? extra.habitId : undefined;
+          const time: string | undefined = typeof extra.reminderTime === 'string' ? extra.reminderTime : undefined;
           const actionId: string | undefined = (action as any)?.actionId;
           if (!habitId) return;
           const store = useHabitsStore.getState();
@@ -171,17 +178,38 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
             // Schedule one-off +10 minutes
             const at = new Date(Date.now() + 10 * 60 * 1000);
             const nativeId = toJavaIntId(`snooze|${habitId}|${at.getTime()}`);
-            await LocalNotifications.schedule({ notifications: [{ id: nativeId, title: info?.title || 'Reminder', body: info?.body || '', schedule: { at }, channelId: 'habit-reminders-ting', sound: getNativeSoundName(), extra: { habitId, type: 'habit-reminder', snoozed: true } }] });
+            await LocalNotifications.schedule({
+              notifications: [{
+                id: nativeId,
+                title: info?.title || 'Reminder',
+                body: info?.body || '',
+                schedule: { at },
+                channelId: 'habit-reminders-ting',
+                sound: getNativeSoundName(),
+                smallIcon: info?.smallIcon,
+                extra: { habitId, reminderTime: time, type: 'habit-reminder', snoozed: true },
+                actionTypeId: info?.actionTypeId,
+              }],
+            });
           }
         } catch (e) {
           console.warn('Action handler error', e);
         }
+      }).then((listener) => {
+        removeActionListener = listener;
+      }).catch((err) => {
+        console.warn('Failed to register notification action listener', err);
       });
     } catch {}
 
     return () => {
       window.removeEventListener('notification-click', handleNotificationClick as EventListener);
       window.removeEventListener('notification-action', handleNotificationAction as EventListener);
+      try {
+        removeActionListener?.remove();
+      } catch (err) {
+        console.warn('Failed to remove LocalNotifications listener', err);
+      }
     };
   }, []);
 
@@ -193,10 +221,12 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       if (isNative) {
         const display = await requestNotifPermissions();
         const perm = { granted: display === 'granted', canAskAgain: display !== 'denied', status: display } as const;
+        console.log('[NOTIFICATIONS permission request]', perm);
         setPermission(perm);
         return perm;
       } else {
         const perm = { granted: false, canAskAgain: true, status: 'prompt' as const };
+        console.log('[NOTIFICATIONS permission request:web]', perm);
         setPermission(perm);
         return perm;
       }
@@ -223,6 +253,67 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     }
   };
 
+  const checkAndRequestPermission = async (): Promise<boolean> => {
+    const isNative = Capacitor.getPlatform() !== 'web';
+    if (!isNative) {
+      return true;
+    }
+    try {
+      const status = await LocalNotifications.checkPermissions();
+      const display = status.display as 'granted' | 'denied' | 'prompt' | undefined;
+      if (display === 'granted') {
+        setPermission({ granted: true, canAskAgain: true, status: 'granted' });
+        return true;
+      }
+      if (display === 'prompt' || !display) {
+        setPermission({ granted: false, canAskAgain: true, status: 'prompt' });
+        const requestRes = await LocalNotifications.requestPermissions();
+        const requestDisplay = (requestRes.display ?? requestRes) as 'granted' | 'denied' | 'prompt' | undefined;
+        const granted = requestDisplay === 'granted';
+        setPermission({ granted, canAskAgain: requestDisplay !== 'denied', status: (requestDisplay ?? 'prompt') as 'granted' | 'denied' | 'prompt' });
+        return granted;
+      }
+
+      setPermission({ granted: false, canAskAgain: false, status: 'denied' });
+      try {
+        let goToSettings = false;
+        try {
+          const dialogPlugin: any = (Capacitor as any)?.Plugins?.Dialog ?? (Capacitor as any)?.Dialog;
+          if (dialogPlugin?.confirm) {
+            const result = await dialogPlugin.confirm({
+              title: 'Permission Required',
+              message: 'To schedule reminders, this app needs permission to send notifications. Would you like to go to settings to enable it?',
+              okButtonTitle: 'Go to Settings',
+              cancelButtonTitle: 'Not Now',
+            });
+            goToSettings = !!result?.value;
+          } else if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
+            goToSettings = window.confirm('To schedule reminders, this app needs permission to send notifications. Open settings now?');
+          }
+        } catch (dialogErr) {
+          console.warn('Permission dialog failed', dialogErr);
+        }
+        if (goToSettings) {
+          try {
+            const { App } = await import('@capacitor/app');
+            const appApi: any = App;
+            if (App?.openSettings) {
+              await App.openSettings();
+            } else if (typeof appApi?.openAppSettings === 'function') {
+              await appApi.openAppSettings();
+            }
+          } catch (settingsErr) {
+            console.warn('Failed to open app settings', settingsErr);
+          }
+        }
+      } catch {}
+      return false;
+    } catch (err) {
+      console.warn('Notification permission check failed', err);
+      return false;
+    }
+  };
+
   const scheduleHabitReminder = async (
     habitId: string,
     title: string,
@@ -236,6 +327,14 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       setError(null);
       if (!isEnabled) throw new Error('Notifications disabled');
       const isNative = Capacitor.getPlatform() !== 'web';
+      console.log('[NOTIFICATIONS scheduleHabitReminder] request', {
+        habitId,
+        title,
+        scheduledTime,
+        frequency,
+        weekdays,
+        isNative,
+      });
       if (!isNative) return `web-${habitId}-${scheduledTime}`;
       const habit = useHabitsStore.getState().habitsById[habitId] ?? { id: habitId, name: title, emoji, frequency: 'daily', reminderTimes: [], createdAt: new Date().toISOString() };
       const tmpHabit = { ...habit, reminderTimes: habit.reminderTimes?.includes(scheduledTime) ? habit.reminderTimes : [...(habit.reminderTimes || []), scheduledTime] };
@@ -324,7 +423,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       if (!isEnabled) throw new Error('Notifications disabled');
       const id = toJavaIntId(`test-${Date.now()}`);
       await LocalNotifications.schedule({
-        notifications: [{ id, title, body, channelId: 'habit-reminders-ting', sound: getNativeSoundName(), smallIcon: 'notification_icon' }]
+        notifications: [{ id, title, body: body || 'This is a test notification', channelId: 'habit-reminders-ting', sound: getNativeSoundName(), smallIcon: 'notification_icon' }]
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to send test notification';
@@ -357,6 +456,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     setEnabled,
     scheduledNotifications,
     requestPermission,
+    checkAndRequestPermission,
     scheduleHabitReminder,
     cancelHabitReminder,
     cancelHabitReminders,

@@ -6,7 +6,15 @@ export function ErrorNotFound() {
   const { navigate } = useAppShell();
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background p-6 text-center">
+    <div 
+      className="flex flex-col items-center justify-center min-h-screen bg-background w-full p-6 text-center"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+      }}
+    >
       <div className="mb-8">
         <div className="w-32 h-32 bg-muted rounded-full flex items-center justify-center mb-6">
           <span className="text-6xl">🔍</span>

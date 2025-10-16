@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { AppShellProvider, useAppShell, BottomNav } from './components/AppShell';
-import { BackNavHandler } from './components/BackNavHandler';
+import { App as CapacitorApp } from '@capacitor/app';
 import { NotificationProvider } from './providers/notificationProvider';
 import { BootScreen } from './screens/BootScreen';
 import { OnboardingMain } from './screens/OnboardingMain';
@@ -24,47 +24,37 @@ import { useHabitsStore } from './store/HabitsStore';
 import { startDayRolloverService } from './services/DayRolloverService';
 import { start as startSyncBus } from './lib/syncBus';
 
-// Import test utilities in development mode
-if (process.env.NODE_ENV === 'development') {
-  import('./utils/backNavHandlerTest');
-}
-
 function AppContent() {
-  const { currentRoute, navigate, theme, isOnboarded } = useAppShell();
-  const { hydrateAll, hydrationState } = useHabitsStore();
+  const { currentRoute, navigate, goBack, theme, isOnboarded } = useAppShell();
+  const hydrationState = useHabitsStore(state => state.hydrationState);
   const lastNotifNavAtRef = useRef<number>(0);
   const lastNotifHabitRef = useRef<string | null>(null);
+  const routeRef = useRef(currentRoute);
+  const navigateRef = useRef(navigate);
+  const goBackRef = useRef(goBack);
+  useEffect(() => { routeRef.current = currentRoute; }, [currentRoute]);
+  useEffect(() => { navigateRef.current = navigate; }, [navigate]);
+  useEffect(() => { goBackRef.current = goBack; }, [goBack]);
 
-  // Apply theme to document
+  // Always apply dark theme
   useEffect(() => {
     const root = document.documentElement;
-    
-    if (theme === 'dark') {
-      root.classList.add('dark');
-    } else if (theme === 'light') {
-      root.classList.remove('dark');
-    } else {
-      // System theme
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (prefersDark) {
-        root.classList.add('dark');
-      } else {
-        root.classList.remove('dark');
-      }
-    }
-  }, [theme]);
+    root.classList.add('dark');
+  }, []);
 
   // Hydrate habits store on app start and start rollover service
   useEffect(() => {
-    if (hydrationState !== 'ready') {
+    const { _hasHydrated } = useHabitsStore.getState();
+    const hydrateAll = useHabitsStore.getState().hydrateAll;
+    if (!_hasHydrated) {
+      console.log('--- HYDRATING STORE ---');
       void hydrateAll();
     }
     startDayRolloverService();
-    // Start cross-tab/app sync bus: rehydrate on external mutations
     startSyncBus(async (_msg) => {
-      await hydrateAll();
+      await hydrateAll(true);
     });
-  }, [hydrateAll, hydrationState]);
+  }, []);
 
   // Navigate to habit detail when a notification is tapped
   useEffect(() => {
@@ -152,25 +142,46 @@ function AppContent() {
   // Show bottom navigation for main app routes
   const showBottomNav = isOnboarded && ['/home', '/history', '/insights', '/settings'].includes(currentRoute);
 
+  useEffect(() => {
+    let handle: { remove: () => void } | undefined;
+    const listenerPromise = CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+      const route = routeRef.current;
+      if (route === '/' || route === '/home') {
+        void CapacitorApp.exitApp();
+        return;
+      }
+      if (canGoBack) {
+        goBackRef.current?.();
+      } else {
+        navigateRef.current?.('/home');
+      }
+    });
+
+    listenerPromise
+      .then((h) => { handle = h; })
+      .catch(() => { /* noop if listener unsupported */ });
+
+    return () => {
+      if (handle) {
+        handle.remove();
+      }
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-md mx-auto relative">
-        {/* Robust Android back navigation handler */}
-        <BackNavHandler
-          enableDoublePressToExit={true}
-          doublePressWindow={2000}
-          rootRoutes={['/', '/home']}
-          exitMessage="Press back again to exit"
-        />
-        
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Full-screen content area */}
+      <div className="flex-1 flex flex-col w-full">
         {renderScreen()}
-        {showBottomNav && (
-          <BottomNav
-            currentRoute={currentRoute}
-            onNavigate={navigate}
-          />
-        )}
       </div>
+      
+      {/* Fixed bottom navigation */}
+      {showBottomNav && (
+        <BottomNav
+          currentRoute={currentRoute}
+          onNavigate={navigate}
+        />
+      )}
     </div>
   );
 }

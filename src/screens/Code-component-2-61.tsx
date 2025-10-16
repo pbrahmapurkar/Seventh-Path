@@ -1,13 +1,12 @@
 import React from 'react';
-import { ChevronRight, User, Bell, Palette, RotateCcw, Info, Sun, Moon, Monitor } from 'lucide-react';
+import { ChevronRight, User, Bell, RotateCcw, Info } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Switch } from '../components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { AppBar } from '../components/AppShell';
 import { useAppShell } from '../components/AppShell';
 
 export function Settings() {
-  const { userName, theme, setTheme, setIsOnboarded, navigate } = useAppShell();
+  const { userName, setIsOnboarded, navigate } = useAppShell();
 
   const handleResetOnboarding = () => {
     if (confirm('This will clear your profile and habits. Are you sure?')) {
@@ -78,38 +77,6 @@ export function Settings() {
             title="Notifications"
             description="Daily habit reminders"
             action={<Switch defaultChecked />}
-          />
-          <SettingsRow
-            icon={<Palette size={20} />}
-            title="Theme"
-            description="Choose your preferred theme"
-            action={
-              <Select value={theme} onValueChange={setTheme}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="system">
-                    <div className="flex items-center gap-2">
-                      <Monitor size={16} />
-                      System
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="light">
-                    <div className="flex items-center gap-2">
-                      <Sun size={16} />
-                      Light
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="dark">
-                    <div className="flex items-center gap-2">
-                      <Moon size={16} />
-                      Dark
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            }
           />
         </SettingsSection>
 

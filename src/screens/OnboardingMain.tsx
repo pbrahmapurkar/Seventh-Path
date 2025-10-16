@@ -23,9 +23,17 @@ export function OnboardingMain() {
   }, []);
 
   return (
-    <div className="onboarding-intro bg-[#0C1117] dark:bg-[#0C1117] min-h-screen">
+    <div 
+      className="onboarding-intro bg-[#0C1117] dark:bg-[#0C1117] min-h-screen w-full flex flex-col"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+      }}
+    >
       {/* Safe area header with progress */}
-      <div className="intro-header pt-safe-area-top">
+      <div className="intro-header flex-shrink-0">
         <div className="intro-progress-bars" aria-hidden="true">
           <span className="bar bar-active" />
           <span className="bar" />
@@ -36,7 +44,7 @@ export function OnboardingMain() {
       </div>
 
       {/* Scrollable content */}
-      <div className="intro-scroll">
+      <div className="intro-scroll flex-1 overflow-y-auto">
         {/* Logo block */}
         <div className="intro-logo-wrap motion-scale-in" role="img" aria-label="Seventh Path logo">
           <img src={seventhPathLogo} alt="Seventh Path Logo" className="intro-logo" />

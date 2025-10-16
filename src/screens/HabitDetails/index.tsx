@@ -4,7 +4,9 @@ import { useAppShell, AppBar, BottomNav } from '../../components/AppShell';
 import { Button } from '../../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Badge } from '../../components/ui/badge';
-import { Edit, Trash2, Plus, Clock, Check, Home, BarChart3, Settings, History } from 'lucide-react';
+import { Skeleton, SkeletonCard, SkeletonStats, SkeletonTabs } from '../../components/ui/skeleton';
+import { Edit, Trash2, Plus, Clock, Check, Home, BarChart3, Settings, History, CheckCircle2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 // removed Snooze action; no LocalNotifications import needed here
 
 function formatSinceDays(iso: string): number {
@@ -16,15 +18,34 @@ function formatSinceDays(iso: string): number {
 
 function TimeInput({ onSubmit, initial }: { onSubmit: (t: string) => void; initial?: string }) {
   const [t, setT] = useState(initial || '08:00');
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  
+  const handleTimeChange = (newTime: string) => {
+    setT(newTime);
+    onSubmit(newTime);
+    setShowConfirmation(true);
+    setTimeout(() => setShowConfirmation(false), 2000);
+  };
+
   return (
     <div className="flex items-center gap-2">
       <input
         type="time"
         className="border rounded px-2 py-1 text-sm bg-background"
         value={t}
-        onChange={(e) => setT(e.target.value)}
+        onChange={(e) => handleTimeChange(e.target.value)}
       />
-      <Button size="sm" onClick={() => onSubmit(t)}>Save</Button>
+      {showConfirmation && (
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0, opacity: 0 }}
+          className="flex items-center gap-1 text-green-600 text-xs"
+        >
+          <CheckCircle2 className="w-3 h-3" />
+          <span>Saved</span>
+        </motion.div>
+      )}
     </div>
   );
 }
@@ -44,64 +65,104 @@ export function HabitDetails({ habitId }: { habitId: string }) {
   const canCompleteToday = useMemo(() => Boolean(todayEntry && todayEntry.reminders.length > 0 && !completedToday), [todayEntry, completedToday]);
 
   if (loading) return (
-    <div className="p-6">Loading…</div>
+    <div 
+      className="flex flex-col min-h-screen bg-background w-full"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+      }}
+    >
+      <AppBar title="Habit Details" showBack onBack={() => navigate('/home')} />
+      <div className="flex-1 px-6 py-6 pt-20 pb-24 w-full overflow-x-hidden overflow-y-auto">
+        <SkeletonCard className="mb-8" />
+        <SkeletonCard className="mb-8" />
+        <SkeletonTabs />
+      </div>
+    </div>
   );
   if (error || !habit) return (
-    <div className="p-6">{error || 'Habit not found'}</div>
+    <div 
+      className="flex flex-col min-h-screen bg-background w-full p-6"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+      }}
+    >
+      {error || 'Habit not found'}
+    </div>
   );
 
   return (
-    <div className="flex flex-col min-h-screen bg-background pb-24 pb-safe-area-bottom">
+    <div 
+      className="flex flex-col min-h-screen bg-background w-full"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+      }}
+    >
       <AppBar
         title="Habit Details"
         showBack
         onBack={() => navigate('/home')}
         actions={
-          <Button variant="ghost" size="sm" onClick={() => navigate(`/habit/${habitId}/edit`)}>
-            <Edit size={16} />
+          <Button variant="ghost" size="sm" onClick={() => navigate(`/habit/${habitId}/edit`)} className="hover:bg-muted/50 active:scale-95 transition-all duration-200">
+            <Edit size={18} />
           </Button>
         }
       />
 
-      <div className="flex-1 px-6 py-6">
-        {/* Header Card */}
-        <div className="bg-card border border-border rounded-lg p-6 mb-8">
-          <div className="flex items-center gap-4 mb-6">
-            <span className="text-4xl">{habit.emoji}</span>
+      <div className="flex-1 px-6 py-6 pt-20 pb-24 w-full overflow-x-hidden overflow-y-auto">
+        {/* Header Card - Enhanced */}
+        <div className="bg-gradient-to-br from-card to-card/50 border border-border rounded-2xl p-8 mb-8 w-full shadow-sm">
+          <div className="flex items-center gap-6 mb-8">
+            <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-3xl flex items-center justify-center shadow-lg">
+              <span className="text-4xl">{habit.emoji}</span>
+            </div>
             <div className="flex-1">
-              <h1 className="text-2xl font-medium">{habit.name}</h1>
-              <p className="text-muted-foreground">
-                {habit.frequency === 'daily' ? 'Daily' : 'Weekly'}
+              <h1 className="text-3xl font-bold text-foreground mb-2">{habit.name}</h1>
+              <p className="text-muted-foreground font-medium text-lg">
+                {habit.frequency === 'daily' ? 'Daily' : 'Weekly'} Habit
               </p>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <div className="text-center">
-              <div className="text-2xl font-medium text-primary">{stats?.currentStreak ?? 0}</div>
-              <div className="text-sm text-muted-foreground">🔥 Current streak</div>
+          <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+            <div className="text-center bg-primary/5 rounded-2xl p-4">
+              <div className="text-3xl font-bold text-primary mb-1">{stats?.currentStreak ?? 0}</div>
+              <div className="text-sm text-muted-foreground font-medium">🔥 Current streak</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-medium text-primary">{stats?.bestStreak ?? 0}</div>
-              <div className="text-sm text-muted-foreground">🏆 Best streak</div>
+            <div className="text-center bg-primary/5 rounded-2xl p-4">
+              <div className="text-3xl font-bold text-primary mb-1">{stats?.bestStreak ?? 0}</div>
+              <div className="text-sm text-muted-foreground font-medium">🏆 Best streak</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-medium text-primary">{stats?.completionRate ?? 0}%</div>
-              <div className="text-sm text-muted-foreground">% Completion</div>
+            <div className="text-center bg-primary/5 rounded-2xl p-4">
+              <div className="text-3xl font-bold text-primary mb-1">{stats?.completionRate ?? 0}%</div>
+              <div className="text-sm text-muted-foreground font-medium">% Completion</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-medium text-primary">{stats?.totalCompletedDays ?? 0}</div>
-              <div className="text-sm text-muted-foreground">Total completions</div>
+            <div className="text-center bg-primary/5 rounded-2xl p-4">
+              <div className="text-3xl font-bold text-primary mb-1">{stats?.totalCompletedDays ?? 0}</div>
+              <div className="text-sm text-muted-foreground font-medium">Total completions</div>
             </div>
           </div>
         </div>
 
-        {/* Reminder Checklist (today) */}
-        <div className="bg-card border border-border rounded-lg p-6 mb-8">
+        {/* Reminder Checklist (today) - Enhanced */}
+        <div className="bg-card border border-border rounded-2xl p-6 mb-8 w-full shadow-sm">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="font-medium">Today's Reminders</h3>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-primary/10 rounded-xl flex items-center justify-center">
+                <Clock className="w-4 h-4 text-primary" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground">Today's Reminders</h3>
+            </div>
             {!completedToday && (
-              <Button size="sm" variant="secondary" onClick={() => setAdding(v => !v)}>
-                <Plus size={14} className="mr-1" /> Add
+              <Button size="sm" variant="secondary" onClick={() => setAdding(v => !v)} className="rounded-xl font-semibold hover:scale-105 active:scale-95 transition-all duration-200">
+                <Plus size={16} className="mr-2" /> Add
               </Button>
             )}
           </div>
@@ -112,21 +173,21 @@ export function HabitDetails({ habitId }: { habitId: string }) {
             </div>
           )}
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             {todayEntry && todayEntry.reminders.length > 0 ? (
               todayEntry.reminders.map((r) => (
-                <div key={r.time} className="flex items-center justify-between p-3 rounded border border-border">
-                  <div className="flex items-center gap-3">
+                <div key={r.time} className="flex items-center justify-between p-4 rounded-2xl border border-border bg-card/50 hover:bg-card transition-all duration-200">
+                  <div className="flex items-center gap-4">
                     <button
-                      className={`w-6 h-6 rounded border flex items-center justify-center ${r.done ? 'bg-primary text-primary-foreground border-primary' : 'border-border'}`}
+                      className={`w-7 h-7 rounded-xl border-2 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 ${r.done ? 'bg-primary text-primary-foreground border-primary shadow-lg' : 'border-border hover:border-primary/50'}`}
                       onClick={() => toggleReminder(r.time, !r.done)}
                       aria-label={r.done ? 'Uncheck' : 'Check'}
                     >
-                      {r.done && <Check size={14} />}
+                      {r.done && <Check size={16} />}
                     </button>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Clock size={14} className="text-muted-foreground" />
-                      <span>{r.time}</span>
+                    <div className="flex items-center gap-3 text-base">
+                      <Clock size={16} className="text-muted-foreground" />
+                      <span className="font-semibold">{r.time}</span>
                       {editingTime === r.time ? (
                         <TimeInput initial={r.time} onSubmit={async (t) => { await updateReminderTime(r.time, t); setEditingTime(null); }} />
                       ) : null}
@@ -134,76 +195,105 @@ export function HabitDetails({ habitId }: { habitId: string }) {
                   </div>
                   <div className="flex items-center gap-2">
                     {!r.done && (
-                      <Button size="sm" variant="outline" onClick={() => setEditingTime(editingTime === r.time ? null : r.time)}>Edit</Button>
+                      <Button size="sm" variant="outline" onClick={() => setEditingTime(editingTime === r.time ? null : r.time)} className="rounded-xl font-semibold hover:scale-105 active:scale-95 transition-all duration-200">Edit</Button>
                     )}
                     {!r.done && (
-                      <Button size="sm" variant="outline" onClick={() => removeReminder(r.time)}>Delete</Button>
+                      <Button size="sm" variant="outline" onClick={() => removeReminder(r.time)} className="rounded-xl font-semibold hover:scale-105 active:scale-95 transition-all duration-200">Delete</Button>
                     )}
-                    
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground">No reminders set for today.</p>
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-muted/20 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                  <Clock className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <p className="text-muted-foreground font-medium">No reminders set for today.</p>
+              </div>
             )}
           </div>
 
-          <div className="mt-6">
+          <div className="mt-8">
             {completedToday ? (
-              <Button className="w-full" disabled>✅ Completed Today</Button>
+              <Button className="w-full h-14 text-lg font-bold rounded-2xl" disabled>✅ Completed Today</Button>
             ) : (
-              <Button className="w-full" onClick={markCompletedToday} disabled={!canCompleteToday}>Mark Completed Today</Button>
+              <Button className="w-full h-14 text-lg font-bold rounded-2xl hover:scale-105 active:scale-95 transition-all duration-200" onClick={markCompletedToday} disabled={!canCompleteToday}>Mark Completed Today</Button>
             )}
           </div>
         </div>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="history">History</TabsTrigger>
+        {/* Tabs - Enhanced */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-muted/30 rounded-2xl p-1">
+            <TabsTrigger value="overview" className="rounded-xl font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Overview</TabsTrigger>
+            <TabsTrigger value="history" className="rounded-xl font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">History</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-8 mt-8">
-            {/* This Week */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-card border border-border rounded-lg p-4">
-                <div className="text-sm font-medium mb-2">This Week</div>
-                <div className="text-xl font-medium">
+          <TabsContent value="overview" className="space-y-8 mt-8 w-full">
+            {/* This Week - Enhanced */}
+            <div className="grid grid-cols-2 gap-6 w-full">
+              <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 bg-primary/10 rounded-xl flex items-center justify-center">
+                    <Clock className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="text-lg font-bold text-foreground">This Week</div>
+                </div>
+                <div className="text-3xl font-bold text-primary mb-1">
                   {stats?.weeklyProgress.filter(d => d.complete).length ?? 0}/7
                 </div>
-                <div className="text-sm text-muted-foreground">Days completed</div>
+                <div className="text-sm text-muted-foreground font-medium">Days completed</div>
               </div>
-              <div className="bg-card border border-border rounded-lg p-4">
-                <div className="text-sm font-medium mb-2">Created</div>
-                <div className="text-xl font-medium">{formatSinceDays(habit.createdAt)}</div>
-                <div className="text-sm text-muted-foreground">Days ago</div>
+              <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 bg-primary/10 rounded-xl flex items-center justify-center">
+                    <Check className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="text-lg font-bold text-foreground">Created</div>
+                </div>
+                <div className="text-3xl font-bold text-primary mb-1">{formatSinceDays(habit.createdAt)}</div>
+                <div className="text-sm text-muted-foreground font-medium">Days ago</div>
               </div>
             </div>
 
-            {/* Recent Activity */}
-            <div className="bg-card border border-border rounded-lg p-6">
-              <h3 className="font-medium mb-6">Recent Activity</h3>
-              <div className="space-y-3">
+            {/* Recent Activity - Enhanced */}
+            <div className="bg-card border border-border rounded-2xl p-6 w-full shadow-sm">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 bg-primary/10 rounded-xl flex items-center justify-center">
+                  <Check className="w-4 h-4 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold text-foreground">Recent Activity</h3>
+              </div>
+              <div className="space-y-4">
                 {activity.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No recent activity yet.</p>
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-muted/20 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                      <Check className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <p className="text-muted-foreground font-medium">No recent activity yet.</p>
+                  </div>
                 ) : activity.map((a, idx) => (
-                  <div key={idx} className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-primary rounded-full" />
-                    <span className="text-sm">
+                  <div key={idx} className="flex items-center gap-4 p-4 rounded-2xl bg-card/50 hover:bg-card transition-all duration-200">
+                    <div className="w-3 h-3 bg-primary rounded-full flex-shrink-0" />
+                    <span className="text-base font-medium flex-1">
                       {new Date(a.ts).toLocaleString()} — {a.type.replace('_', ' ')} {a.detail ? `(${a.detail})` : ''}
                     </span>
-                    <Badge variant="secondary" className="ml-auto text-xs">Log</Badge>
+                    <Badge variant="secondary" className="text-xs font-semibold px-3 py-1 rounded-full">Log</Badge>
                   </div>
                 ))}
               </div>
             </div>
           </TabsContent>
 
-          <TabsContent value="history" className="space-y-8 mt-8">
-            <div className="bg-card border border-border rounded-lg p-6">
-              <h3 className="font-medium mb-6">Last 14 Days</h3>
-              <div className="grid grid-cols-7 gap-2">
+          <TabsContent value="history" className="space-y-8 mt-8 w-full">
+            <div className="bg-card border border-border rounded-2xl p-6 w-full shadow-sm">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 bg-primary/10 rounded-xl flex items-center justify-center">
+                  <Clock className="w-4 h-4 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold text-foreground">Last 14 Days</h3>
+              </div>
+              <div className="grid grid-cols-7 gap-3">
                 {stats?.weeklyProgress && (
                   [...Array(14)].map((_, i) => {
                     const d = new Date(); d.setDate(d.getDate() - (13 - i));
@@ -211,7 +301,7 @@ export function HabitDetails({ habitId }: { habitId: string }) {
                     const found = stats.weeklyProgress.find(w => w.date === ymd);
                     const complete = found?.complete ?? false;
                     return (
-                      <div key={i} className={`h-8 rounded border ${complete ? 'bg-primary border-primary' : 'border-muted bg-muted/30'}`} title={ymd} />
+                      <div key={i} className={`h-10 rounded-2xl border-2 transition-all duration-200 hover:scale-110 ${complete ? 'bg-primary border-primary shadow-lg' : 'border-muted bg-muted/30 hover:border-primary/50'}`} title={ymd} />
                     );
                   })
                 )}
@@ -220,15 +310,15 @@ export function HabitDetails({ habitId }: { habitId: string }) {
           </TabsContent>
         </Tabs>
 
-        {/* Danger Zone */}
-        <div className="mt-8 pt-6 border-t border-border">
-          <Button variant="destructive" className="w-full" onClick={async () => {
+        {/* Danger Zone - Enhanced */}
+        <div className="mt-8 pt-6 border-t border-border w-full">
+          <Button variant="destructive" className="w-full h-14 text-lg font-bold rounded-2xl hover:scale-105 active:scale-95 transition-all duration-200" onClick={async () => {
             if (confirm('Delete this habit and all its data?')) {
               await removeHabit();
               navigate('/home');
             }
           }}>
-            <Trash2 size={16} className="mr-2" /> Delete Habit
+            <Trash2 size={18} className="mr-2" /> Delete Habit
           </Button>
         </div>
       </div>

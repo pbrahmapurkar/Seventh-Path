@@ -57,7 +57,7 @@ class NotificationService {
         {
           id,
           title: 'Seventh Path',
-          body: 'Test notification',
+          body: 'This is a test notification',
           schedule: { at: new Date(Date.now() + 1000) },
           channelId: 'seventhpath_reminders',
           sound,
