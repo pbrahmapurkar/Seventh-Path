@@ -1,30 +1,37 @@
 // Service Worker for Seventh Path Habit Tracker
-const CACHE_NAME = 'seventh-path-v1';
-const urlsToCache = [
-  '/',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
-  '/manifest.json'
-];
+const CACHE_NAME = 'seventh-path-v1.0.8';
 
-// Install event
+// Install event - skip waiting to activate immediately
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
-      })
-  );
+  console.log('Service Worker: Installing...');
+  self.skipWaiting();
 });
 
-// Fetch event
+// Fetch event - network-first strategy for development
 self.addEventListener('fetch', (event) => {
+  // Skip non-GET requests and chrome-extension requests
+  if (event.request.method !== 'GET' || event.request.url.startsWith('chrome-extension://')) {
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request)
+    fetch(event.request)
       .then((response) => {
-        // Return cached version or fetch from network
-        return response || fetch(event.request);
+        // Clone the response before caching
+        const responseToCache = response.clone();
+        
+        // Only cache successful responses
+        if (response.status === 200) {
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        
+        return response;
+      })
+      .catch(() => {
+        // Fallback to cache if network fails
+        return caches.match(event.request);
       })
   );
 });
