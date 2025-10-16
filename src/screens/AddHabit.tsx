@@ -366,6 +366,12 @@ export function AddHabit() {
             </div>
           </div>
 
+          {/* Timer Configuration Section - NEW */}
+          <TimerConfiguration
+            config={timerConfig}
+            onChange={setTimerConfig}
+          />
+
           {/* Permission Warning */}
           {hasReminder && !isPermissionGranted && (
             <div className="bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900 border border-amber-200 dark:border-amber-800 rounded-2xl p-6">
