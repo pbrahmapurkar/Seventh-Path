@@ -451,6 +451,43 @@ export function Settings() {
           )}
         </SettingsSection>
 
+        {/* Appearance Section */}
+        <SettingsSection title="Appearance" icon={<Sparkles className="w-4 h-4 text-primary" />}>
+          <SettingsRow
+            icon={darkMode ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+            title="Dark Mode"
+            description={darkMode ? 'Switch to light theme' : 'Switch to dark theme'}
+            action={
+              <Switch
+                checked={darkMode}
+                onCheckedChange={handleToggleTheme}
+              />
+            }
+          />
+        </SettingsSection>
+                    className="h-11"
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <SettingsRow
+              icon={<User className="w-5 h-5" />}
+              title="Display Name"
+              description={userName || 'Tap to set your name'}
+              action={
+                <Button size="sm" variant="outline" onClick={handleStartEditingName} className="hover:scale-105 transition-transform">
+                  <Edit2 className="w-4 h-4 mr-1" />
+                  Edit
+                </Button>
+              }
+            />
+          )}
+        </SettingsSection>
+
         {/* Enhanced Notifications Section */}
         <SettingsSection title="Notifications" icon={<Bell className="w-4 h-4 text-primary" />}>
           <SettingsRow
