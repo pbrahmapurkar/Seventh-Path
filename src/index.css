@@ -4,86 +4,33 @@
 
 @layer base {
   :root {
-    /* Light Theme - Soft, Eye-Friendly Palette */
-    --background: 210 40% 98%;  /* Soft off-white */
-    --foreground: 222 47% 11%;  /* Deep charcoal for text */
-    --card: 0 0% 100%;  /* Pure white cards */
-    --card-foreground: 222 47% 11%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 217 91% 60%;  /* Soft blue - calming */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96%;  /* Very light blue-gray */
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;  /* Medium gray for secondary text */
-    --accent: 142 76% 73%;  /* Soft green - energizing */
-    --accent-foreground: 222 47% 11%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 217 91% 60%;
-    --radius: 0.75rem;  /* Slightly more rounded for friendliness */
-    
-    /* Additional palette colors */
-    --success: 142 76% 36%;
-    --success-light: 142 76% 73%;
-    --warning: 38 92% 50%;
-    --warning-light: 48 96% 89%;
-    --info: 199 89% 48%;
-    --info-light: 199 89% 96%;
+    /* Theme colors will be injected dynamically via ThemeContext */
+    /* Default to light theme */
+    --background: hsl(210, 40%, 98%);
+    --foreground: hsl(222, 47%, 11%);
+    --card: hsl(0, 0%, 100%);
+    --card-foreground: hsl(222, 47%, 11%);
+    --popover: hsl(0, 0%, 100%);
+    --popover-foreground: hsl(222, 47%, 11%);
+    --primary: hsl(217, 91%, 60%);
+    --primary-foreground: hsl(0, 0%, 100%);
+    --secondary: hsl(210, 40%, 96%);
+    --secondary-foreground: hsl(222, 47%, 11%);
+    --muted: hsl(210, 40%, 96%);
+    --muted-foreground: hsl(215, 16%, 47%);
+    --accent: hsl(142, 76%, 73%);
+    --accent-foreground: hsl(222, 47%, 11%);
+    --destructive: hsl(0, 84%, 60%);
+    --destructive-foreground: hsl(0, 0%, 100%);
+    --success: hsl(142, 76%, 36%);
+    --success-foreground: hsl(0, 0%, 100%);
+    --warning: hsl(38, 92%, 50%);
+    --warning-foreground: hsl(0, 0%, 100%);
+    --info: hsl(199, 89%, 48%);
+    --info-foreground: hsl(0, 0%, 100%);
+    --border: hsl(214, 32%, 91%);
+    --input: hsl(214, 32%, 91%);
+    --ring: hsl(217, 91%, 60%);
+    --radius: 0.75rem;
   }
-
-  .dark {
-    /* Optional: Keep dark mode available but not default */
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 13%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 13%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 223 47% 11%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 142 76% 73%;
-    --accent-foreground: 222 47% 11%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 224 71% 4%;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  
-  /* Improved readability */
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold;
-    letter-spacing: -0.02em;
-  }
-  
-  p {
-    line-height: 1.6;
-  }
-  
-  /* Smooth transitions for theme switching */
-  * {
-    transition-property: background-color, border-color, color;
-    transition-duration: 150ms;
-    transition-timing-function: ease-in-out;
-  }
-}
+}\n\n@layer base {\n  * {\n    @apply border-border;\n  }\n  \n  body {\n    @apply bg-background text-foreground;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;\n    -webkit-font-smoothing: antialiased;\n    -moz-osx-font-smoothing: grayscale;\n  }\n  \n  /* Improved readability */\n  h1, h2, h3, h4, h5, h6 {\n    @apply font-semibold;\n    letter-spacing: -0.02em;\n  }\n  \n  p {\n    line-height: 1.6;\n  }\n  \n  /* Smooth theme transitions */\n  body,\n  body * {\n    transition-property: background-color, border-color, color, fill, stroke;\n    transition-duration: 200ms;\n    transition-timing-function: ease-in-out;\n  }\n  \n  /* Disable transitions for elements that shouldn't animate */\n  input,\n  textarea,\n  select,\n  [role=\"slider\"],\n  [role=\"progressbar\"] {\n    transition: none !important;\n  }\n}\n\n/* Theme transition overlay */\n@keyframes fadeIn {\n  from {\n    opacity: 0;\n  }\n  to {\n    opacity: 1;\n  }\n}\n\n.theme-transitioning {\n  animation: fadeIn 200ms ease-in-out;\n}\n
