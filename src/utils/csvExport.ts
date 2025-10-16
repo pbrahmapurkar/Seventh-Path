@@ -179,14 +179,16 @@ export function parseCSV(csvContent: string): HabitExportData[] {
       const value = cells[index];
       
       // Parse JSON fields
-      if (['weeklyDays', 'reminderTimes', 'completionHistory'].includes(header)) {
+      if (['weeklyDays', 'reminderTimes', 'completionHistory', 'timerSessions'].includes(header)) {
         try {
           habit[header] = JSON.parse(value || '[]');
         } catch {
-          habit[header] = header === 'completionHistory' ? {} : [];
+          habit[header] = ['completionHistory', 'timerSessions'].includes(header) ? {} : [];
         }
-      } else if (['currentStreak', 'bestStreak', 'completionRate', 'totalCompletions'].includes(header)) {
+      } else if (['currentStreak', 'bestStreak', 'completionRate', 'totalCompletions', 'timerDefaultDuration'].includes(header)) {
         habit[header] = parseFloat(value) || 0;
+      } else if (['timerEnabled', 'timerAutoComplete'].includes(header)) {
+        habit[header] = value === 'true';
       } else {
         habit[header] = value;
       }
