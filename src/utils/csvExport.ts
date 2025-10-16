@@ -181,7 +181,7 @@ export function parseCSV(csvContent: string): HabitExportData[] {
       // Parse JSON fields
       if (['weeklyDays', 'reminderTimes', 'completionHistory', 'timerSessions'].includes(header)) {
         try {
-          habit[header] = JSON.parse(value || '[]');
+          habit[header] = JSON.parse(value || (header === 'completionHistory' ? '{}' : '[]'));
         } catch {
           habit[header] = ['completionHistory', 'timerSessions'].includes(header) ? {} : [];
         }
