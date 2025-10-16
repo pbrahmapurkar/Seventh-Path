@@ -1,6 +1,6 @@
 /**
  * CSV Export/Import utilities for Seventh Path
- * Handles exporting and importing habit data including completion history
+ * Handles exporting and importing habit data including completion history, timer sessions, and notes
  */
 
 import type { HabitDef, DayEntry } from '../lib/habits/types';
@@ -28,25 +28,42 @@ export interface HabitExportData {
   timerDefaultDuration?: number;
   timerAutoComplete?: boolean;
   
-  // Completion history (JSON string)
+  // Completion history (JSON string with ISO timestamps)
   completionHistory: string;
   
   // Timer sessions (JSON string)
   timerSessions?: string;
+  
+  // Notes (future feature, included for forward compatibility)
+  notes?: string;
 }
 
 export interface CSVExportResult {
   success: boolean;
   csv?: string;
+  filename?: string;
+  habitCount?: number;
   error?: string;
 }
 
 export interface CSVImportResult {
   success: boolean;
   imported?: number;
+  updated?: number;
   skipped?: number;
   errors?: string[];
+  warnings?: string[];
 }
+
+export interface CSVImportOptions {
+  mode: 'merge' | 'replace';
+  validateOnly?: boolean;
+}
+
+/**
+ * CSV Schema Version for compatibility checking
+ */
+const CSV_SCHEMA_VERSION = '1.0';
 
 /**
  * Convert habit data to CSV format
