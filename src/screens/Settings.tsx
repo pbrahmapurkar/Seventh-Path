@@ -12,6 +12,9 @@ import { useNotificationsStore } from '../store/NotificationsStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Capacitor } from '@capacitor/core';
 import { exportHabitsToCSV, parseCSV, validateHabitData, downloadCSV, generateFilename } from '../utils/csvExport';
+import { ThemeSelector } from '../components/ThemeSelector';
+import { useToast, ToastContainer } from '../components/Toast';
+import { useTheme } from '../contexts/ThemeContext';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore - vite json import allowed
 import packageInfo from '../../package.json';
