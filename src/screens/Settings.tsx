@@ -150,72 +150,135 @@ export function Settings() {
       setIsExporting(true);
       const result = exportHabitsToCSV(habitsById, statsById, habitDaysByKey);
       
-      if (result.success && result.csv) {
-        const filename = generateFilename();
-        downloadCSV(result.csv, filename);
+      if (result.success && result.csv && result.filename) {
+        downloadCSV(result.csv, result.filename);
         
-        // Show success message
-        try {
-          if (Capacitor.getPlatform() !== 'web') {
-            const toastMod = await import('@capacitor/toast');
-            await toastMod?.Toast?.show?.({ text: `Exported ${Object.keys(habitsById).length} habits successfully!` });
-          } else {
-            alert(`Exported ${Object.keys(habitsById).length} habits successfully!`);
-          }
-        } catch {}
+        // Calculate file size
+        const fileSize = formatFileSize(new Blob([result.csv]).size);
+        
+        // Show success toast with details
+        toast.success(
+          `Exported ${result.habitCount} habit${result.habitCount !== 1 ? 's' : ''} (${fileSize}) successfully!`,
+          3000
+        );
+        
+        console.log('[Export] Success:', {
+          habitCount: result.habitCount,
+          filename: result.filename,
+          fileSize,
+          timestamp: new Date().toISOString()
+        });
       } else {
         throw new Error(result.error || 'Export failed');
       }
     } catch (error) {
-      console.error('Export error:', error);
-      try {
-        if (Capacitor.getPlatform() !== 'web') {
-          const toastMod = await import('@capacitor/toast');
-          await toastMod?.Toast?.show?.({ text: 'Export failed. Please try again.' });
-        } else {
-          alert('Export failed. Please try again.');
-        }
-      } catch {}
+      console.error('[Export] Error:', error);
+      toast.error('Export failed. Please try again.');
     } finally {
       setIsExporting(false);
     }
   };
 
-  const handleImportData = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportFilePick = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     try {
       setIsImporting(true);
-      const text = await file.text();
-      const habits = parseCSV(text);
       
+      // Validate file type
+      if (!file.name.endsWith('.csv')) {
+        throw new Error('Please select a CSV file');
+      }
+
+      // Read and parse file
+      const text = await file.text();
+      const { habits, schemaVersion } = parseCSV(text);
+      
+      if (habits.length === 0) {
+        throw new Error('CSV file contains no valid habits');
+      }
+
+      console.log('[Import] File parsed:', {
+        fileName: file.name,
+        habitCount: habits.length,
+        schemaVersion,
+        fileSize: formatFileSize(file.size)
+      });
+      
+      // Store for import dialog
+      setPendingImportFile(file);
+      setPendingHabits(habits);
+      setShowEnhancedImportDialog(true);
+      
+    } catch (error) {
+      console.error('[Import] Parse error:', error);
+      toast.error(
+        `Invalid CSV file: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        4000
+      );
+      
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const handleImportExecution = async (mode: 'merge' | 'replace'): Promise<CSVImportResult> => {
+    if (!pendingImportFile || pendingHabits.length === 0) {
+      return { 
+        success: false, 
+        errors: ['No file selected or no valid habits found'] 
+      };
+    }
+
+    console.log('[Import] Starting import:', { mode, habitCount: pendingHabits.length });
+
+    try {
       let imported = 0;
+      let updated = 0;
       let skipped = 0;
       const errors: string[] = [];
+      const warnings: string[] = [];
 
-      for (const habitData of habits) {
+      // Replace mode: clear all existing habits
+      if (mode === 'replace') {
+        console.log('[Import] Clearing all existing habits (replace mode)');
+        await clearAllHabits();
+      }
+
+      // Import each habit
+      for (const habitData of pendingHabits) {
         const validation = validateHabitData(habitData);
         
+        // Collect warnings
+        if (validation.warnings && validation.warnings.length > 0) {
+          warnings.push(...validation.warnings.map(w => `${habitData.name}: ${w}`));
+        }
+        
+        // Skip invalid habits
         if (!validation.valid) {
           errors.push(`${habitData.name}: ${validation.errors.join(', ')}`);
           skipped++;
+          console.warn('[Import] Skipping invalid habit:', habitData.name, validation.errors);
           continue;
         }
 
         try {
-          // Check if habit already exists
           const existingHabit = habitsById[habitData.id];
           
           // Build timer config if available
           const timerConfig = habitData.timerEnabled ? {
             enabled: true,
-            mode: habitData.timerMode as 'countdown' | 'stopwatch' || 'countdown',
+            mode: (habitData.timerMode as 'countdown' | 'stopwatch') || 'countdown',
             defaultDuration: habitData.timerDefaultDuration || 1800,
             autoCompleteHabit: habitData.timerAutoComplete ?? true
           } : undefined;
           
-          if (existingHabit) {
+          if (existingHabit && mode === 'merge') {
             // Update existing habit
             await editHabit({
               id: habitData.id,
@@ -226,6 +289,8 @@ export function Settings() {
               reminderTimes: habitData.reminderTimes,
               timerConfig,
             });
+            updated++;
+            console.log('[Import] Updated habit:', habitData.name);
           } else {
             // Create new habit
             await addHabit({
@@ -238,31 +303,57 @@ export function Settings() {
               createdAt: habitData.createdAt || new Date().toISOString(),
               timerConfig,
             });
+            imported++;
+            console.log('[Import] Imported new habit:', habitData.name);
           }
-          
-          imported++;
         } catch (error) {
-          console.error(`Error importing habit ${habitData.name}:`, error);
-          errors.push(`${habitData.name}: Import failed`);
+          console.error(`[Import] Error importing habit ${habitData.name}:`, error);
+          errors.push(`${habitData.name}: Import failed - ${error instanceof Error ? error.message : 'Unknown error'}`);
           skipped++;
         }
       }
 
-      // Show result
-      const resultMessage = `Import complete:\\n✓ Imported: ${imported}\\n${skipped > 0 ? `⚠ Skipped: ${skipped}` : ''}${errors.length > 0 ? `\\n\\nErrors:\\n${errors.join('\\n')}` : ''}`;
-      setImportResult(resultMessage);
-      setShowImportDialog(true);
+      console.log('[Import] Batch complete:', { imported, updated, skipped, errors: errors.length, warnings: warnings.length });
 
-    } catch (error) {
-      console.error('Import error:', error);
-      setImportResult(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      setShowImportDialog(true);
-    } finally {
-      setIsImporting(false);
+      // ✅ CRITICAL: Refresh all state immediately
+      console.log('[Import] Refreshing app state...');
+      await hydrateHabits();
+      await hydrate(); // Notifications store
+      await refreshScheduledCount();
+      
+      console.log('[Import] State refresh complete');
+
+      // Clear pending state
+      setPendingImportFile(null);
+      setPendingHabits([]);
+      
       // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+
+      // Show success toast
+      if (imported + updated > 0) {
+        toast.success(
+          `Import complete! ${imported} imported, ${updated} updated`,
+          3000
+        );
+      }
+
+      return {
+        success: errors.length === 0 || imported + updated > 0,
+        imported,
+        updated,
+        skipped,
+        errors,
+        warnings
+      };
+    } catch (error) {
+      console.error('[Import] Fatal error:', error);
+      return {
+        success: false,
+        errors: [error instanceof Error ? error.message : 'Unknown error during import']
+      };
     }
   };
 
