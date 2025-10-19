@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { AppShellProvider, useAppShell, BottomNav } from './components/AppShell';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { App as CapacitorApp } from '@capacitor/app';
 import { NotificationProvider } from './providers/notificationProvider';
 import { BootScreen } from './screens/BootScreen';
@@ -36,11 +37,8 @@ function AppContent() {
   useEffect(() => { navigateRef.current = navigate; }, [navigate]);
   useEffect(() => { goBackRef.current = goBack; }, [goBack]);
 
-  // Always apply dark theme
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.add('dark');
-  }, []);
+  // Theme is now managed by ThemeContext
+  // No need for manual theme management here
 
   // Hydrate habits store on app start and start rollover service
   useEffect(() => {
@@ -188,10 +186,12 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AppShellProvider>
-      <NotificationProvider>
-        <AppContent />
-      </NotificationProvider>
-    </AppShellProvider>
+    <ThemeProvider>
+      <AppShellProvider>
+        <NotificationProvider>
+          <AppContent />
+        </NotificationProvider>
+      </AppShellProvider>
+    </ThemeProvider>
   );
 }

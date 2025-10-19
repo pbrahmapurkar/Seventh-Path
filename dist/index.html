@@ -8,33 +8,39 @@
     <meta name="description" content="A beautiful habit tracking app with notification reminders to help you build consistent habits." />
     
     <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#D6E7FF" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="Seventh Path: Habit Tracker" />
+    <meta name="apple-mobile-web-app-title" content="Seventh Path" />
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
     
     <!-- Favicon -->
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
     
-    <!-- Service Worker Registration -->
+    <!-- Service Worker Registration - DISABLED IN DEVELOPMENT -->
+    <!-- Service worker is only needed for production PWA functionality -->
     <script>
+      // Unregister any existing service workers in development
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then((registration) => {
-              console.log('SW registered: ', registration);
-            })
-            .catch((registrationError) => {
-              console.log('SW registration failed: ', registrationError);
-            });
-        });
+        const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        
+        if (isDev) {
+          // Unregister all service workers in development
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for(let registration of registrations) {
+              registration.unregister();
+              console.log('🧹 Unregistered service worker:', registration.scope);
+            }
+          });
+          console.log('🔧 Development mode: Service workers disabled');
+        }
       }
     </script>
-    <script type="module" crossorigin src="/assets/index-CFj5Eq0t.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-DUfVUGlp.css">
+    <script type="module" crossorigin src="/assets/index--s8HpC9J.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-vR0jcuGS.css">
   </head>
   <body>
     <div id="root"></div>

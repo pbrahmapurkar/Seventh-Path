@@ -1,0 +1,291 @@
+/**
+ * Enhanced Theme CSS Custom Properties
+ * Provides CSS variables for all theme colors and design tokens
+ * Supports dynamic theme switching with smooth transitions
+ */
+
+:root {
+  /* Light Theme (Default) */
+  --color-background: hsl(210, 40%, 98%);
+  --color-foreground: hsl(222, 47%, 11%);
+  --color-card: hsl(0, 0%, 100%);
+  --color-cardForeground: hsl(222, 47%, 11%);
+  --color-popover: hsl(0, 0%, 100%);
+  --color-popoverForeground: hsl(222, 47%, 11%);
+  --color-primary: hsl(217, 91%, 60%);
+  --color-primaryForeground: hsl(0, 0%, 100%);
+  --color-secondary: hsl(210, 40%, 96%);
+  --color-secondaryForeground: hsl(222, 47%, 11%);
+  --color-muted: hsl(210, 40%, 96%);
+  --color-mutedForeground: hsl(215, 16%, 47%);
+  --color-accent: hsl(142, 76%, 73%);
+  --color-accentForeground: hsl(222, 47%, 11%);
+  --color-destructive: hsl(0, 84%, 60%);
+  --color-destructiveForeground: hsl(0, 0%, 100%);
+  --color-success: hsl(142, 76%, 36%);
+  --color-successForeground: hsl(0, 0%, 100%);
+  --color-warning: hsl(38, 92%, 50%);
+  --color-warningForeground: hsl(0, 0%, 100%);
+  --color-info: hsl(199, 89%, 48%);
+  --color-infoForeground: hsl(0, 0%, 100%);
+  --color-border: hsl(214, 32%, 91%);
+  --color-input: hsl(214, 32%, 91%);
+  --color-ring: hsl(217, 91%, 60%);
+  --color-chartFill1: hsl(217, 91%, 60%);
+  --color-chartFill2: hsl(142, 76%, 36%);
+  --color-chartFill3: hsl(38, 92%, 50%);
+  --color-chartFill4: hsl(199, 89%, 48%);
+  --color-chartFill5: hsl(0, 84%, 60%);
+  --color-gradient: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(142, 76%, 73%) 100%);
+}
+
+/* Dark Theme */
+.theme-dark {
+  --color-background: hsl(222, 47%, 11%);
+  --color-foreground: hsl(210, 40%, 98%);
+  --color-card: hsl(222, 47%, 13%);
+  --color-cardForeground: hsl(210, 40%, 98%);
+  --color-popover: hsl(222, 47%, 13%);
+  --color-popoverForeground: hsl(210, 40%, 98%);
+  --color-primary: hsl(217, 91%, 60%);
+  --color-primaryForeground: hsl(222, 47%, 11%);
+  --color-secondary: hsl(217, 33%, 17%);
+  --color-secondaryForeground: hsl(210, 40%, 98%);
+  --color-muted: hsl(223, 47%, 11%);
+  --color-mutedForeground: hsl(215, 20%, 65%);
+  --color-accent: hsl(142, 76%, 73%);
+  --color-accentForeground: hsl(222, 47%, 11%);
+  --color-destructive: hsl(0, 63%, 31%);
+  --color-destructiveForeground: hsl(210, 40%, 98%);
+  --color-success: hsl(142, 76%, 36%);
+  --color-successForeground: hsl(210, 40%, 98%);
+  --color-warning: hsl(38, 92%, 50%);
+  --color-warningForeground: hsl(222, 47%, 11%);
+  --color-info: hsl(199, 89%, 48%);
+  --color-infoForeground: hsl(0, 0%, 100%);
+  --color-border: hsl(217, 33%, 17%);
+  --color-input: hsl(217, 33%, 17%);
+  --color-ring: hsl(224, 71%, 4%);
+  --color-chartFill1: hsl(217, 91%, 60%);
+  --color-chartFill2: hsl(142, 76%, 36%);
+  --color-chartFill3: hsl(38, 92%, 50%);
+  --color-chartFill4: hsl(199, 89%, 48%);
+  --color-chartFill5: hsl(0, 63%, 31%);
+  --color-gradient: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(142, 76%, 73%) 100%);
+}
+
+/* Blue Theme - Calm */
+.theme-blue-calm {
+  --color-background: hsl(210, 100%, 98%);
+  --color-foreground: hsl(215, 25%, 27%);
+  --color-card: hsl(0, 0%, 100%);
+  --color-cardForeground: hsl(215, 25%, 27%);
+  --color-popover: hsl(0, 0%, 100%);
+  --color-popoverForeground: hsl(215, 25%, 27%);
+  --color-primary: hsl(210, 100%, 50%);
+  --color-primaryForeground: hsl(0, 0%, 100%);
+  --color-secondary: hsl(210, 40%, 96%);
+  --color-secondaryForeground: hsl(215, 25%, 27%);
+  --color-muted: hsl(210, 40%, 96%);
+  --color-mutedForeground: hsl(215, 16%, 47%);
+  --color-accent: hsl(200, 98%, 39%);
+  --color-accentForeground: hsl(0, 0%, 100%);
+  --color-destructive: hsl(0, 84%, 60%);
+  --color-destructiveForeground: hsl(0, 0%, 100%);
+  --color-success: hsl(142, 76%, 36%);
+  --color-successForeground: hsl(0, 0%, 100%);
+  --color-warning: hsl(38, 92%, 50%);
+  --color-warningForeground: hsl(0, 0%, 100%);
+  --color-info: hsl(199, 89%, 48%);
+  --color-infoForeground: hsl(0, 0%, 100%);
+  --color-border: hsl(210, 50%, 90%);
+  --color-input: hsl(210, 50%, 90%);
+  --color-ring: hsl(210, 100%, 50%);
+  --color-chartFill1: hsl(210, 100%, 50%);
+  --color-chartFill2: hsl(200, 98%, 39%);
+  --color-chartFill3: hsl(199, 89%, 48%);
+  --color-chartFill4: hsl(142, 76%, 36%);
+  --color-chartFill5: hsl(38, 92%, 50%);
+  --color-gradient: linear-gradient(135deg, hsl(210, 100%, 50%) 0%, hsl(200, 98%, 39%) 100%);
+}
+
+/* Blue Theme - Bold */
+.theme-blue-bold {
+  --color-background: hsl(210, 100%, 95%);
+  --color-foreground: hsl(215, 25%, 27%);
+  --color-card: hsl(0, 0%, 100%);
+  --color-cardForeground: hsl(215, 25%, 27%);
+  --color-popover: hsl(0, 0%, 100%);
+  --color-popoverForeground: hsl(215, 25%, 27%);
+  --color-primary: hsl(217, 91%, 60%);
+  --color-primaryForeground: hsl(0, 0%, 100%);
+  --color-secondary: hsl(210, 40%, 96%);
+  --color-secondaryForeground: hsl(215, 25%, 27%);
+  --color-muted: hsl(210, 40%, 96%);
+  --color-mutedForeground: hsl(215, 16%, 47%);
+  --color-accent: hsl(200, 98%, 39%);
+  --color-accentForeground: hsl(0, 0%, 100%);
+  --color-destructive: hsl(0, 84%, 60%);
+  --color-destructiveForeground: hsl(0, 0%, 100%);
+  --color-success: hsl(142, 76%, 36%);
+  --color-successForeground: hsl(0, 0%, 100%);
+  --color-warning: hsl(38, 92%, 50%);
+  --color-warningForeground: hsl(0, 0%, 100%);
+  --color-info: hsl(199, 89%, 48%);
+  --color-infoForeground: hsl(0, 0%, 100%);
+  --color-border: hsl(210, 50%, 90%);
+  --color-input: hsl(210, 50%, 90%);
+  --color-ring: hsl(217, 91%, 60%);
+  --color-chartFill1: hsl(217, 91%, 60%);
+  --color-chartFill2: hsl(200, 98%, 39%);
+  --color-chartFill3: hsl(199, 89%, 48%);
+  --color-chartFill4: hsl(142, 76%, 36%);
+  --color-chartFill5: hsl(38, 92%, 50%);
+  --color-gradient: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(200, 98%, 39%) 100%);
+}
+
+/* Green Theme - Calm */
+.theme-green-calm {
+  --color-background: hsl(120, 40%, 98%);
+  --color-foreground: hsl(120, 25%, 15%);
+  --color-card: hsl(0, 0%, 100%);
+  --color-cardForeground: hsl(120, 25%, 15%);
+  --color-popover: hsl(0, 0%, 100%);
+  --color-popoverForeground: hsl(120, 25%, 15%);
+  --color-primary: hsl(142, 76%, 36%);
+  --color-primaryForeground: hsl(0, 0%, 100%);
+  --color-secondary: hsl(120, 40%, 96%);
+  --color-secondaryForeground: hsl(120, 25%, 15%);
+  --color-muted: hsl(120, 40%, 96%);
+  --color-mutedForeground: hsl(120, 16%, 47%);
+  --color-accent: hsl(142, 76%, 73%);
+  --color-accentForeground: hsl(120, 25%, 15%);
+  --color-destructive: hsl(0, 84%, 60%);
+  --color-destructiveForeground: hsl(0, 0%, 100%);
+  --color-success: hsl(142, 76%, 36%);
+  --color-successForeground: hsl(0, 0%, 100%);
+  --color-warning: hsl(38, 92%, 50%);
+  --color-warningForeground: hsl(0, 0%, 100%);
+  --color-info: hsl(199, 89%, 48%);
+  --color-infoForeground: hsl(0, 0%, 100%);
+  --color-border: hsl(120, 30%, 88%);
+  --color-input: hsl(120, 30%, 88%);
+  --color-ring: hsl(142, 76%, 36%);
+  --color-chartFill1: hsl(142, 76%, 36%);
+  --color-chartFill2: hsl(142, 76%, 73%);
+  --color-chartFill3: hsl(120, 40%, 50%);
+  --color-chartFill4: hsl(199, 89%, 48%);
+  --color-chartFill5: hsl(38, 92%, 50%);
+  --color-gradient: linear-gradient(135deg, hsl(142, 76%, 36%) 0%, hsl(142, 76%, 73%) 100%);
+}
+
+/* Green Theme - Bold */
+.theme-green-bold {
+  --color-background: hsl(120, 40%, 95%);
+  --color-foreground: hsl(120, 25%, 15%);
+  --color-card: hsl(0, 0%, 100%);
+  --color-cardForeground: hsl(120, 25%, 15%);
+  --color-popover: hsl(0, 0%, 100%);
+  --color-popoverForeground: hsl(120, 25%, 15%);
+  --color-primary: hsl(142, 76%, 36%);
+  --color-primaryForeground: hsl(0, 0%, 100%);
+  --color-secondary: hsl(120, 40%, 96%);
+  --color-secondaryForeground: hsl(120, 25%, 15%);
+  --color-muted: hsl(120, 40%, 96%);
+  --color-mutedForeground: hsl(120, 16%, 47%);
+  --color-accent: hsl(142, 76%, 73%);
+  --color-accentForeground: hsl(120, 25%, 15%);
+  --color-destructive: hsl(0, 84%, 60%);
+  --color-destructiveForeground: hsl(0, 0%, 100%);
+  --color-success: hsl(142, 76%, 36%);
+  --color-successForeground: hsl(0, 0%, 100%);
+  --color-warning: hsl(38, 92%, 50%);
+  --color-warningForeground: hsl(0, 0%, 100%);
+  --color-info: hsl(199, 89%, 48%);
+  --color-infoForeground: hsl(0, 0%, 100%);
+  --color-border: hsl(120, 30%, 88%);
+  --color-input: hsl(120, 30%, 88%);
+  --color-ring: hsl(142, 76%, 36%);
+  --color-chartFill1: hsl(142, 76%, 36%);
+  --color-chartFill2: hsl(142, 76%, 73%);
+  --color-chartFill3: hsl(120, 40%, 50%);
+  --color-chartFill4: hsl(199, 89%, 48%);
+  --color-chartFill5: hsl(38, 92%, 50%);
+  --color-gradient: linear-gradient(135deg, hsl(142, 76%, 36%) 0%, hsl(142, 76%, 73%) 100%);
+}
+
+/* Theme Transition Animations */
+.theme-transition {
+  transition: background-color 300ms ease-in-out,
+              color 300ms ease-in-out,
+              border-color 300ms ease-in-out,
+              box-shadow 300ms ease-in-out;
+}
+
+/* Apply theme transitions to all elements */
+* {
+  transition: background-color 300ms ease-in-out,
+              color 300ms ease-in-out,
+              border-color 300ms ease-in-out,
+              box-shadow 300ms ease-in-out;
+}
+
+/* Disable transitions for reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .theme-transition,
+  * {
+    transition: none !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --color-border: hsl(0, 0%, 0%);
+    --color-input: hsl(0, 0%, 0%);
+  }
+  
+  .theme-dark {
+    --color-border: hsl(0, 0%, 100%);
+    --color-input: hsl(0, 0%, 100%);
+  }
+}
+
+/* Focus ring improvements for accessibility */
+.focus-ring {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+/* Theme-specific component styles */
+.theme-card {
+  background-color: var(--color-card);
+  color: var(--color-cardForeground);
+  border: 1px solid var(--color-border);
+}
+
+.theme-button-primary {
+  background-color: var(--color-primary);
+  color: var(--color-primaryForeground);
+  border: 1px solid var(--color-primary);
+}
+
+.theme-button-secondary {
+  background-color: var(--color-secondary);
+  color: var(--color-secondaryForeground);
+  border: 1px solid var(--color-border);
+}
+
+.theme-input {
+  background-color: var(--color-card);
+  color: var(--color-cardForeground);
+  border: 1px solid var(--color-input);
+}
+
+.theme-input:focus {
+  border-color: var(--color-ring);
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+

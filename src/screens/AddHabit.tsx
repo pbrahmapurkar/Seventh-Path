@@ -10,6 +10,8 @@ import { useNotifications } from '../providers/notificationProvider';
 import { createHabit } from '../lib/habits';
 import { useHabitsStore } from '../store/HabitsStore';
 import { MultiTimePicker } from '../components/MultiTimePicker';
+import { TimerConfiguration } from '../components/Timer';
+import type { TimerConfig } from '../types/timer';
 import { Bell, BellOff, Plus, Target, Sparkles, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
 
 const emojiOptions = [
@@ -55,13 +57,20 @@ export function AddHabit() {
   const [hasReminder, setHasReminder] = useState(false);
   const [reminderTimes, setReminderTimes] = useState<string[]>(['08:00']);
   const [weeklyDays, setWeeklyDays] = useState<number[]>([]); // 0-6 Sun-Sat
+  const [timerConfig, setTimerConfig] = useState<TimerConfig>({
+    enabled: false,
+    mode: 'countdown',
+    defaultDuration: 1800, // 30 minutes default
+    autoCompleteHabit: true
+  });
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const isDirty = Boolean(
     title.trim() ||
     (hasReminder && reminderTimes.length > 0 && !(reminderTimes.length === 1 && reminderTimes[0] === '08:00')) ||
     emoji !== '🎯' ||
-    frequency !== 'daily'
+    frequency !== 'daily' ||
+    timerConfig.enabled
   );
 
   const handleSave = async () => {
@@ -92,6 +101,7 @@ export function AddHabit() {
         frequency,
         reminderTimes: hasReminder ? reminderTimes : [],
         weeklyDays: frequency === 'weekly' ? weeklyDays : undefined,
+        timerConfig: timerConfig.enabled ? timerConfig : undefined,
       });
       
       // Schedule notification if enabled and permission granted
@@ -355,6 +365,12 @@ export function AddHabit() {
               )}
             </div>
           </div>
+
+          {/* Timer Configuration Section - NEW */}
+          <TimerConfiguration
+            config={timerConfig}
+            onChange={setTimerConfig}
+          />
 
           {/* Permission Warning */}
           {hasReminder && !isPermissionGranted && (

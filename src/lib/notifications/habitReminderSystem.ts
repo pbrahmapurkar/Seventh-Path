@@ -120,7 +120,40 @@ export function buildBody(habit: HabitDef): string {
   return `Time for your ${habit.name}!`;
 }
 
+/**
+ * Check if habit is completed for a given date
+ * Used to suppress notifications for already-completed habits
+ */
+async function isHabitCompletedForDate(habitId: string, ymd: string): Promise<boolean> {
+  try {
+    const anyWin: any = globalThis as any;
+    const prefs = anyWin?.Capacitor?.Plugins?.Preferences;
+    const key = `habit:${habitId}:day:${ymd}`;
+    
+    let dayDataStr: string | null = null;
+    
+    if (prefs && Capacitor.getPlatform() !== 'web') {
+      const res = await prefs.get({ key });
+      dayDataStr = res.value;
+    } else {
+      dayDataStr = localStorage.getItem(key);
+    }
+    
+    if (!dayDataStr) return false;
+    
+    const dayData = JSON.parse(dayDataStr);
+    const reminders = dayData?.reminders || [];
+    
+    // Habit is completed if all reminders are marked as done
+    return reminders.length > 0 && reminders.every((r: any) => r.done === true);
+  } catch (error) {
+    console.error('Error checking habit completion:', error);
+    return false;
+  }
+}
+
 // Schedule N upcoming one-off notifications for a reminder
+// Will skip notifications for dates where habit is already completed
 export async function scheduleReminderInstances(
   habit: HabitDef,
   time: string,
@@ -134,8 +167,18 @@ export async function scheduleReminderInstances(
   const sound = getNativeSoundName();
   const scheduled: { id: number; title: string; body: string; schedule: { at: Date }; channelId: string; sound?: string; extra: any; actionTypeId?: string }[] = [];
   const ids: number[] = [];
+  
   for (const at of dates) {
     const ymd = `${at.getFullYear()}-${String(at.getMonth() + 1).padStart(2, '0')}-${String(at.getDate()).padStart(2, '0')}`;
+    
+    // Check if habit is already completed for this date
+    const isCompleted = await isHabitCompletedForDate(habit.id, ymd);
+    
+    if (isCompleted) {
+      console.log(`[NOTIFICATIONS] Skipping notification for ${habit.name} on ${ymd} - already completed`);
+      continue;
+    }
+    
     const key = `${habit.id}|${ymd}|${time}`;
     const id = toJavaIntId(key);
     ids.push(id);

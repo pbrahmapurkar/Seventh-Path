@@ -1,0 +1,337 @@
+/**
+ * Seventh Path Design System CSS Variables
+ * Formal specification implementation with invariant semantic colors
+ */
+
+:root {
+  /* Dark Theme (Default) */
+  --sp-background-primary: #1C1C1E;
+  --sp-background-surface: #2C2C2E;
+  --sp-background-accent: #EC4899;
+  --sp-gradient-start: #8B5CF6;
+  --sp-gradient-end: #30A46C;
+  
+  --sp-text-primary: #F2F2F7;
+  --sp-text-secondary: #AEAEB2;
+  --sp-text-muted: #8E8E93;
+  --sp-text-on-accent: #FFFFFF;
+  --sp-icon-primary: #D1D1D6;
+  --sp-icon-muted: #8E8E93;
+  
+  --sp-border-subtle: #3A3A3C;
+  --sp-border-interactive: #48484A;
+  --sp-focus-ring: #8B5CF6;
+  --sp-divider: #3A3A3C;
+  
+  --sp-chart-fill-primary: #8B5CF6;
+  --sp-chart-fill-secondary: #30A46C;
+  --sp-semantic-success: #30A46C;
+  --sp-semantic-warning: #F7B955;
+  --sp-semantic-danger: #E5484D;
+  --sp-semantic-info: #0090FF;
+}
+
+/* Light Theme */
+[data-theme="light"] {
+  --sp-background-primary: #FFFFFF;
+  --sp-background-surface: #F2F2F7;
+  --sp-background-accent: #DB2777;
+  --sp-gradient-start: #6D28D9;
+  --sp-gradient-end: #15803D;
+  
+  --sp-text-primary: #1C1C1E;
+  --sp-text-secondary: #636366;
+  --sp-text-muted: #8E8E93;
+  --sp-text-on-accent: #FFFFFF;
+  --sp-icon-primary: #3A3A3C;
+  --sp-icon-muted: #8E8E93;
+  
+  --sp-border-subtle: #E5E5EA;
+  --sp-border-interactive: #D1D1D6;
+  --sp-focus-ring: #6D28D9;
+  --sp-divider: #E5E5EA;
+  
+  --sp-chart-fill-primary: #6D28D9;
+  --sp-chart-fill-secondary: #15803D;
+  --sp-semantic-success: #30A46C;
+  --sp-semantic-warning: #F7B955;
+  --sp-semantic-danger: #E5484D;
+  --sp-semantic-info: #0090FF;
+}
+
+/* Blue Theme */
+[data-theme="blue"] {
+  --sp-background-primary: #0F172A;
+  --sp-background-surface: #1E293B;
+  --sp-background-accent: #FBBF24;
+  --sp-gradient-start: #60A5FA;
+  --sp-gradient-end: #34D399;
+  
+  --sp-text-primary: #F1F5F9;
+  --sp-text-secondary: #CBD5E1;
+  --sp-text-muted: #94A3B8;
+  --sp-text-on-accent: #FFFFFF;
+  --sp-icon-primary: #E2E8F0;
+  --sp-icon-muted: #94A3B8;
+  
+  --sp-border-subtle: #334155;
+  --sp-border-interactive: #475569;
+  --sp-focus-ring: #60A5FA;
+  --sp-divider: #334155;
+  
+  --sp-chart-fill-primary: #60A5FA;
+  --sp-chart-fill-secondary: #34D399;
+  --sp-semantic-success: #30A46C;
+  --sp-semantic-warning: #F7B955;
+  --sp-semantic-danger: #E5484D;
+  --sp-semantic-info: #0090FF;
+}
+
+/* Green Theme */
+[data-theme="green"] {
+  --sp-background-primary: #111813;
+  --sp-background-surface: #1A241D;
+  --sp-background-accent: #F97316;
+  --sp-gradient-start: #4ADE80;
+  --sp-gradient-end: #A78BFA;
+  
+  --sp-text-primary: #F5F7F6;
+  --sp-text-secondary: #B4BFB8;
+  --sp-text-muted: #87978D;
+  --sp-text-on-accent: #FFFFFF;
+  --sp-icon-primary: #DDE2DF;
+  --sp-icon-muted: #87978D;
+  
+  --sp-border-subtle: #29362E;
+  --sp-border-interactive: #37493D;
+  --sp-focus-ring: #4ADE80;
+  --sp-divider: #29362E;
+  
+  --sp-chart-fill-primary: #4ADE80;
+  --sp-chart-fill-secondary: #A78BFA;
+  --sp-semantic-success: #30A46C;
+  --sp-semantic-warning: #F7B955;
+  --sp-semantic-danger: #E5484D;
+  --sp-semantic-info: #0090FF;
+}
+
+/* Theme Transition Animations */
+.theme-transition {
+  transition: background-color 120ms ease-in-out,
+              color 120ms ease-in-out,
+              border-color 120ms ease-in-out,
+              box-shadow 120ms ease-in-out;
+}
+
+/* Apply theme transitions to all elements */
+* {
+  transition: background-color 120ms ease-in-out,
+              color 120ms ease-in-out,
+              border-color 120ms ease-in-out,
+              box-shadow 120ms ease-in-out;
+}
+
+/* Disable transitions for reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .theme-transition,
+  * {
+    transition: none !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --sp-border-subtle: #000000;
+    --sp-border-interactive: #000000;
+    --sp-divider: #000000;
+  }
+  
+  [data-theme="light"] {
+    --sp-border-subtle: #000000;
+    --sp-border-interactive: #000000;
+    --sp-divider: #000000;
+  }
+}
+
+/* Focus ring improvements for accessibility */
+.focus-ring {
+  outline: 2px solid var(--sp-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Design System Component Classes */
+.ds-bg-primary {
+  background-color: var(--sp-background-primary);
+}
+
+.ds-bg-surface {
+  background-color: var(--sp-background-surface);
+}
+
+.ds-bg-accent {
+  background-color: var(--sp-background-accent);
+}
+
+.ds-text-primary {
+  color: var(--sp-text-primary);
+}
+
+.ds-text-secondary {
+  color: var(--sp-text-secondary);
+}
+
+.ds-text-muted {
+  color: var(--sp-text-muted);
+}
+
+.ds-text-on-accent {
+  color: var(--sp-text-on-accent);
+}
+
+.ds-icon-primary {
+  color: var(--sp-icon-primary);
+}
+
+.ds-icon-muted {
+  color: var(--sp-icon-muted);
+}
+
+.ds-border-subtle {
+  border-color: var(--sp-border-subtle);
+}
+
+.ds-border-interactive {
+  border-color: var(--sp-border-interactive);
+}
+
+.ds-divider {
+  border-color: var(--sp-divider);
+}
+
+.ds-chart-primary {
+  fill: var(--sp-chart-fill-primary);
+}
+
+.ds-chart-secondary {
+  fill: var(--sp-chart-fill-secondary);
+}
+
+.ds-semantic-success {
+  color: var(--sp-semantic-success);
+}
+
+.ds-semantic-warning {
+  color: var(--sp-semantic-warning);
+}
+
+.ds-semantic-danger {
+  color: var(--sp-semantic-danger);
+}
+
+.ds-semantic-info {
+  color: var(--sp-semantic-info);
+}
+
+/* Button States */
+.ds-button-primary {
+  background-color: var(--sp-background-accent);
+  color: var(--sp-text-on-accent);
+  border: 1px solid var(--sp-background-accent);
+}
+
+.ds-button-primary:hover {
+  opacity: 0.9;
+}
+
+.ds-button-primary:active {
+  opacity: 0.8;
+}
+
+.ds-button-secondary {
+  background-color: var(--sp-background-surface);
+  color: var(--sp-text-primary);
+  border: 1px solid var(--sp-border-interactive);
+}
+
+.ds-button-secondary:hover {
+  background-color: var(--sp-border-subtle);
+}
+
+.ds-button-secondary:active {
+  background-color: var(--sp-border-interactive);
+}
+
+.ds-button-disabled {
+  background-color: var(--sp-border-subtle);
+  color: var(--sp-text-muted);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Input States */
+.ds-input {
+  background-color: var(--sp-background-primary);
+  color: var(--sp-text-primary);
+  border: 1px solid var(--sp-border-interactive);
+}
+
+.ds-input:focus {
+  border-color: var(--sp-focus-ring);
+  outline: 2px solid var(--sp-focus-ring);
+  outline-offset: 2px;
+}
+
+.ds-input::placeholder {
+  color: var(--sp-text-muted);
+}
+
+/* Card Components */
+.ds-card {
+  background-color: var(--sp-background-surface);
+  border: 1px solid var(--sp-border-subtle);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ds-card-elevated {
+  background-color: var(--sp-background-surface);
+  border: 1px solid var(--sp-border-subtle);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* List Components */
+.ds-list-item {
+  background-color: var(--sp-background-surface);
+  border-bottom: 1px solid var(--sp-divider);
+}
+
+.ds-list-item:last-child {
+  border-bottom: none;
+}
+
+/* Toast/Alert Components */
+.ds-toast-success {
+  background-color: var(--sp-semantic-success);
+  color: var(--sp-text-on-accent);
+  border: 1px solid var(--sp-semantic-success);
+}
+
+.ds-toast-warning {
+  background-color: var(--sp-semantic-warning);
+  color: var(--sp-text-primary);
+  border: 1px solid var(--sp-semantic-warning);
+}
+
+.ds-toast-danger {
+  background-color: var(--sp-semantic-danger);
+  color: var(--sp-text-on-accent);
+  border: 1px solid var(--sp-semantic-danger);
+}
+
+.ds-toast-info {
+  background-color: var(--sp-semantic-info);
+  color: var(--sp-text-on-accent);
+  border: 1px solid var(--sp-semantic-info);
+}
+
+

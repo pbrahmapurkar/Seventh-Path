@@ -1,0 +1,344 @@
+/**
+ * Token-Based CSS Custom Properties System
+ * Provides CSS variables for all theme tokens with smooth transitions
+ */
+
+:root {
+  /* Light Theme (Default) */
+  --background: #FFFFFF;
+  --background-elevated: #F8FAFC;
+  --surface: #FFFFFF;
+  --surface-elevated: #F1F5F9;
+  
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-tertiary: #94A3B8;
+  --text-inverse: #FFFFFF;
+  
+  --accent: #3B82F6;
+  --accent-strong: #1D4ED8;
+  --accent-subtle: #DBEAFE;
+  --accent-text: #FFFFFF;
+  
+  --success: #059669;
+  --success-subtle: #D1FAE5;
+  --success-text: #FFFFFF;
+  --warning: #D97706;
+  --warning-subtle: #FEF3C7;
+  --warning-text: #FFFFFF;
+  --error: #DC2626;
+  --error-subtle: #FEE2E2;
+  --error-text: #FFFFFF;
+  --info: #0284C7;
+  --info-subtle: #E0F2FE;
+  --info-text: #FFFFFF;
+  
+  --border: #E2E8F0;
+  --border-strong: #CBD5E1;
+  --border-subtle: #F1F5F9;
+  --focus: #3B82F6;
+  --focus-ring: #3B82F620;
+  
+  --chart-line-1: #3B82F6;
+  --chart-line-2: #059669;
+  --chart-line-3: #D97706;
+  --chart-fill-1: #3B82F6;
+  --chart-fill-2: #059669;
+  --chart-fill-3: #D97706;
+  --chart-fill-4: #7C3AED;
+  --chart-fill-5: #DC2626;
+  
+  --shadow: #00000010;
+  --shadow-strong: #00000020;
+  --shadow-subtle: #00000005;
+  
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --letter-spacing-tight: -0.025em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.025em;
+}
+
+/* Dark Theme */
+.theme-dark {
+  --background: #0F172A;
+  --background-elevated: #1E293B;
+  --surface: #1E293B;
+  --surface-elevated: #334155;
+  
+  --text-primary: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --text-tertiary: #94A3B8;
+  --text-inverse: #0F172A;
+  
+  --accent: #60A5FA;
+  --accent-strong: #3B82F6;
+  --accent-subtle: #1E3A8A;
+  --accent-text: #FFFFFF;
+  
+  --success: #10B981;
+  --success-subtle: #064E3B;
+  --success-text: #FFFFFF;
+  --warning: #F59E0B;
+  --warning-subtle: #78350F;
+  --warning-text: #FFFFFF;
+  --error: #EF4444;
+  --error-subtle: #7F1D1D;
+  --error-text: #FFFFFF;
+  --info: #06B6D4;
+  --info-subtle: #164E63;
+  --info-text: #FFFFFF;
+  
+  --border: #334155;
+  --border-strong: #475569;
+  --border-subtle: #1E293B;
+  --focus: #60A5FA;
+  --focus-ring: #60A5FA20;
+  
+  --chart-line-1: #60A5FA;
+  --chart-line-2: #10B981;
+  --chart-line-3: #F59E0B;
+  --chart-fill-1: #60A5FA;
+  --chart-fill-2: #10B981;
+  --chart-fill-3: #F59E0B;
+  --chart-fill-4: #A78BFA;
+  --chart-fill-5: #EF4444;
+  
+  --shadow: #00000040;
+  --shadow-strong: #00000060;
+  --shadow-subtle: #00000020;
+}
+
+/* Blue Theme */
+.theme-blue {
+  --background: #F0F9FF;
+  --background-elevated: #E0F2FE;
+  --surface: #FFFFFF;
+  --surface-elevated: #F0F9FF;
+  
+  --text-primary: #0C4A6E;
+  --text-secondary: #0369A1;
+  --text-tertiary: #7DD3FC;
+  --text-inverse: #FFFFFF;
+  
+  --accent: #0284C7;
+  --accent-strong: #0369A1;
+  --accent-subtle: #E0F2FE;
+  --accent-text: #FFFFFF;
+  
+  --success: #059669;
+  --success-subtle: #D1FAE5;
+  --success-text: #FFFFFF;
+  --warning: #D97706;
+  --warning-subtle: #FEF3C7;
+  --warning-text: #FFFFFF;
+  --error: #DC2626;
+  --error-subtle: #FEE2E2;
+  --error-text: #FFFFFF;
+  --info: #0284C7;
+  --info-subtle: #E0F2FE;
+  --info-text: #FFFFFF;
+  
+  --border: #BAE6FD;
+  --border-strong: #7DD3FC;
+  --border-subtle: #E0F2FE;
+  --focus: #0284C7;
+  --focus-ring: #0284C720;
+  
+  --chart-line-1: #0284C7;
+  --chart-line-2: #0369A1;
+  --chart-line-3: #0EA5E9;
+  --chart-fill-1: #0284C7;
+  --chart-fill-2: #0369A1;
+  --chart-fill-3: #0EA5E9;
+  --chart-fill-4: #059669;
+  --chart-fill-5: #D97706;
+  
+  --shadow: #0284C710;
+  --shadow-strong: #0284C720;
+  --shadow-subtle: #0284C705;
+}
+
+/* Green Theme */
+.theme-green {
+  --background: #F0FDF4;
+  --background-elevated: #DCFCE7;
+  --surface: #FFFFFF;
+  --surface-elevated: #F0FDF4;
+  
+  --text-primary: #14532D;
+  --text-secondary: #166534;
+  --text-tertiary: #86EFAC;
+  --text-inverse: #FFFFFF;
+  
+  --accent: #16A34A;
+  --accent-strong: #15803D;
+  --accent-subtle: #DCFCE7;
+  --accent-text: #FFFFFF;
+  
+  --success: #16A34A;
+  --success-subtle: #DCFCE7;
+  --success-text: #FFFFFF;
+  --warning: #D97706;
+  --warning-subtle: #FEF3C7;
+  --warning-text: #FFFFFF;
+  --error: #DC2626;
+  --error-subtle: #FEE2E2;
+  --error-text: #FFFFFF;
+  --info: #0284C7;
+  --info-subtle: #E0F2FE;
+  --info-text: #FFFFFF;
+  
+  --border: #BBF7D0;
+  --border-strong: #86EFAC;
+  --border-subtle: #DCFCE7;
+  --focus: #16A34A;
+  --focus-ring: #16A34A20;
+  
+  --chart-line-1: #16A34A;
+  --chart-line-2: #15803D;
+  --chart-line-3: #22C55E;
+  --chart-fill-1: #16A34A;
+  --chart-fill-2: #15803D;
+  --chart-fill-3: #22C55E;
+  --chart-fill-4: #0284C7;
+  --chart-fill-5: #D97706;
+  
+  --shadow: #16A34A10;
+  --shadow-strong: #16A34A20;
+  --shadow-subtle: #16A34A05;
+}
+
+/* Theme Transition Animations */
+.theme-transition {
+  transition: background-color 120ms ease-in-out,
+              color 120ms ease-in-out,
+              border-color 120ms ease-in-out,
+              box-shadow 120ms ease-in-out;
+}
+
+/* Apply theme transitions to all elements */
+* {
+  transition: background-color 120ms ease-in-out,
+              color 120ms ease-in-out,
+              border-color 120ms ease-in-out,
+              box-shadow 120ms ease-in-out;
+}
+
+/* Disable transitions for reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .theme-transition,
+  * {
+    transition: none !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --border: #000000;
+    --border-strong: #000000;
+    --border-subtle: #000000;
+  }
+  
+  .theme-dark {
+    --border: #FFFFFF;
+    --border-strong: #FFFFFF;
+    --border-subtle: #FFFFFF;
+  }
+}
+
+/* Focus ring improvements for accessibility */
+.focus-ring {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Token-based component styles */
+.token-card {
+  background-color: var(--surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 3px var(--shadow);
+}
+
+.token-button-primary {
+  background-color: var(--accent);
+  color: var(--accent-text);
+  border: 1px solid var(--accent);
+}
+
+.token-button-secondary {
+  background-color: var(--surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.token-input {
+  background-color: var(--surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.token-input:focus {
+  border-color: var(--focus);
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.token-text-primary {
+  color: var(--text-primary);
+}
+
+.token-text-secondary {
+  color: var(--text-secondary);
+}
+
+.token-text-tertiary {
+  color: var(--text-tertiary);
+}
+
+.token-bg-primary {
+  background-color: var(--background);
+}
+
+.token-bg-elevated {
+  background-color: var(--background-elevated);
+}
+
+.token-surface {
+  background-color: var(--surface);
+}
+
+.token-surface-elevated {
+  background-color: var(--surface-elevated);
+}
+
+.token-border {
+  border-color: var(--border);
+}
+
+.token-border-strong {
+  border-color: var(--border-strong);
+}
+
+.token-border-subtle {
+  border-color: var(--border-subtle);
+}
+
+.token-shadow {
+  box-shadow: 0 1px 3px var(--shadow);
+}
+
+.token-shadow-strong {
+  box-shadow: 0 4px 6px var(--shadow-strong);
+}
+
+.token-shadow-subtle {
+  box-shadow: 0 1px 2px var(--shadow-subtle);
+}
+
+

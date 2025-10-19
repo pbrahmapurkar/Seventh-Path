@@ -1,5 +1,5 @@
-import React, { useCallback, useState } from 'react';
-import { ChevronRight, User, Bell, RotateCcw, Info, Settings as SettingsIcon, TestTube, Trash2, FileText, Shield, Edit2, Check, X, Sparkles, Zap, Heart, ShieldCheck, AlertTriangle, CheckCircle2, History, BarChart3, Plus } from 'lucide-react';
+import React, { useCallback, useState, useRef } from 'react';
+import { ChevronRight, User, Bell, RotateCcw, Info, Settings as SettingsIcon, TestTube, Trash2, FileText, Shield, Edit2, Check, X, Sparkles, Zap, Heart, ShieldCheck, AlertTriangle, CheckCircle2, History, BarChart3, Plus, Download, Upload, Database } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Switch } from '../components/ui/switch';
 import { Input } from '../components/ui/input';
@@ -10,7 +10,11 @@ import { useAppShell } from '../components/AppShell';
 import { useHabitsStore } from '../store/HabitsStore';
 import { useNotificationsStore } from '../store/NotificationsStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { ImportDialog } from '../components/ImportDialog';
 import { Capacitor } from '@capacitor/core';
+import { exportHabitsToCSV, parseCSV, validateHabitData, downloadCSV, formatFileSize } from '../utils/csvExport';
+import { useToast, ToastContainer } from '../components/Toast';
+import type { CSVImportResult } from '../utils/csvExport';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore - vite json import allowed
 import packageInfo from '../../package.json';
@@ -26,13 +30,34 @@ export function Settings() {
     refreshScheduledCount,
     sendTest,
   } = useNotificationsStore();
-  const { factoryReset } = useHabitsStore();
+  const { 
+    factoryReset, 
+    habitsById, 
+    statsById, 
+    habitDaysByKey, 
+    addHabit, 
+    editHabit,
+    clearAllHabits,
+    hydrate: hydrateHabits 
+  } = useHabitsStore();
+  const toast = useToast();
 
   const [isTestingNotification, setIsTestingNotification] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState(userName);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importResult, setImportResult] = useState<string>('');
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  
+  // Enhanced import state
+  const [pendingImportFile, setPendingImportFile] = useState<File | null>(null);
+  const [pendingHabits, setPendingHabits] = useState<any[]>([]);
+  const [showEnhancedImportDialog, setShowEnhancedImportDialog] = useState(false);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const version = packageInfo?.version ?? '1.0.7';
 
   const openLink = useCallback(async (url: string) => {
@@ -111,6 +136,218 @@ export function Settings() {
   const handleCancelEditingName = () => {
     setTempName(userName);
     setIsEditingName(false);
+  };
+
+  const handleExportData = async () => {
+    try {
+      setIsExporting(true);
+      const result = exportHabitsToCSV(habitsById, statsById, habitDaysByKey);
+      
+      if (result.success && result.csv && result.filename) {
+        downloadCSV(result.csv, result.filename);
+        
+        // Calculate file size
+        const fileSize = formatFileSize(new Blob([result.csv]).size);
+        
+        // Show success toast with details
+        toast.success(
+          `Exported ${result.habitCount} habit${result.habitCount !== 1 ? 's' : ''} (${fileSize}) successfully!`,
+          3000
+        );
+        
+        console.log('[Export] Success:', {
+          habitCount: result.habitCount,
+          filename: result.filename,
+          fileSize,
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        throw new Error(result.error || 'Export failed');
+      }
+    } catch (error) {
+      console.error('[Export] Error:', error);
+      toast.error('Export failed. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleImportFilePick = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsImporting(true);
+      
+      // Validate file type
+      if (!file.name.endsWith('.csv')) {
+        throw new Error('Please select a CSV file');
+      }
+
+      // Read and parse file
+      const text = await file.text();
+      const { habits, schemaVersion } = parseCSV(text);
+      
+      if (habits.length === 0) {
+        throw new Error('CSV file contains no valid habits');
+      }
+
+      console.log('[Import] File parsed:', {
+        fileName: file.name,
+        habitCount: habits.length,
+        schemaVersion,
+        fileSize: formatFileSize(file.size)
+      });
+      
+      // Store for import dialog
+      setPendingImportFile(file);
+      setPendingHabits(habits);
+      setShowEnhancedImportDialog(true);
+      
+    } catch (error) {
+      console.error('[Import] Parse error:', error);
+      toast.error(
+        `Invalid CSV file: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        4000
+      );
+      
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const handleImportExecution = async (mode: 'merge' | 'replace'): Promise<CSVImportResult> => {
+    if (!pendingImportFile || pendingHabits.length === 0) {
+      return { 
+        success: false, 
+        errors: ['No file selected or no valid habits found'] 
+      };
+    }
+
+    console.log('[Import] Starting import:', { mode, habitCount: pendingHabits.length });
+
+    try {
+      let imported = 0;
+      let updated = 0;
+      let skipped = 0;
+      const errors: string[] = [];
+      const warnings: string[] = [];
+
+      // Replace mode: clear all existing habits
+      if (mode === 'replace') {
+        console.log('[Import] Clearing all existing habits (replace mode)');
+        await clearAllHabits();
+      }
+
+      // Import each habit
+      for (const habitData of pendingHabits) {
+        const validation = validateHabitData(habitData);
+        
+        // Collect warnings
+        if (validation.warnings && validation.warnings.length > 0) {
+          warnings.push(...validation.warnings.map(w => `${habitData.name}: ${w}`));
+        }
+        
+        // Skip invalid habits
+        if (!validation.valid) {
+          errors.push(`${habitData.name}: ${validation.errors.join(', ')}`);
+          skipped++;
+          console.warn('[Import] Skipping invalid habit:', habitData.name, validation.errors);
+          continue;
+        }
+
+        try {
+          const existingHabit = habitsById[habitData.id];
+          
+          // Build timer config if available
+          const timerConfig = habitData.timerEnabled ? {
+            enabled: true,
+            mode: (habitData.timerMode as 'countdown' | 'stopwatch') || 'countdown',
+            defaultDuration: habitData.timerDefaultDuration || 1800,
+            autoCompleteHabit: habitData.timerAutoComplete ?? true
+          } : undefined;
+          
+          if (existingHabit && mode === 'merge') {
+            // Update existing habit
+            await editHabit({
+              id: habitData.id,
+              name: habitData.name,
+              emoji: habitData.emoji,
+              frequency: habitData.frequency,
+              weeklyDays: habitData.weeklyDays,
+              reminderTimes: habitData.reminderTimes,
+              timerConfig,
+            });
+            updated++;
+            console.log('[Import] Updated habit:', habitData.name);
+          } else {
+            // Create new habit
+            await addHabit({
+              id: habitData.id,
+              name: habitData.name,
+              emoji: habitData.emoji,
+              frequency: habitData.frequency,
+              weeklyDays: habitData.weeklyDays || [],
+              reminderTimes: habitData.reminderTimes || [],
+              createdAt: habitData.createdAt || new Date().toISOString(),
+              timerConfig,
+            });
+            imported++;
+            console.log('[Import] Imported new habit:', habitData.name);
+          }
+        } catch (error) {
+          console.error(`[Import] Error importing habit ${habitData.name}:`, error);
+          errors.push(`${habitData.name}: Import failed - ${error instanceof Error ? error.message : 'Unknown error'}`);
+          skipped++;
+        }
+      }
+
+      console.log('[Import] Batch complete:', { imported, updated, skipped, errors: errors.length, warnings: warnings.length });
+
+      // ✅ CRITICAL: Refresh all state immediately
+      console.log('[Import] Refreshing app state...');
+      await hydrateHabits();
+      await hydrate(); // Notifications store
+      await refreshScheduledCount();
+      
+      console.log('[Import] State refresh complete');
+
+      // Clear pending state
+      setPendingImportFile(null);
+      setPendingHabits([]);
+      
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+
+      // Show success toast
+      if (imported + updated > 0) {
+        toast.success(
+          `Import complete! ${imported} imported, ${updated} updated`,
+          3000
+        );
+      }
+
+      return {
+        success: errors.length === 0 || imported + updated > 0,
+        imported,
+        updated,
+        skipped,
+        errors,
+        warnings
+      };
+    } catch (error) {
+      console.error('[Import] Fatal error:', error);
+      return {
+        success: false,
+        errors: [error instanceof Error ? error.message : 'Unknown error during import']
+      };
+    }
   };
 
   React.useEffect(() => {
@@ -384,8 +621,75 @@ export function Settings() {
         </SettingsSection>
 
 
+        {/* Data Management Section - NEW */}
+        <SettingsSection title="Data Management" icon={<Database className="w-4 h-4 text-primary" />}>
+          <SettingsRow
+            icon={<Download className="w-5 h-5" />}
+            title="Export Data"
+            description="Download all your habits and history as CSV"
+            action={
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleExportData}
+                disabled={isExporting || Object.keys(habitsById).length === 0}
+                className="hover:scale-105 transition-transform"
+              >
+                {isExporting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 mr-1" />
+                    Export
+                  </>
+                )}
+              </Button>
+            }
+          />
+
+          <SettingsRow
+            icon={<Upload className="w-5 h-5" />}
+            title="Import Data"
+            description="Import habits from a CSV file"
+            action={
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv"
+                  onChange={handleImportFilePick}
+                  style={{ display: 'none' }}
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isImporting}
+                  className="hover:scale-105 transition-transform"
+                >
+                  {isImporting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                      Reading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 mr-1" />
+                      Import
+                    </>
+                  )}
+                </Button>
+              </>
+            }
+          />
+        </SettingsSection>
+
+
         {/* Enhanced Data Section */}
-        <SettingsSection title="Data & Storage" icon={<RotateCcw className="w-4 h-4 text-primary" />}>
+        <SettingsSection title="Reset Options" icon={<RotateCcw className="w-4 h-4 text-primary" />}>
           <SettingsRow
             icon={<RotateCcw className="w-5 h-5" />}
             title="Reset Onboarding"
@@ -502,6 +806,43 @@ export function Settings() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Import Result Dialog - OLD (Remove this) */}
+      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+        <DialogContent className="max-w-md rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">
+              Import Results
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            <pre className="whitespace-pre-wrap text-sm bg-muted/30 p-4 rounded-lg">
+              {importResult}
+            </pre>
+          </div>
+          <div className="flex justify-end pt-4">
+            <Button onClick={() => setShowImportDialog(false)}>
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Enhanced Import Dialog - NEW */}
+      <ImportDialog
+        open={showEnhancedImportDialog}
+        onClose={() => {
+          setShowEnhancedImportDialog(false);
+          setPendingImportFile(null);
+          setPendingHabits([]);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+        }}
+        onImport={handleImportExecution}
+        fileName={pendingImportFile?.name}
+        habitCount={pendingHabits.length}
+      />
 
       {/* About Modal */}
       <Dialog open={aboutOpen} onOpenChange={setAboutOpen}>
@@ -671,6 +1012,9 @@ export function Settings() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toast.toasts} onClose={toast.closeToast} />
     </div>
   );
 }

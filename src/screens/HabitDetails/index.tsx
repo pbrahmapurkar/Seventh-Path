@@ -5,8 +5,9 @@ import { Button } from '../../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Badge } from '../../components/ui/badge';
 import { Skeleton, SkeletonCard, SkeletonStats, SkeletonTabs } from '../../components/ui/skeleton';
-import { Edit, Trash2, Plus, Clock, Check, Home, BarChart3, Settings, History, CheckCircle2 } from 'lucide-react';
+import { Edit, Trash2, Plus, Clock, Check, Home, BarChart3, Settings, History, CheckCircle2, Timer } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { TimerTab } from './TimerTab';
 // removed Snooze action; no LocalNotifications import needed here
 
 function formatSinceDays(iso: string): number {
@@ -224,8 +225,14 @@ export function HabitDetails({ habitId }: { habitId: string }) {
 
         {/* Tabs - Enhanced */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-muted/30 rounded-2xl p-1">
+          <TabsList className={`grid w-full ${habit.timerConfig?.enabled ? 'grid-cols-3' : 'grid-cols-2'} bg-muted/30 rounded-2xl p-1`}>
             <TabsTrigger value="overview" className="rounded-xl font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Overview</TabsTrigger>
+            {habit.timerConfig?.enabled && (
+              <TabsTrigger value="timer" className="rounded-xl font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Timer className="w-4 h-4 mr-2" />
+                Timer
+              </TabsTrigger>
+            )}
             <TabsTrigger value="history" className="rounded-xl font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">History</TabsTrigger>
           </TabsList>
 
@@ -284,6 +291,19 @@ export function HabitDetails({ habitId }: { habitId: string }) {
               </div>
             </div>
           </TabsContent>
+
+          {/* Timer Tab - NEW */}
+          {habit.timerConfig?.enabled && (
+            <TabsContent value="timer" className="mt-8 w-full">
+              <TimerTab 
+                habit={habit}
+                onHabitComplete={async () => {
+                  // Refresh the habit details after auto-completion
+                  window.location.reload();
+                }}
+              />
+            </TabsContent>
+          )}
 
           <TabsContent value="history" className="space-y-8 mt-8 w-full">
             <div className="bg-card border border-border rounded-2xl p-6 w-full shadow-sm">
