@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { useAppShell } from '../components/AppShell';
+import { useAppShell } from '../components/AppShellRouter';
 import { User, ArrowRight, Sparkles } from 'lucide-react';
 
 export function OnboardingName() {

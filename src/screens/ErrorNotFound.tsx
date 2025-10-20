@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '../components/ui/button';
-import { useAppShell } from '../components/AppShell';
+import { useAppShell } from '../components/AppShellRouter';
 
 export function ErrorNotFound() {
   const { navigate } = useAppShell();

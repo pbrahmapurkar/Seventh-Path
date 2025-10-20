@@ -1,6 +1,32 @@
-import React from 'react';
-import { AppBar } from '../components/AppShell';
-import { useAppShell } from '../components/AppShell';
+import { AppBar, useAppShell } from '../components/AppShellRouter';
+import { Capacitor } from '@capacitor/core';
+
+// Capacitor-safe external link helper
+function openExternal(url: string): void {
+  // Check if we're in a Capacitor environment
+  if (Capacitor.getPlatform() !== 'web') {
+    // For mobile platforms, try to use the Capacitor Browser plugin
+    // This will be handled by the Capacitor runtime if the plugin is available
+    try {
+      // Use the global Capacitor object to access plugins
+      const anyWin: any = globalThis as any;
+      const Browser = anyWin?.Capacitor?.Plugins?.Browser;
+      if (Browser) {
+        Browser.open({ url });
+        return;
+      }
+    } catch (browserError) {
+      console.warn('Browser plugin not available, falling back to window.open:', browserError);
+    }
+  }
+  
+  // Fallback to window.open (works on web and as last resort on mobile)
+  try {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  } catch (error) {
+    console.error('Failed to open external URL:', url, error);
+  }
+}
 
 export function PrivacyPolicy() {
   const { navigate } = useAppShell();
@@ -63,7 +89,7 @@ export function PrivacyPolicy() {
               <p className="leading-relaxed">
                 This policy may evolve to reflect new features or legal requirements; material changes will appear in-app, and continued use after updates indicates acceptance. For privacy questions, contact Pratik Prakash Brahmapurkar via{' '}
                 <button
-                  onClick={() => window.open('https://misterpb.in', '_blank', 'noopener,noreferrer')}
+                  onClick={() => openExternal('https://misterpb.in')}
                   className="underline underline-offset-2 decoration-primary text-primary hover:opacity-90 font-medium"
                   aria-label="Open website misterpb.in"
                   role="link"
@@ -72,7 +98,7 @@ export function PrivacyPolicy() {
                 </button>{' '}
                 or Instagram{' '}
                 <button
-                  onClick={() => window.open('https://instagram.com/mister.pb', '_blank', 'noopener,noreferrer')}
+                  onClick={() => openExternal('https://instagram.com/mister.pb')}
                   className="underline underline-offset-2 decoration-primary text-primary hover:opacity-90 font-medium"
                   aria-label="Open Instagram profile @mister.pb"
                   role="link"

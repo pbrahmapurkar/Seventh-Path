@@ -26,8 +26,49 @@ import { clearCompletionCaches } from '../lib/completion';
 // Persistence helpers
 // ---------------------------------------------------------------------------
 
+// Safe JSON parsing with error handling
+function safeParseJson<T = any>(jsonString: string): T | null {
+  try {
+    return JSON.parse(jsonString) as T;
+  } catch (error) {
+    console.warn(`Failed to parse JSON for key: ${jsonString.substring(0, 50)}...`, error);
+    return null;
+  }
+}
+
+// Safe JSON stringification with error handling
+function safeStringifyJson(value: any): string | null {
+  try {
+    return JSON.stringify(value);
+  } catch (error) {
+    console.warn('Failed to stringify JSON:', error);
+    return null;
+  }
+}
+
+// Safe storage key removal for corrupted data cleanup
+async function removeCorruptedKey(key: string): Promise<void> {
+  try {
+    const anyWin: any = globalThis as any;
+    const prefs = anyWin?.Capacitor?.Plugins?.Preferences;
+    if (prefs && Capacitor.getPlatform() !== 'web') {
+      await prefs.remove({ key });
+    } else {
+      localStorage.removeItem(key);
+    }
+    console.log(`Removed corrupted key: ${key}`);
+  } catch (error) {
+    console.warn(`Failed to remove corrupted key ${key}:`, error);
+  }
+}
+
 async function setJSON(key: string, value: any): Promise<void> {
-  const str = JSON.stringify(value);
+  const str = safeStringifyJson(value);
+  if (!str) {
+    console.error(`Failed to stringify value for key: ${key}`);
+    return;
+  }
+  
   const anyWin: any = globalThis as any;
   const prefs = anyWin?.Capacitor?.Plugins?.Preferences;
   if (prefs && Capacitor.getPlatform() !== 'web') {
@@ -41,11 +82,36 @@ async function getJSON<T = any>(key: string): Promise<T | null> {
   const anyWin: any = globalThis as any;
   const prefs = anyWin?.Capacitor?.Plugins?.Preferences;
   if (prefs && Capacitor.getPlatform() !== 'web') {
-    const res = await prefs.get({ key });
-    return res?.value ? (JSON.parse(res.value) as T) : null;
+    try {
+      const res = await prefs.get({ key });
+      if (!res?.value) return null;
+      const parsed = safeParseJson<T>(res.value);
+      if (parsed === null) {
+        // Remove corrupted key to prevent future failures
+        await removeCorruptedKey(key);
+      }
+      return parsed;
+    } catch (error) {
+      console.warn(`Failed to get preference for key ${key}:`, error);
+      await removeCorruptedKey(key);
+      return null;
+    }
   }
-  const raw = localStorage.getItem(key);
-  return raw ? (JSON.parse(raw) as T) : null;
+  
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = safeParseJson<T>(raw);
+    if (parsed === null) {
+      // Remove corrupted key to prevent future failures
+      await removeCorruptedKey(key);
+    }
+    return parsed;
+  } catch (error) {
+    console.warn(`Failed to get localStorage item for key ${key}:`, error);
+    await removeCorruptedKey(key);
+    return null;
+  }
 }
 
 // Keys
@@ -259,49 +325,118 @@ const createHabitsStore: StateCreator<HabitsStoreState> = (set, get) => {
     hydrateAll: async (force = false) => {
       const state = get();
       if (!force && (state.hydrationState === 'hydrating' || state._hasHydrated)) return;
+      
       set({ hydrationState: 'hydrating' });
 
-      const habits = await listHabits();
-      const habitsById: Record<string, Habit> = {};
-      const statsById: Record<string, HabitStats> = {};
-      const habitDaysByKey: Record<string, HabitDay> = {};
-      const todayDate = new Date();
-      const today = toYMD(todayDate);
-      const persistedLog = (await getJSON<CompletionLogEntry[]>(completionLogKey)) ?? [];
-      const lookbackDays = 90;
-      const dateWindow: string[] = [];
+      try {
+        // Load habits with error handling
+        let habits: Habit[] = [];
+        try {
+          habits = await listHabits();
+        } catch (error) {
+          console.error('Failed to load habits during hydration:', error);
+          // Reset hydration state on failure
+          set({ 
+            hydrationState: 'idle',
+            _hasHydrated: false 
+          });
+          return;
+        }
 
-      for (let offset = 0; offset < lookbackDays; offset += 1) {
-        const d = new Date(todayDate);
-        d.setDate(todayDate.getDate() - offset);
-        dateWindow.push(toYMD(d));
-      }
+        const habitsById: Record<string, Habit> = {};
+        const statsById: Record<string, HabitStats> = {};
+        const habitDaysByKey: Record<string, HabitDay> = {};
+        const todayDate = new Date();
+        const today = toYMD(todayDate);
+        
+        // Load completion log with error handling
+        let persistedLog: CompletionLogEntry[] = [];
+        try {
+          persistedLog = (await getJSON<CompletionLogEntry[]>(completionLogKey)) ?? [];
+        } catch (error) {
+          console.warn('Failed to load completion log, using empty array:', error);
+        }
 
-      for (const habit of habits) {
-        habitsById[habit.id] = habit;
-        const storedStats = await getJSON<HabitStats>(statsKey(habit.id));
-        statsById[habit.id] = storedStats ?? (await computeStats(habit));
-        for (const ymd of dateWindow) {
-          const entry =
-            ymd === today
-              ? await ensureDayEntry(habit, ymd)
-              : await getDayEntry(habit.id, ymd);
-          if (entry) {
-            habitDaysByKey[dayKey(habit.id, ymd)] = entry;
+        const lookbackDays = 90;
+        const dateWindow: string[] = [];
+
+        for (let offset = 0; offset < lookbackDays; offset += 1) {
+          const d = new Date(todayDate);
+          d.setDate(todayDate.getDate() - offset);
+          dateWindow.push(toYMD(d));
+        }
+
+        // Process each habit with individual error handling
+        for (const habit of habits) {
+          try {
+            habitsById[habit.id] = habit;
+            
+            // Load stats with error handling
+            let storedStats: HabitStats | null = null;
+            try {
+              storedStats = await getJSON<HabitStats>(statsKey(habit.id));
+            } catch (error) {
+              console.warn(`Failed to load stats for habit ${habit.id}:`, error);
+            }
+            
+            // Compute stats if loading failed
+            try {
+              statsById[habit.id] = storedStats ?? (await computeStats(habit));
+            } catch (error) {
+              console.warn(`Failed to compute stats for habit ${habit.id}:`, error);
+              // Use empty stats as fallback
+              statsById[habit.id] = {
+                currentStreak: 0,
+                bestStreak: 0,
+                completionRate: 0,
+                totalCompletedDays: 0,
+                weeklyProgress: []
+              };
+            }
+
+            // Load day entries with error handling
+            for (const ymd of dateWindow) {
+              try {
+                const entry =
+                  ymd === today
+                    ? await ensureDayEntry(habit, ymd)
+                    : await getDayEntry(habit.id, ymd);
+                if (entry) {
+                  habitDaysByKey[dayKey(habit.id, ymd)] = entry;
+                }
+              } catch (error) {
+                console.warn(`Failed to load day entry for habit ${habit.id} on ${ymd}:`, error);
+                // Continue with other days
+              }
+            }
+          } catch (error) {
+            console.error(`Failed to process habit ${habit.id} during hydration:`, error);
+            // Continue with other habits
           }
         }
-      }
 
-      set((current) => ({
-        hydrationState: 'ready',
-        lastHydratedYMD: today,
-        habitsById,
-        habitDaysByKey,
-        statsById,
-        completionLog: persistedLog,
-        _completionCacheVersion: 0,
-        _hasHydrated: true,
-      }));
+        // Only mark as hydrated if we successfully loaded at least some data
+        set((current) => ({
+          hydrationState: 'ready',
+          lastHydratedYMD: today,
+          habitsById,
+          habitDaysByKey,
+          statsById,
+          completionLog: persistedLog,
+          _completionCacheVersion: 0,
+          _hasHydrated: true,
+        }));
+
+      } catch (error) {
+        console.error('Critical error during hydration:', error);
+        // Reset hydration state on critical failure
+        set({ 
+          hydrationState: 'idle',
+          _hasHydrated: false 
+        });
+        // Re-throw to allow UI to handle the error
+        throw new Error(`Hydration failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
     },
 
     addHabit: async (habit) => {

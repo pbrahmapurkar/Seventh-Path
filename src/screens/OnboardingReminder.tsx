@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 import { Switch } from '../components/ui/switch';
-import { useAppShell } from '../components/AppShell';
+import { useAppShell } from '../components/AppShellRouter';
 import { useNotifications } from '../providers/notificationProvider';
 import { NotificationPermissionBanner } from '../components/ReminderTimePicker';
 import { getOnboardingSelected, setOnboardingComplete } from '../lib/habits';

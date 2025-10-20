@@ -1,0 +1,496 @@
+/**
+ * Seventh Path Zen Design System - Celebration Animations
+ * Gentle, mindful celebration effects for habit completions
+ */
+
+/* Core Celebration Animations */
+@keyframes celebrationPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+@keyframes celebrationGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(168, 181, 160, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(168, 181, 160, 0.3),
+                0 0 60px rgba(168, 181, 160, 0.2);
+  }
+}
+
+@keyframes celebrationBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-8px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+  75% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes celebrationShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-2px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(2px);
+  }
+}
+
+@keyframes celebrationRotate {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes celebrationFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes celebrationFadeOut {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+/* Celebration Utility Classes */
+.celebration-pulse {
+  animation: celebrationPulse 1.5s var(--ease-gentle) 3;
+}
+
+.celebration-glow {
+  animation: celebrationGlow 2s var(--ease-gentle) 3;
+}
+
+.celebration-bounce {
+  animation: celebrationBounce 1s var(--ease-gentle) 3;
+}
+
+.celebration-shake {
+  animation: celebrationShake 0.5s var(--ease-gentle) 3;
+}
+
+.celebration-rotate {
+  animation: celebrationRotate 1s var(--ease-gentle) 3;
+}
+
+.celebration-fade-in {
+  animation: celebrationFadeIn 0.5s var(--ease-gentle);
+}
+
+.celebration-fade-out {
+  animation: celebrationFadeOut 0.5s var(--ease-gentle);
+}
+
+/* Combined Celebration Effects */
+.celebration-complete {
+  animation: celebrationPulse 1.5s var(--ease-gentle) 3,
+             celebrationGlow 2s var(--ease-gentle) 3;
+}
+
+.celebration-success {
+  animation: celebrationBounce 1s var(--ease-gentle) 3,
+             celebrationGlow 2s var(--ease-gentle) 3;
+}
+
+.celebration-achievement {
+  animation: celebrationRotate 1s var(--ease-gentle) 3,
+             celebrationGlow 2s var(--ease-gentle) 3;
+}
+
+.celebration-milestone {
+  animation: celebrationPulse 2s var(--ease-gentle) 5,
+             celebrationGlow 3s var(--ease-gentle) 5;
+}
+
+/* Celebration for Specific Elements */
+.celebration-button {
+  animation: celebrationPulse 1s var(--ease-gentle) 3;
+}
+
+.celebration-button:hover {
+  animation: celebrationGlow 2s var(--ease-gentle) infinite;
+}
+
+.celebration-card {
+  animation: celebrationBounce 1s var(--ease-gentle) 3,
+             celebrationGlow 2s var(--ease-gentle) 3;
+}
+
+.celebration-icon {
+  animation: celebrationRotate 1s var(--ease-gentle) 3;
+}
+
+.celebration-text {
+  animation: celebrationFadeIn 0.5s var(--ease-gentle);
+}
+
+.celebration-progress {
+  animation: celebrationGlow 2s var(--ease-gentle) 3;
+}
+
+/* Celebration with Color Changes */
+.celebration-color {
+  animation: celebrationPulse 1.5s var(--ease-gentle) 3,
+             celebrationColor 1.5s var(--ease-gentle) 3;
+}
+
+@keyframes celebrationColor {
+  0%, 100% {
+    color: var(--text-primary);
+  }
+  50% {
+    color: var(--zen-sage);
+  }
+}
+
+/* Celebration with Background Changes */
+.celebration-bg {
+  animation: celebrationPulse 1.5s var(--ease-gentle) 3,
+             celebrationBackground 1.5s var(--ease-gentle) 3;
+}
+
+@keyframes celebrationBackground {
+  0%, 100% {
+    background-color: var(--bg-surface);
+  }
+  50% {
+    background-color: rgba(168, 181, 160, 0.1);
+  }
+}
+
+/* Celebration with Border Changes */
+.celebration-border {
+  animation: celebrationPulse 1.5s var(--ease-gentle) 3,
+             celebrationBorder 1.5s var(--ease-gentle) 3;
+}
+
+@keyframes celebrationBorder {
+  0%, 100% {
+    border-color: var(--border-subtle);
+  }
+  50% {
+    border-color: var(--zen-sage);
+  }
+}
+
+/* Celebration with Shadow Changes */
+.celebration-shadow {
+  animation: celebrationPulse 1.5s var(--ease-gentle) 3,
+             celebrationShadow 1.5s var(--ease-gentle) 3;
+}
+
+@keyframes celebrationShadow {
+  0%, 100% {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  }
+  50% {
+    box-shadow: 0 8px 24px rgba(168, 181, 160, 0.2),
+                0 0 40px rgba(168, 181, 160, 0.1);
+  }
+}
+
+/* Celebration Groups - Staggered Animations */
+.celebration-group > *:nth-child(1) {
+  animation: celebrationFadeIn 0.5s var(--ease-gentle);
+  animation-delay: 0s;
+}
+
+.celebration-group > *:nth-child(2) {
+  animation: celebrationFadeIn 0.5s var(--ease-gentle);
+  animation-delay: 0.1s;
+}
+
+.celebration-group > *:nth-child(3) {
+  animation: celebrationFadeIn 0.5s var(--ease-gentle);
+  animation-delay: 0.2s;
+}
+
+.celebration-group > *:nth-child(4) {
+  animation: celebrationFadeIn 0.5s var(--ease-gentle);
+  animation-delay: 0.3s;
+}
+
+.celebration-group > *:nth-child(5) {
+  animation: celebrationFadeIn 0.5s var(--ease-gentle);
+  animation-delay: 0.4s;
+}
+
+.celebration-group > *:nth-child(6) {
+  animation: celebrationFadeIn 0.5s var(--ease-gentle);
+  animation-delay: 0.5s;
+}
+
+/* Celebration for Habit Completion */
+.celebration-habit-complete {
+  animation: celebrationPulse 1.5s var(--ease-gentle) 3,
+             celebrationGlow 2s var(--ease-gentle) 3,
+             celebrationColor 1.5s var(--ease-gentle) 3;
+}
+
+.celebration-habit-complete .celebration-icon {
+  animation: celebrationRotate 1s var(--ease-gentle) 3;
+}
+
+.celebration-habit-complete .celebration-text {
+  animation: celebrationFadeIn 0.5s var(--ease-gentle);
+}
+
+/* Celebration for Streak Achievement */
+.celebration-streak {
+  animation: celebrationBounce 1s var(--ease-gentle) 3,
+             celebrationGlow 2s var(--ease-gentle) 3;
+}
+
+.celebration-streak .celebration-number {
+  animation: celebrationPulse 1s var(--ease-gentle) 3;
+}
+
+/* Celebration for Goal Achievement */
+.celebration-goal {
+  animation: celebrationRotate 1s var(--ease-gentle) 3,
+             celebrationGlow 2s var(--ease-gentle) 3;
+}
+
+.celebration-goal .celebration-icon {
+  animation: celebrationBounce 1s var(--ease-gentle) 3;
+}
+
+/* Celebration for Level Up */
+.celebration-level-up {
+  animation: celebrationPulse 2s var(--ease-gentle) 5,
+             celebrationGlow 3s var(--ease-gentle) 5,
+             celebrationShake 0.5s var(--ease-gentle) 3;
+}
+
+.celebration-level-up .celebration-badge {
+  animation: celebrationRotate 1s var(--ease-gentle) 3;
+}
+
+/* Celebration for Daily Goal */
+.celebration-daily-goal {
+  animation: celebrationPulse 1s var(--ease-gentle) 3,
+             celebrationGlow 1.5s var(--ease-gentle) 3;
+}
+
+/* Celebration for Weekly Goal */
+.celebration-weekly-goal {
+  animation: celebrationBounce 1s var(--ease-gentle) 3,
+             celebrationGlow 2s var(--ease-gentle) 3;
+}
+
+/* Celebration for Monthly Goal */
+.celebration-monthly-goal {
+  animation: celebrationRotate 1s var(--ease-gentle) 3,
+             celebrationGlow 2s var(--ease-gentle) 3,
+             celebrationPulse 1.5s var(--ease-gentle) 3;
+}
+
+/* Celebration for Yearly Goal */
+.celebration-yearly-goal {
+  animation: celebrationPulse 2s var(--ease-gentle) 5,
+             celebrationGlow 3s var(--ease-gentle) 5,
+             celebrationBounce 1s var(--ease-gentle) 3,
+             celebrationRotate 1s var(--ease-gentle) 3;
+}
+
+/* Celebration States */
+.celebration-active {
+  animation-play-state: running;
+}
+
+.celebration-paused {
+  animation-play-state: paused;
+}
+
+.celebration-stopped {
+  animation: none;
+}
+
+/* Celebration with Sound Cues (Visual Only) */
+.celebration-sound {
+  animation: celebrationPulse 1s var(--ease-gentle) 3,
+             celebrationSound 1s var(--ease-gentle) 3;
+}
+
+@keyframes celebrationSound {
+  0%, 100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  75% {
+    transform: scale(1.08);
+  }
+}
+
+/* Celebration for Notifications */
+.celebration-notification {
+  animation: celebrationFadeIn 0.5s var(--ease-gentle),
+             celebrationGlow 2s var(--ease-gentle) 3;
+}
+
+.celebration-notification.success {
+  animation: celebrationFadeIn 0.5s var(--ease-gentle),
+             celebrationGlow 2s var(--ease-gentle) 3,
+             celebrationColor 1.5s var(--ease-gentle) 3;
+}
+
+.celebration-notification.achievement {
+  animation: celebrationFadeIn 0.5s var(--ease-gentle),
+             celebrationBounce 1s var(--ease-gentle) 3,
+             celebrationGlow 2s var(--ease-gentle) 3;
+}
+
+/* Celebration for Progress Bars */
+.celebration-progress-bar {
+  animation: celebrationGlow 2s var(--ease-gentle) 3;
+}
+
+.celebration-progress-bar.fill {
+  animation: celebrationGlow 2s var(--ease-gentle) 3,
+             celebrationProgressFill 2s var(--ease-gentle) 3;
+}
+
+@keyframes celebrationProgressFill {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .celebration-pulse,
+  .celebration-glow,
+  .celebration-bounce,
+  .celebration-shake,
+  .celebration-rotate,
+  .celebration-fade-in,
+  .celebration-fade-out,
+  .celebration-complete,
+  .celebration-success,
+  .celebration-achievement,
+  .celebration-milestone,
+  .celebration-button,
+  .celebration-card,
+  .celebration-icon,
+  .celebration-text,
+  .celebration-progress,
+  .celebration-color,
+  .celebration-bg,
+  .celebration-border,
+  .celebration-shadow,
+  .celebration-group > *,
+  .celebration-habit-complete,
+  .celebration-streak,
+  .celebration-goal,
+  .celebration-level-up,
+  .celebration-daily-goal,
+  .celebration-weekly-goal,
+  .celebration-monthly-goal,
+  .celebration-yearly-goal,
+  .celebration-sound,
+  .celebration-notification,
+  .celebration-progress-bar {
+    animation: none;
+  }
+}
+
+/* Calm Mode - Gentler Celebrations */
+[data-calm-mode="true"] .celebration-pulse {
+  animation: celebrationPulse 2s var(--ease-gentle) 2;
+}
+
+[data-calm-mode="true"] .celebration-glow {
+  animation: celebrationGlow 3s var(--ease-gentle) 2;
+}
+
+[data-calm-mode="true"] .celebration-bounce {
+  animation: celebrationBounce 1.5s var(--ease-gentle) 2;
+}
+
+[data-calm-mode="true"] .celebration-shake {
+  animation: celebrationShake 0.8s var(--ease-gentle) 2;
+}
+
+[data-calm-mode="true"] .celebration-rotate {
+  animation: celebrationRotate 1.5s var(--ease-gentle) 2;
+}
+
+/* Celebration Performance Optimizations */
+.celebration-pulse,
+.celebration-glow,
+.celebration-bounce,
+.celebration-shake,
+.celebration-rotate,
+.celebration-fade-in,
+.celebration-fade-out {
+  will-change: transform, opacity, box-shadow;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Celebration Accessibility */
+.celebration-pulse[aria-hidden="true"],
+.celebration-glow[aria-hidden="true"],
+.celebration-bounce[aria-hidden="true"],
+.celebration-shake[aria-hidden="true"],
+.celebration-rotate[aria-hidden="true"] {
+  animation: none;
+}
+
+.celebration-pulse:focus,
+.celebration-glow:focus,
+.celebration-bounce:focus,
+.celebration-shake:focus,
+.celebration-rotate:focus {
+  animation: none;
+}
+
+.celebration-pulse:focus-visible,
+.celebration-glow:focus-visible,
+.celebration-bounce:focus-visible,
+.celebration-shake:focus-visible,
+.celebration-rotate:focus-visible {
+  animation: celebrationGlow 2s var(--ease-gentle) infinite;
+}

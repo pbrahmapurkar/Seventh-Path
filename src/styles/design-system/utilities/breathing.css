@@ -1,0 +1,420 @@
+/**
+ * Seventh Path Zen Design System - Breathing Animations
+ * Therapeutic breathing effects for mindful interface elements
+ */
+
+/* Core Breathing Animation */
+@keyframes breathing {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 0.85;
+  }
+}
+
+@keyframes breathingSlow {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.01);
+    opacity: 0.9;
+  }
+}
+
+@keyframes breathingFast {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.03);
+    opacity: 0.8;
+  }
+}
+
+@keyframes breathingPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(168, 181, 160, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(168, 181, 160, 0);
+  }
+}
+
+@keyframes breathingGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(168, 181, 160, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(168, 181, 160, 0.25);
+  }
+}
+
+@keyframes breathingRotate {
+  0%, 100% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(2deg) scale(1.02);
+  }
+}
+
+/* Breathing Utility Classes */
+.breathing {
+  animation: breathing 4s ease-in-out infinite;
+}
+
+.breathing-slow {
+  animation: breathingSlow 6s ease-in-out infinite;
+}
+
+.breathing-fast {
+  animation: breathingFast 2s ease-in-out infinite;
+}
+
+.breathing-pulse {
+  animation: breathingPulse 2s ease-in-out infinite;
+}
+
+.breathing-glow {
+  animation: breathingGlow 3s ease-in-out infinite;
+}
+
+.breathing-rotate {
+  animation: breathingRotate 4s ease-in-out infinite;
+}
+
+/* Breathing with Different Durations */
+.breathing-2s {
+  animation: breathing 2s ease-in-out infinite;
+}
+
+.breathing-3s {
+  animation: breathing 3s ease-in-out infinite;
+}
+
+.breathing-5s {
+  animation: breathing 5s ease-in-out infinite;
+}
+
+.breathing-6s {
+  animation: breathing 6s ease-in-out infinite;
+}
+
+.breathing-8s {
+  animation: breathing 8s ease-in-out infinite;
+}
+
+/* Breathing with Delays */
+.breathing-delay-1 {
+  animation: breathing 4s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+.breathing-delay-2 {
+  animation: breathing 4s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+.breathing-delay-3 {
+  animation: breathing 4s ease-in-out infinite;
+  animation-delay: 3s;
+}
+
+/* Breathing for Specific Elements */
+.breathing-card {
+  animation: breathing 4s ease-in-out infinite;
+}
+
+.breathing-card:hover {
+  animation: breathingSlow 6s ease-in-out infinite;
+}
+
+.breathing-button {
+  animation: breathingPulse 2s ease-in-out infinite;
+}
+
+.breathing-button:hover {
+  animation: breathingGlow 3s ease-in-out infinite;
+}
+
+.breathing-icon {
+  animation: breathingRotate 4s ease-in-out infinite;
+}
+
+.breathing-text {
+  animation: breathingSlow 6s ease-in-out infinite;
+}
+
+/* Breathing States */
+.breathing-active {
+  animation-play-state: running;
+}
+
+.breathing-paused {
+  animation-play-state: paused;
+}
+
+.breathing-stopped {
+  animation: none;
+}
+
+/* Breathing with Color Changes */
+.breathing-color {
+  animation: breathing 4s ease-in-out infinite,
+             breathingColor 4s ease-in-out infinite;
+}
+
+@keyframes breathingColor {
+  0%, 100% {
+    color: var(--text-primary);
+  }
+  50% {
+    color: var(--zen-sage);
+  }
+}
+
+/* Breathing with Background Changes */
+.breathing-bg {
+  animation: breathing 4s ease-in-out infinite,
+             breathingBackground 4s ease-in-out infinite;
+}
+
+@keyframes breathingBackground {
+  0%, 100% {
+    background-color: var(--bg-surface);
+  }
+  50% {
+    background-color: rgba(168, 181, 160, 0.05);
+  }
+}
+
+/* Breathing with Border Changes */
+.breathing-border {
+  animation: breathing 4s ease-in-out infinite,
+             breathingBorder 4s ease-in-out infinite;
+}
+
+@keyframes breathingBorder {
+  0%, 100% {
+    border-color: var(--border-subtle);
+  }
+  50% {
+    border-color: var(--zen-sage);
+  }
+}
+
+/* Breathing with Shadow Changes */
+.breathing-shadow {
+  animation: breathing 4s ease-in-out infinite,
+             breathingShadow 4s ease-in-out infinite;
+}
+
+@keyframes breathingShadow {
+  0%, 100% {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  }
+  50% {
+    box-shadow: 0 6px 20px rgba(168, 181, 160, 0.15);
+  }
+}
+
+/* Breathing Groups - Staggered Animations */
+.breathing-group > *:nth-child(1) {
+  animation: breathing 4s ease-in-out infinite;
+  animation-delay: 0s;
+}
+
+.breathing-group > *:nth-child(2) {
+  animation: breathing 4s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+.breathing-group > *:nth-child(3) {
+  animation: breathing 4s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+.breathing-group > *:nth-child(4) {
+  animation: breathing 4s ease-in-out infinite;
+  animation-delay: 1.5s;
+}
+
+.breathing-group > *:nth-child(5) {
+  animation: breathing 4s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+.breathing-group > *:nth-child(6) {
+  animation: breathing 4s ease-in-out infinite;
+  animation-delay: 2.5s;
+}
+
+/* Breathing for Meditation Timer */
+.breathing-meditation {
+  animation: breathing 4s ease-in-out infinite;
+}
+
+.breathing-meditation.inhale {
+  animation: breathingInhale 4s ease-in-out infinite;
+}
+
+.breathing-meditation.exhale {
+  animation: breathingExhale 4s ease-in-out infinite;
+}
+
+@keyframes breathingInhale {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.9;
+  }
+}
+
+@keyframes breathingExhale {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+}
+
+/* Breathing for Progress Indicators */
+.breathing-progress {
+  animation: breathingPulse 2s ease-in-out infinite;
+}
+
+.breathing-progress.active {
+  animation: breathingGlow 3s ease-in-out infinite;
+}
+
+/* Breathing for Loading States */
+.breathing-loading {
+  animation: breathingPulse 1.5s ease-in-out infinite;
+}
+
+.breathing-loading.dots::after {
+  content: '';
+  animation: breathingDots 1.5s ease-in-out infinite;
+}
+
+@keyframes breathingDots {
+  0%, 20% {
+    content: '.';
+  }
+  40% {
+    content: '..';
+  }
+  60%, 100% {
+    content: '...';
+  }
+}
+
+/* Breathing for Notifications */
+.breathing-notification {
+  animation: breathingGlow 3s ease-in-out infinite;
+}
+
+.breathing-notification.urgent {
+  animation: breathingFast 1s ease-in-out infinite;
+}
+
+/* Breathing for Focus States */
+.breathing-focus {
+  animation: breathingGlow 2s ease-in-out infinite;
+}
+
+.breathing-focus:focus {
+  animation: breathingPulse 1s ease-in-out infinite;
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .breathing,
+  .breathing-slow,
+  .breathing-fast,
+  .breathing-pulse,
+  .breathing-glow,
+  .breathing-rotate,
+  .breathing-2s,
+  .breathing-3s,
+  .breathing-5s,
+  .breathing-6s,
+  .breathing-8s,
+  .breathing-delay-1,
+  .breathing-delay-2,
+  .breathing-delay-3,
+  .breathing-card,
+  .breathing-button,
+  .breathing-icon,
+  .breathing-text,
+  .breathing-color,
+  .breathing-bg,
+  .breathing-border,
+  .breathing-shadow,
+  .breathing-group > *,
+  .breathing-meditation,
+  .breathing-progress,
+  .breathing-loading,
+  .breathing-notification,
+  .breathing-focus {
+    animation: none;
+  }
+}
+
+/* Calm Mode - Slower, More Gentle Breathing */
+[data-calm-mode="true"] .breathing {
+  animation: breathingSlow 6s ease-in-out infinite;
+}
+
+[data-calm-mode="true"] .breathing-slow {
+  animation: breathingSlow 8s ease-in-out infinite;
+}
+
+[data-calm-mode="true"] .breathing-fast {
+  animation: breathing 4s ease-in-out infinite;
+}
+
+[data-calm-mode="true"] .breathing-pulse {
+  animation: breathingPulse 3s ease-in-out infinite;
+}
+
+[data-calm-mode="true"] .breathing-glow {
+  animation: breathingGlow 4s ease-in-out infinite;
+}
+
+/* Breathing Performance Optimizations */
+.breathing,
+.breathing-slow,
+.breathing-fast,
+.breathing-pulse,
+.breathing-glow,
+.breathing-rotate {
+  will-change: transform, opacity, box-shadow;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Breathing Accessibility */
+.breathing[aria-hidden="true"] {
+  animation: none;
+}
+
+.breathing:focus {
+  animation: none;
+}
+
+.breathing:focus-visible {
+  animation: breathingGlow 2s ease-in-out infinite;
+}

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useHabitDetails } from './hooks';
-import { useAppShell, AppBar, BottomNav } from '../../components/AppShell';
+import { useAppShell, AppBar, BottomNav } from '../../components/AppShellRouter';
 import { Button } from '../../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Badge } from '../../components/ui/badge';

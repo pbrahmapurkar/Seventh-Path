@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAppShell } from '../components/AppShell';
+import { useAppShell } from '../components/AppShellRouter';
 import seventhPathLogo from '../assets/d39dcef0d5c4765688b970ab66912bbb65f81e62.png';
 
 export function BootScreen() {

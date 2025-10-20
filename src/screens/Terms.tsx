@@ -1,6 +1,5 @@
 import React from 'react';
-import { AppBar } from '../components/AppShell';
-import { useAppShell } from '../components/AppShell';
+import { AppBar, useAppShell } from '../components/AppShellRouter';
 
 export function TermsOfUse() {
   const { navigate } = useAppShell();

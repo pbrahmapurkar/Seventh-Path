@@ -3,10 +3,9 @@ import { BarChart3, TrendingUp, Target, Award, Calendar, Zap, ArrowUpRight, Arro
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { InsightCard, EmptyState } from '../components/HabitCard';
-import { AppBar } from '../components/AppShell';
+import { AppBar, useAppShell } from '../components/AppShellRouter';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { useHabitsStore } from '../store/HabitsStore';
-import { useAppShell } from '../components/AppShell';
 import { CompletionRateRing, StreakRing, TopHabitRing } from '../components/ProgressRing';
 import { HabitLeaderboard } from '../components/HabitLeaderboard';
 import { CompletionRateCard, StreakCard, TopHabitCard } from '../components/MetricCard';

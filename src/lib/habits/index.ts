@@ -276,49 +276,8 @@ export async function getRecentActivity(habitId: string, limit = 5): Promise<Hab
   }
 }
 
-// Stats
-export async function computeStats(habit: HabitDef): Promise<HabitStats> {
-  const today = new Date();
-  const created = new Date(habit.createdAt);
-  const totalDays = Math.max(1, daysBetween(created, today) + 1);
-
-  // Walk through days to compute completed days and streaks
-  let totalCompletedDays = 0;
-  let currentStreak = 0;
-  let bestStreak = 0;
-
-  // Weekly progress: last 7 days
-  const weeklyProgress: { date: string; complete: boolean }[] = [];
-
-  // Iterate all days from creation to today
-  let rollingStreak = 0;
-  for (let i = 0; i < totalDays; i++) {
-    const d = new Date(created.getTime() + (i * 24 * 60 * 60 * 1000));
-    const ymd = toYMD(d);
-    const entry = await getDayEntry(habit.id, ymd);
-    const complete = entry ? isDayComplete(entry) : false;
-    if (complete) {
-      totalCompletedDays++;
-      rollingStreak++;
-      bestStreak = Math.max(bestStreak, rollingStreak);
-    } else {
-      rollingStreak = 0;
-    }
-    if (toYMD(d) === toYMD(today)) currentStreak = complete ? rollingStreak : 0;
-    // capture last 7 days later
-  }
-
-  // Weekly progress (last 7 days ending today)
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(today.getTime() - (i * 24 * 60 * 60 * 1000));
-    const ymd = toYMD(d);
-    const entry = await getDayEntry(habit.id, ymd);
-    weeklyProgress.push({ date: ymd, complete: entry ? isDayComplete(entry) : false });
-  }
-
-  const completionRate = Math.round((totalCompletedDays / totalDays) * 100);
-  return { currentStreak, bestStreak, completionRate, totalCompletedDays, weeklyProgress };
-}
+// Stats - using optimized version with caching
+export { computeStats, clearDayEntryCache, clearHabitCache, getCacheStats } from './computeStatsOptimized';
 
 // Reminder operations
 export async function toggleReminderForToday(habit: HabitDef, time: string, done: boolean): Promise<DayEntry> {

@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Plus, Calendar, Target, Sparkles, Flame } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { HabitCard } from '../components/HabitCard';
-import { useAppShell } from '../components/AppShell';
+import { useAppShell } from '../components/AppShellRouter';
 import { useHabitsStore } from '../store/HabitsStore';
 import { toYMD } from '../lib/habits';
 import { getCompletionForDateMemoized } from '../lib/completion';

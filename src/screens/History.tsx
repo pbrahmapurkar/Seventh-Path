@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, TrendingUp, CheckCircle2, CircleDashed, Lock, Edit3, X } from 'lucide-react';
-import { useAppShell, AppBar } from '../components/AppShell';
+import { useAppShell, AppBar } from '../components/AppShellRouter';
 import { useHabitsStore } from '../store/HabitsStore';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -696,3 +696,5 @@ export function HistoryScreen() {
     </div>
   );
 }
+
+export { HistoryScreen as History };

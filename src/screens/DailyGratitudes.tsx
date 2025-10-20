@@ -3,8 +3,7 @@ import { Calendar, Share, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
-import { AppBar } from '../components/AppShell';
-import { useAppShell } from '../components/AppShell';
+import { AppBar, useAppShell } from '../components/AppShellRouter';
 
 const gratitudePrompts = [
   "What made you smile today?",

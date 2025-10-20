@@ -7,6 +7,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { useHabitsStore } from '../store/HabitsStore';
+import { getPreference, setPreference } from '../lib/storage/preferences';
 import {
   runMigrationOnce,
   ensureReminderChannel,
@@ -72,9 +73,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   const [scheduledNotifications, setScheduledNotifications] = useState<NotificationContextType['scheduledNotifications']>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isEnabled, setIsEnabled] = useState<boolean>(() => {
-    try { return localStorage.getItem('notificationsEnabled') !== 'false'; } catch { return true; }
-  });
+  const [isEnabled, setIsEnabled] = useState<boolean>(true); // Default to enabled, will be updated from storage
 
   // (migrated) computeNextOccurrences moved to habitReminderSystem
 
@@ -83,8 +82,13 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     const initializeNotifications = async () => {
       try {
         setIsLoading(true);
+        
+        // Load notification enabled state from preferences
+        const enabledState = await getPreference('notificationsEnabled', true);
+        setIsEnabled(enabledState);
+        
         const isNative = Capacitor.getPlatform() !== 'web';
-        console.log('[NOTIFICATIONS init] start', { platform: Capacitor.getPlatform(), isNative });
+        console.log('[NOTIFICATIONS init] start', { platform: Capacitor.getPlatform(), isNative, enabledState });
 
         if (isNative) {
           await runMigrationOnce();
@@ -243,11 +247,17 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     try {
       setIsLoading(true);
       setIsEnabled(on);
-      try { localStorage.setItem('notificationsEnabled', on ? 'true' : 'false'); } catch {}
+      
+      // Save to preferences (works on both web and native)
+      await setPreference('notificationsEnabled', on);
+      
       if (!on) {
         // Cancel all scheduled notifications when disabled
         await cancelAllReminders();
       }
+    } catch (error) {
+      console.warn('Failed to update notification enabled state:', error);
+      // Still update local state even if storage fails
     } finally {
       setIsLoading(false);
     }

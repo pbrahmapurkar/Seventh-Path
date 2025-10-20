@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Heart, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { AppBar } from '../components/AppShell';
-import { useAppShell } from '../components/AppShell';
+import { AppBar, useAppShell } from '../components/AppShellRouter';
 
 const mockAffirmations = [
   {

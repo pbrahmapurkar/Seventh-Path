@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { Button } from '../components/ui/button';
-import { useAppShell } from '../components/AppShell';
+import { useAppShell } from '../components/AppShellRouter';
 import seventhPathLogo from '../assets/d39dcef0d5c4765688b970ab66912bbb65f81e62.png';
 import '../styles/onboarding.css';
 import { Capacitor } from '@capacitor/core';

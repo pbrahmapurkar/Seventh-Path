@@ -7,7 +7,7 @@ import { Switch } from './ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { useHabitsStore } from '../store/HabitsStore';
-import { useAppShell } from './AppShell';
+import { useAppShell } from './AppShellRouter';
 import { createHabit } from '../lib/habits';
 import { useNotifications } from '../providers/notificationProvider';
 

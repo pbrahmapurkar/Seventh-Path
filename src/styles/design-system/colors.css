@@ -1,0 +1,118 @@
+/**
+ * Seventh Path Zen Design System - Color Palette
+ * Tranquil, spiritual color system for mindful habit tracking
+ */
+
+:root {
+  /* Zen Collection - Primary Palette */
+  --zen-sage: #A8B5A0;        /* Primary calm green */
+  --zen-lavender: #E6E6FA;    /* Secondary spiritual purple */
+  --zen-amber: #F4E4BC;       /* Accent warmth */
+  --zen-mist: #F5F7F5;        /* Background serenity */
+  --zen-stone: #6B7280;       /* Neutral grounding */
+  
+  /* Semantic Colors with Zen Philosophy */
+  --color-completed: linear-gradient(135deg, #A8B5A0 0%, #E6E6FA 100%);
+  --color-in-progress: linear-gradient(135deg, #F4E4BC 0%, #A8B5A0 100%);
+  --color-gentle-warning: #F4E4BC;
+  --color-affirming: #A8B5A0;
+  
+  /* Reduced Saturation Variants (15% reduction) */
+  --zen-sage-subtle: #B5C0B0;     /* 15% less saturated */
+  --zen-lavender-subtle: #E8E8F2; /* 15% less saturated */
+  --zen-amber-subtle: #F6E8D0;    /* 15% less saturated */
+  --zen-mist-subtle: #F7F9F7;     /* 15% less saturated */
+  --zen-stone-subtle: #7A7F8A;    /* 15% less saturated */
+  
+  /* Gradient Overlays for Depth */
+  --gradient-overlay-light: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(168, 181, 160, 0.05) 100%);
+  --gradient-overlay-dark: linear-gradient(135deg, rgba(0, 0, 0, 0.05) 0%, rgba(168, 181, 160, 0.1) 100%);
+  
+  /* Soft Inner Shadows */
+  --shadow-inner-soft: inset 0 1px 3px rgba(168, 181, 160, 0.1);
+  --shadow-inner-gentle: inset 0 2px 4px rgba(168, 181, 160, 0.08);
+  
+  /* Theme-specific Backgrounds */
+  --bg-primary: var(--zen-mist);
+  --bg-surface: rgba(255, 255, 255, 0.98);
+  --bg-surface-elevated: rgba(255, 255, 255, 0.95);
+  --bg-card: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.98) 0%, 
+    rgba(245, 247, 245, 0.95) 100%);
+  --bg-card-completed: linear-gradient(135deg, 
+    rgba(168, 181, 160, 0.08) 0%, 
+    rgba(230, 230, 250, 0.08) 100%);
+  
+  /* Text Colors */
+  --text-primary: #2D3748;
+  --text-secondary: #4A5568;
+  --text-muted: #718096;
+  --text-on-accent: #FFFFFF;
+  --text-on-sage: #2D3748;
+  
+  /* Border Colors */
+  --border-subtle: rgba(168, 181, 160, 0.1);
+  --border-interactive: rgba(168, 181, 160, 0.2);
+  --border-focus: var(--zen-sage);
+  
+  /* Focus Ring */
+  --focus-ring: 0 0 0 3px rgba(168, 181, 160, 0.12);
+  --focus-ring-offset: 3px;
+}
+
+/* Dark Theme Variants */
+[data-theme="dark"] {
+  --bg-primary: #1A202C;
+  --bg-surface: rgba(26, 32, 44, 0.98);
+  --bg-surface-elevated: rgba(26, 32, 44, 0.95);
+  --bg-card: linear-gradient(135deg, 
+    rgba(26, 32, 44, 0.98) 0%, 
+    rgba(45, 55, 72, 0.95) 100%);
+  --bg-card-completed: linear-gradient(135deg, 
+    rgba(168, 181, 160, 0.12) 0%, 
+    rgba(230, 230, 250, 0.08) 100%);
+  
+  --text-primary: #F7FAFC;
+  --text-secondary: #E2E8F0;
+  --text-muted: #A0AEC0;
+  --text-on-sage: #F7FAFC;
+  
+  --border-subtle: rgba(168, 181, 160, 0.15);
+  --border-interactive: rgba(168, 181, 160, 0.25);
+  
+  --gradient-overlay-light: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(168, 181, 160, 0.08) 100%);
+  --gradient-overlay-dark: linear-gradient(135deg, rgba(0, 0, 0, 0.1) 0%, rgba(168, 181, 160, 0.15) 100%);
+}
+
+/* Calm Mode - Enhanced Accessibility */
+[data-calm-mode="true"] {
+  --text-primary: #1A202C;
+  --text-secondary: #2D3748;
+  --text-muted: #4A5568;
+  --border-subtle: rgba(168, 181, 160, 0.2);
+  --border-interactive: rgba(168, 181, 160, 0.3);
+  --focus-ring: 0 0 0 4px rgba(168, 181, 160, 0.2);
+}
+
+[data-theme="dark"][data-calm-mode="true"] {
+  --text-primary: #F7FAFC;
+  --text-secondary: #E2E8F0;
+  --text-muted: #CBD5E1;
+  --border-subtle: rgba(168, 181, 160, 0.25);
+  --border-interactive: rgba(168, 181, 160, 0.35);
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  :root {
+    --border-subtle: #000000;
+    --border-interactive: #000000;
+    --text-muted: #000000;
+  }
+  
+  [data-theme="dark"] {
+    --border-subtle: #FFFFFF;
+    --border-interactive: #FFFFFF;
+    --text-muted: #FFFFFF;
+  }
+}

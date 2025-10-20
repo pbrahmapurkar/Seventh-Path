@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { useAppShell } from '../components/AppShell';
+import { useAppShell } from '../components/AppShellRouter';
 import { starterHabits } from '../lib/habitStore';
 import { createHabit, makeHabitId, setOnboardingSelected } from '../lib/habits';
 import { useHabitsStore } from '../store/HabitsStore';
