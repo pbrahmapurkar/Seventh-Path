@@ -1,0 +1,953 @@
+/**
+ * Seventh Path Design System v2.0
+ * Complete CSS Token System & Component Library
+ * 
+ * Philosophy: Calm > Urgency, Identity > Gamification
+ * This is a quiet companion, not a dashboard.
+ */
+
+/* ============================================
+   DESIGN TOKENS
+   ============================================ */
+
+:root {
+    /* ----------------------------------------
+     CORE BACKGROUNDS
+     ---------------------------------------- */
+
+    --sp-bg-primary: #0A0E14;
+    --sp-bg-secondary: #0F1419;
+    --sp-bg-tertiary: #151C24;
+
+    /* ----------------------------------------
+     SURFACE SYSTEM (3-Layer Hierarchy)
+     Background → Context → Focus
+     ---------------------------------------- */
+
+    /* Background Layer (no interaction) */
+    --sp-surface-background: var(--sp-bg-primary);
+
+    /* Context Layer (most cards) */
+    --sp-surface-context: rgba(26, 36, 50, 0.7);
+    --sp-surface-context-hover: rgba(30, 42, 58, 0.75);
+    --sp-surface-context-active: rgba(36, 48, 64, 0.85);
+
+    /* Focus Layer (max 1-2 per screen) */
+    --sp-surface-focus: var(--sp-bg-tertiary);
+
+    /* Secondary surfaces (list items) */
+    --sp-surface-secondary: rgba(26, 36, 50, 0.5);
+
+    /* ----------------------------------------
+     BORDERS (Subtle by default)
+     ---------------------------------------- */
+
+    --sp-border-subtle: rgba(42, 58, 74, 0.4);
+    --sp-border-default: rgba(58, 74, 90, 0.5);
+    --sp-border-accent: rgba(16, 185, 129, 0.3);
+    --sp-border-focus: rgba(16, 185, 129, 0.4);
+
+    /* ----------------------------------------
+     ACCENT COLORS (Use sparingly - max 2 per screen)
+     ---------------------------------------- */
+
+    --sp-accent-primary: #10B981;
+    --sp-accent-soft: rgba(16, 185, 129, 0.15);
+    --sp-accent-brand: #D4AF37;
+    /* Logo only */
+
+    /* ----------------------------------------
+     TEXT COLORS
+     ---------------------------------------- */
+
+    --sp-text-primary: rgba(255, 255, 255, 0.95);
+    --sp-text-secondary: #94A3B8;
+    --sp-text-muted: #64748B;
+    --sp-text-disabled: #475569;
+
+    /* ----------------------------------------
+     SEMANTIC COLORS (Intentionally Soft)
+     Never punishing, always recoverable
+     ---------------------------------------- */
+
+    --sp-semantic-success: rgba(16, 185, 129, 0.8);
+    --sp-semantic-warning: rgba(245, 158, 11, 0.6);
+    --sp-semantic-error: rgba(248, 113, 113, 0.7);
+    --sp-semantic-info: rgba(96, 165, 250, 0.6);
+
+    /* ----------------------------------------
+     TYPOGRAPHY
+     ---------------------------------------- */
+
+    --sp-font-primary: "SF Pro Display", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    --sp-font-fallback: "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
+
+    /* Type scale */
+    --sp-text-display: 32px;
+    --sp-text-headline: 24px;
+    --sp-text-title: 18px;
+    --sp-text-body: 16px;
+    --sp-text-body-sm: 14px;
+    --sp-text-caption: 12px;
+    --sp-text-overline: 11px;
+
+    /* Font weights */
+    --sp-font-regular: 400;
+    --sp-font-medium: 500;
+    --sp-font-semibold: 600;
+
+    /* Line heights */
+    --sp-leading-tight: 1.2;
+    --sp-leading-snug: 1.3;
+    --sp-leading-normal: 1.4;
+    --sp-leading-relaxed: 1.5;
+
+    /* Letter spacing */
+    --sp-tracking-tight: -0.02em;
+    --sp-tracking-snug: -0.015em;
+    --sp-tracking-normal: 0;
+    --sp-tracking-wide: 0.01em;
+    --sp-tracking-wider: 0.08em;
+
+    /* ----------------------------------------
+     SPACING SYSTEM (4px base)
+     ---------------------------------------- */
+
+    --sp-space-1: 4px;
+    --sp-space-2: 8px;
+    --sp-space-3: 12px;
+    --sp-space-4: 16px;
+    --sp-space-5: 20px;
+    --sp-space-6: 24px;
+    --sp-space-8: 32px;
+    --sp-space-10: 40px;
+    --sp-space-12: 48px;
+
+    /* Screen standards */
+    --sp-screen-padding-x: 20px;
+    --sp-screen-padding-top: 48px;
+    --sp-screen-padding-bottom: 34px;
+
+    /* ----------------------------------------
+     BORDER RADIUS
+     ---------------------------------------- */
+
+    --sp-radius-sm: 8px;
+    --sp-radius-md: 12px;
+    --sp-radius-lg: 16px;
+    --sp-radius-xl: 20px;
+    --sp-radius-full: 9999px;
+
+    /* ----------------------------------------
+     MOTION
+     50% longer than industry standard for calm
+     ---------------------------------------- */
+
+    --sp-duration-instant: 100ms;
+    --sp-duration-fast: 200ms;
+    --sp-duration-normal: 300ms;
+    --sp-duration-slow: 400ms;
+    --sp-duration-deliberate: 600ms;
+
+    /* Easing functions */
+    --sp-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --sp-ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+    --sp-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    /* ----------------------------------------
+     COMPONENT SIZING
+     ---------------------------------------- */
+
+    --sp-touch-target: 44px;
+    --sp-touch-target-lg: 52px;
+    --sp-button-height-primary: 52px;
+    --sp-button-height-secondary: 48px;
+    --sp-button-height-ghost: 44px;
+    --sp-header-height: 56px;
+
+    /* Icon sizes */
+    --sp-icon-xs: 16px;
+    --sp-icon-sm: 20px;
+    --sp-icon-md: 24px;
+    --sp-icon-lg: 32px;
+    --sp-icon-xl: 48px;
+    --sp-icon-container-md: 44px;
+    --sp-icon-container-lg: 52px;
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    font-family: var(--sp-font-primary), var(--sp-font-fallback);
+    background-color: var(--sp-bg-primary);
+    color: var(--sp-text-primary);
+    line-height: var(--sp-leading-relaxed);
+}
+
+/* ============================================
+   TYPOGRAPHY CLASSES
+   ============================================ */
+
+.sp-display {
+    font-size: var(--sp-text-display);
+    font-weight: var(--sp-font-semibold);
+    line-height: var(--sp-leading-tight);
+    letter-spacing: var(--sp-tracking-tight);
+    color: var(--sp-text-primary);
+}
+
+.sp-headline {
+    font-size: var(--sp-text-headline);
+    font-weight: var(--sp-font-semibold);
+    line-height: var(--sp-leading-snug);
+    letter-spacing: var(--sp-tracking-snug);
+    color: var(--sp-text-primary);
+}
+
+.sp-title {
+    font-size: var(--sp-text-title);
+    font-weight: var(--sp-font-medium);
+    line-height: var(--sp-leading-normal);
+    letter-spacing: var(--sp-tracking-snug);
+    color: var(--sp-text-primary);
+}
+
+.sp-body {
+    font-size: var(--sp-text-body);
+    font-weight: var(--sp-font-regular);
+    line-height: var(--sp-leading-relaxed);
+    letter-spacing: var(--sp-tracking-normal);
+    color: var(--sp-text-primary);
+}
+
+.sp-body-sm {
+    font-size: var(--sp-text-body-sm);
+    font-weight: var(--sp-font-regular);
+    line-height: var(--sp-leading-relaxed);
+    letter-spacing: var(--sp-tracking-wide);
+    color: var(--sp-text-secondary);
+}
+
+.sp-caption {
+    font-size: var(--sp-text-caption);
+    font-weight: var(--sp-font-regular);
+    line-height: var(--sp-leading-normal);
+    letter-spacing: var(--sp-tracking-wide);
+    color: var(--sp-text-muted);
+}
+
+.sp-overline {
+    font-size: var(--sp-text-overline);
+    font-weight: var(--sp-font-medium);
+    line-height: var(--sp-leading-snug);
+    letter-spacing: var(--sp-tracking-wider);
+    text-transform: uppercase;
+    color: var(--sp-text-muted);
+}
+
+/* ============================================
+   SURFACE & CARD SYSTEM
+   NO BOX SHADOWS - Depth through opacity only
+   ============================================ */
+
+/* Context Layer Card (Primary) */
+.sp-card {
+    background: var(--sp-surface-context);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-lg);
+    padding: var(--sp-space-4);
+    transition:
+        background-color var(--sp-duration-fast) var(--sp-ease-out),
+        border-color var(--sp-duration-fast) var(--sp-ease-out),
+        transform var(--sp-duration-fast) var(--sp-ease-out);
+}
+
+.sp-card:hover {
+    background: var(--sp-surface-context-hover);
+    border-color: rgba(42, 58, 74, 0.5);
+}
+
+.sp-card:active,
+.sp-card.sp-card--pressed {
+    background: var(--sp-surface-context-active);
+    border-color: var(--sp-border-accent);
+    transform: scale(0.98);
+}
+
+.sp-card.sp-card--completed {
+    border-color: var(--sp-border-accent);
+    box-shadow: 0 0 0 1px var(--sp-border-accent);
+}
+
+/* Secondary Surface Card (List items) */
+.sp-card-secondary {
+    background: var(--sp-surface-secondary);
+    border: 1px solid rgba(42, 58, 74, 0.3);
+    border-radius: var(--sp-radius-md);
+    padding: var(--sp-space-3) var(--sp-space-4);
+    transition:
+        background-color var(--sp-duration-fast) var(--sp-ease-out),
+        border-color var(--sp-duration-fast) var(--sp-ease-out);
+}
+
+.sp-card-secondary:hover {
+    background: var(--sp-surface-context);
+}
+
+/* Informational Card (Tips, hints) */
+.sp-card-info {
+    background: var(--sp-bg-secondary);
+    border-radius: var(--sp-radius-md);
+    padding: var(--sp-space-3) var(--sp-space-4);
+}
+
+/* Empty State Card (Inviting, not sad) */
+.sp-card-empty {
+    background: var(--sp-surface-secondary);
+    border: 1px dashed rgba(42, 58, 74, 0.3);
+    border-radius: var(--sp-radius-lg);
+    padding: var(--sp-space-6);
+    text-align: center;
+}
+
+/* Focus Layer (Modals, Active States) */
+.sp-surface-focus {
+    background: var(--sp-surface-focus);
+    border-radius: var(--sp-radius-xl);
+}
+
+/* ============================================
+   BUTTON SYSTEM
+   Primary: One per screen, major actions only
+   ============================================ */
+
+.sp-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-space-2);
+    border: none;
+    border-radius: var(--sp-radius-md);
+    font-family: inherit;
+    font-weight: var(--sp-font-medium);
+    cursor: pointer;
+    transition:
+        background-color var(--sp-duration-fast) var(--sp-ease-out),
+        transform var(--sp-duration-instant) var(--sp-ease-out),
+        opacity var(--sp-duration-instant) var(--sp-ease-out);
+}
+
+.sp-button:active {
+    transform: scale(0.97);
+    opacity: 0.9;
+}
+
+.sp-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Primary Button (Max 1 per screen) */
+.sp-button-primary {
+    height: var(--sp-button-height-primary);
+    padding: 0 var(--sp-space-6);
+    background: var(--sp-accent-primary);
+    color: white;
+    font-size: var(--sp-text-body);
+}
+
+.sp-button-primary:hover:not(:disabled) {
+    background: #0EA472;
+}
+
+/* Secondary Button (Alternative actions) */
+.sp-button-secondary {
+    height: var(--sp-button-height-secondary);
+    padding: 0 var(--sp-space-5);
+    background: transparent;
+    border: 1px solid var(--sp-border-default);
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-body);
+}
+
+.sp-button-secondary:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--sp-border-default);
+}
+
+/* Ghost Button (Tertiary, skip) */
+.sp-button-ghost {
+    height: var(--sp-button-height-ghost);
+    padding: 0 var(--sp-space-4);
+    background: transparent;
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-body);
+}
+
+.sp-button-ghost:hover:not(:disabled) {
+    color: var(--sp-text-primary);
+}
+
+/* Destructive Button (Red) */
+.sp-button-destructive {
+    height: var(--sp-button-height-primary);
+    padding: 0 var(--sp-space-6);
+    background: #EF4444;
+    color: white;
+    font-size: var(--sp-text-body);
+}
+
+.sp-button-destructive:hover:not(:disabled) {
+    background: #DC2626;
+}
+
+/* ============================================
+   HABIT CARD COMPONENT
+   Entire row is tappable
+   ============================================ */
+
+.sp-habit-card {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-3);
+    background: var(--sp-surface-context);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-lg);
+    padding: var(--sp-space-4);
+    cursor: pointer;
+    min-height: var(--sp-touch-target);
+    transition:
+        background-color var(--sp-duration-fast) var(--sp-ease-out),
+        border-color var(--sp-duration-fast) var(--sp-ease-out),
+        transform var(--sp-duration-fast) var(--sp-ease-out);
+}
+
+.sp-habit-card:hover {
+    background: var(--sp-surface-context-hover);
+}
+
+.sp-habit-card:active {
+    background: var(--sp-surface-context-active);
+    transform: scale(0.98);
+}
+
+.sp-habit-card--completed {
+    border-color: var(--sp-border-accent);
+}
+
+/* Strike-through completed title at 70% opacity */
+.sp-habit-card--completed .sp-habit-card__title {
+    opacity: 0.7;
+    text-decoration: line-through;
+}
+
+.sp-habit-card__accent {
+    width: 3px;
+    height: 100%;
+    min-height: 32px;
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-accent-primary);
+}
+
+.sp-habit-card__content {
+    flex: 1;
+    min-width: 0;
+}
+
+.sp-habit-card__title {
+    font-size: var(--sp-text-title);
+    font-weight: var(--sp-font-medium);
+    color: var(--sp-text-primary);
+    margin-bottom: var(--sp-space-1);
+}
+
+.sp-habit-card__subtitle {
+    font-size: var(--sp-text-caption);
+    color: var(--sp-text-muted);
+}
+
+/* Circular checkbox (24px) */
+.sp-habit-card__checkbox {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    border: 2px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-full);
+    background: transparent;
+    transition:
+        background-color var(--sp-duration-fast) var(--sp-ease-out),
+        border-color var(--sp-duration-fast) var(--sp-ease-out);
+}
+
+.sp-habit-card--completed .sp-habit-card__checkbox {
+    background: var(--sp-accent-primary);
+    border-color: var(--sp-accent-primary);
+}
+
+/* ============================================
+   ICON SYSTEM
+   Stroke-based, 1.5px width
+   ============================================ */
+
+.sp-icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--sp-icon-container-md);
+    height: var(--sp-icon-container-md);
+    min-width: var(--sp-icon-container-md);
+    background: var(--sp-accent-soft);
+    border-radius: var(--sp-radius-md);
+}
+
+.sp-icon-container--lg {
+    width: var(--sp-icon-container-lg);
+    height: var(--sp-icon-container-lg);
+    min-width: var(--sp-icon-container-lg);
+}
+
+.sp-icon {
+    width: var(--sp-icon-md);
+    height: var(--sp-icon-md);
+    stroke-width: 1.5px;
+    color: var(--sp-text-primary);
+}
+
+.sp-icon--accent {
+    color: var(--sp-accent-primary);
+}
+
+.sp-icon--muted {
+    color: var(--sp-text-muted);
+}
+
+/* ============================================
+   PROGRESS INDICATORS
+   ============================================ */
+
+/* Circular Progress */
+.sp-progress-ring {
+    transform: rotate(-90deg);
+}
+
+.sp-progress-ring__track {
+    fill: none;
+    stroke: rgba(42, 58, 74, 0.3);
+    stroke-width: 4;
+}
+
+.sp-progress-ring__fill {
+    fill: none;
+    stroke: var(--sp-accent-primary);
+    stroke-width: 4;
+    stroke-linecap: round;
+    transition: stroke-dasharray var(--sp-duration-slow) var(--sp-ease-in-out);
+}
+
+/* Linear Progress */
+.sp-progress-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--sp-bg-secondary);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.sp-progress-bar__fill {
+    height: 100%;
+    background: var(--sp-accent-primary);
+    border-radius: 2px;
+    transition: width var(--sp-duration-normal) var(--sp-ease-out);
+}
+
+/* ============================================
+   HEADER COMPONENT
+   ============================================ */
+
+.sp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--sp-header-height);
+    padding: 0 var(--sp-screen-padding-x);
+    background: var(--sp-bg-primary);
+}
+
+.sp-header__title {
+    font-size: var(--sp-text-headline);
+    font-weight: var(--sp-font-semibold);
+    color: var(--sp-text-primary);
+    text-align: center;
+    flex: 1;
+}
+
+.sp-header__action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--sp-touch-target);
+    min-height: var(--sp-touch-target);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: opacity var(--sp-duration-instant) var(--sp-ease-out);
+}
+
+.sp-header__action:active {
+    opacity: 0.7;
+}
+
+/* ============================================
+   MODAL / BOTTOM SHEET
+   ============================================ */
+
+.sp-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    opacity: 0;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    transition: opacity var(--sp-duration-slow) var(--sp-ease-out);
+    z-index: 50;
+}
+
+.sp-modal-backdrop--visible {
+    opacity: 1;
+}
+
+.sp-bottom-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: 90vh;
+    background: var(--sp-bg-tertiary);
+    border-radius: var(--sp-radius-xl) var(--sp-radius-xl) 0 0;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
+    padding: var(--sp-space-4) var(--sp-screen-padding-x);
+    transform: translateY(100%);
+    transition: transform var(--sp-duration-slow) var(--sp-ease-out);
+    z-index: 51;
+}
+
+.sp-bottom-sheet--visible {
+    transform: translateY(0);
+}
+
+.sp-bottom-sheet__handle {
+    width: 40px;
+    height: 4px;
+    margin: 0 auto var(--sp-space-4);
+    background: var(--sp-border-subtle);
+    border-radius: var(--sp-radius-full);
+}
+
+/* ============================================
+   EMPTY STATE
+   Inviting, not sad
+   ============================================ */
+
+.sp-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--sp-space-10) var(--sp-space-6);
+}
+
+.sp-empty-state__illustration {
+    max-height: 80px;
+    margin-bottom: var(--sp-space-6);
+    opacity: 0.6;
+}
+
+.sp-empty-state__title {
+    font-size: var(--sp-text-title);
+    font-weight: var(--sp-font-medium);
+    color: var(--sp-text-primary);
+    margin-bottom: var(--sp-space-2);
+}
+
+.sp-empty-state__description {
+    font-size: var(--sp-text-body-sm);
+    color: var(--sp-text-secondary);
+    margin-bottom: var(--sp-space-6);
+    max-width: 280px;
+}
+
+/* ============================================
+   SEMANTIC STATES
+   Soft, non-alarming
+   ============================================ */
+
+.sp-state-success {
+    color: var(--sp-semantic-success);
+}
+
+.sp-state-success-bg {
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.sp-state-warning {
+    color: var(--sp-semantic-warning);
+}
+
+.sp-state-warning-bg {
+    background: rgba(245, 158, 11, 0.1);
+}
+
+/* Error: Recoverable, never punishing */
+.sp-state-error {
+    color: var(--sp-semantic-error);
+}
+
+.sp-state-error-bg {
+    background: rgba(248, 113, 113, 0.1);
+}
+
+.sp-state-info {
+    color: var(--sp-semantic-info);
+}
+
+.sp-state-info-bg {
+    background: rgba(96, 165, 250, 0.1);
+}
+
+/* ============================================
+   ANIMATIONS
+   Slow, intentional, reassuring
+   ============================================ */
+
+/* Completion feedback - gentle checkmark */
+@keyframes sp-check-fade {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.sp-animate-check {
+    animation: sp-check-fade var(--sp-duration-fast) var(--sp-ease-spring) both;
+}
+
+/* Fade in (neutral) */
+@keyframes sp-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.sp-animate-fade-in {
+    animation: sp-fade-in var(--sp-duration-normal) var(--sp-ease-out) both;
+}
+
+/* Fade in up (gentle entry) */
+@keyframes sp-fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.sp-animate-fade-in-up {
+    animation: sp-fade-in-up var(--sp-duration-slow) var(--sp-ease-out) both;
+}
+
+/* Scale in (modals) */
+@keyframes sp-scale-in {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.sp-animate-scale-in {
+    animation: sp-scale-in var(--sp-duration-normal) var(--sp-ease-out) both;
+}
+
+/* Stagger children (lists) */
+.sp-stagger-children>* {
+    animation: sp-fade-in-up var(--sp-duration-slow) var(--sp-ease-out) both;
+}
+
+.sp-stagger-children>*:nth-child(1) {
+    animation-delay: 0ms;
+}
+
+.sp-stagger-children>*:nth-child(2) {
+    animation-delay: 50ms;
+}
+
+.sp-stagger-children>*:nth-child(3) {
+    animation-delay: 100ms;
+}
+
+.sp-stagger-children>*:nth-child(4) {
+    animation-delay: 150ms;
+}
+
+.sp-stagger-children>*:nth-child(5) {
+    animation-delay: 200ms;
+}
+
+.sp-stagger-children>*:nth-child(6) {
+    animation-delay: 250ms;
+}
+
+/* ============================================
+   INPUT SYSTEM
+   ============================================ */
+
+.sp-input {
+    width: 100%;
+    min-height: var(--sp-touch-target);
+    padding: 0 var(--sp-space-4);
+    background: var(--sp-bg-secondary);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-md);
+    font-family: inherit;
+    font-size: var(--sp-text-body);
+    color: var(--sp-text-primary);
+    transition:
+        border-color var(--sp-duration-fast) var(--sp-ease-out),
+        box-shadow var(--sp-duration-fast) var(--sp-ease-out);
+}
+
+.sp-input::placeholder {
+    color: var(--sp-text-muted);
+}
+
+.sp-input:focus {
+    outline: none;
+    border-color: var(--sp-border-focus);
+    box-shadow: 0 0 0 2px var(--sp-accent-soft);
+}
+
+.sp-input--error {
+    border-color: var(--sp-semantic-error);
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+/* Layout */
+.sp-stack {
+    display: flex;
+    flex-direction: column;
+}
+
+.sp-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.sp-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Spacing */
+.sp-p-screen {
+    padding: var(--sp-space-4) var(--sp-screen-padding-x);
+}
+
+.sp-px-screen {
+    padding-left: var(--sp-screen-padding-x);
+    padding-right: var(--sp-screen-padding-x);
+}
+
+.sp-gap-cards {
+    gap: var(--sp-space-3);
+}
+
+.sp-gap-section {
+    gap: var(--sp-space-6);
+}
+
+/* Touch targets (minimum 44px) */
+.sp-touch-target {
+    min-width: var(--sp-touch-target);
+    min-height: var(--sp-touch-target);
+}
+
+/* Safe areas */
+.sp-safe-top {
+    padding-top: env(safe-area-inset-top, var(--sp-screen-padding-top));
+}
+
+.sp-safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, var(--sp-screen-padding-bottom));
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+/* Focus visible (keyboard navigation) */
+.sp-button:focus-visible,
+.sp-input:focus-visible,
+.sp-card:focus-visible,
+.sp-habit-card:focus-visible {
+    outline: 2px solid var(--sp-accent-primary);
+    outline-offset: 2px;
+}
+
+/* Reduced motion (respect user preference) */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    :root {
+        --sp-border-subtle: rgba(255, 255, 255, 0.5);
+        --sp-border-default: rgba(255, 255, 255, 0.7);
+        --sp-text-secondary: rgba(255, 255, 255, 0.8);
+        --sp-text-muted: rgba(255, 255, 255, 0.6);
+    }
+}

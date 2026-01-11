@@ -12,21 +12,19 @@ import '../styles/onboarding.css';
 
 export function OnboardingReminder() {
   const { navigate, setIsOnboarded } = useAppShell();
-  const { 
-    requestPermission, 
-    isPermissionGranted, 
-    isLoading, 
+  const {
+    requestPermission,
+    isPermissionGranted,
+    isLoading,
     error,
-    sendTestNotification,
-    scheduleHabitReminder
+    sendTestNotification
   } = useNotifications();
   // Selected habit IDs from the previous step
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const store = useHabitsStore();
-  
+
   const [enableReminders, setEnableReminders] = useState(true);
   const [selectedTimes, setSelectedTimes] = useState<string[]>(['09:00']);
-  const [hasRequestedPermission, setHasRequestedPermission] = useState(false);
   const [customTime, setCustomTime] = useState('09:00');
   const [finishing, setFinishing] = useState(false);
 
@@ -46,7 +44,6 @@ export function OnboardingReminder() {
       let granted = isPermissionGranted;
       if (enableReminders && !granted) {
         const perm = await requestPermission();
-        setHasRequestedPermission(true);
         granted = perm.granted;
       }
 
@@ -57,7 +54,7 @@ export function OnboardingReminder() {
       try {
         localStorage.setItem('notificationsEnabled', enableReminders ? 'true' : 'false');
         localStorage.setItem('reminderTimes', JSON.stringify(timesToSave));
-      } catch {}
+      } catch { }
 
       // Persist to each selected habit via store (emits events + reschedules)
       for (const id of selectedIds) {
@@ -69,7 +66,7 @@ export function OnboardingReminder() {
       }
 
       if (enableReminders && granted) {
-        await sendTestNotification('🎉 Notifications Ready!', `You\'ll receive ${timesToSave.length} daily reminder${timesToSave.length>1?'s':''}.`);
+        await sendTestNotification('🎉 Notifications Ready!', `You\'ll receive ${timesToSave.length} daily reminder${timesToSave.length > 1 ? 's' : ''}.`);
       }
 
       await setOnboardingComplete();
@@ -87,8 +84,7 @@ export function OnboardingReminder() {
   const handleRequestPermission = async () => {
     try {
       await requestPermission();
-      setHasRequestedPermission(true);
-      
+
       // Send test notification
       if (isPermissionGranted) {
         await sendTestNotification(
@@ -170,9 +166,8 @@ export function OnboardingReminder() {
             <div className="flex items-center justify-between p-6 bg-gradient-to-r from-card to-card/50 border border-border rounded-2xl shadow-sm">
               <div className="flex items-center gap-4">
                 <div
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
-                    enableReminders ? 'bg-primary/20' : 'bg-muted/50'
-                  }`}
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${enableReminders ? 'bg-primary/20' : 'bg-muted/50'
+                    }`}
                 >
                   {enableReminders ? (
                     <Bell className="w-6 h-6 text-primary" />
@@ -189,106 +184,104 @@ export function OnboardingReminder() {
             </div>
           </div>
 
-        {/* Permission Banner */}
-        {enableReminders && !isPermissionGranted && (
-          <div className="mb-8">
-            <NotificationPermissionBanner
-              onRequestPermission={handleRequestPermission}
-              isLoading={isLoading}
-            />
-          </div>
-        )}
-
-        {/* Time Selection (multiple) */}
-        {enableReminders && (
-          <div className="space-y-6 mb-8">
-            <div className="text-center">
-              <Label className="text-lg font-semibold">Select reminder times</Label>
-              <p className="text-sm text-muted-foreground mt-2">Choose the best times for your daily habits</p>
+          {/* Permission Banner */}
+          {enableReminders && !isPermissionGranted && (
+            <div className="mb-8">
+              <NotificationPermissionBanner
+                onRequestPermission={handleRequestPermission}
+                isLoading={isLoading}
+              />
             </div>
-            <div className="grid gap-4">
-              {timeSlots.map((slot, index) => {
-                const isSelected = selectedTimes.includes(slot.value);
-                return (
-                  <button
-                    key={slot.value}
-                    onClick={() => toggleTime(slot.value)}
-                    className={`group flex items-center justify-between p-5 rounded-2xl border-2 transition-all duration-300 ${
-                      isSelected 
-                        ? 'border-primary bg-primary/5 scale-105 shadow-lg' 
-                        : 'border-border bg-card hover:bg-muted/50 hover:border-primary/50 hover:scale-102'
-                    }`}
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-                        isSelected ? 'bg-primary/20' : 'bg-muted/50'
-                      }`}>
-                        <Clock className={`w-5 h-5 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
-                      </div>
-                      <div className="text-left">
-                        <span className="font-semibold block text-lg">{slot.label}</span>
-                        <span className="text-sm text-muted-foreground">{slot.description}</span>
-                      </div>
-                    </div>
-                    {isSelected && (
-                      <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-lg">
-                        <CheckCircle className="w-4 h-4 text-white" />
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+          )}
 
-            {/* Custom time */}
-            <div className="bg-card border border-border rounded-2xl p-5">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-muted/50 rounded-xl flex items-center justify-center">
-                  <Plus className="w-5 h-5 text-muted-foreground" />
-                </div>
-                <div className="flex-1">
-                  <Label className="text-sm font-medium mb-2 block">Add custom time</Label>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-3 p-3 border border-border rounded-xl bg-background">
-                      <Clock className="w-4 h-4 text-muted-foreground" />
-                      <input
-                        type="time"
-                        value={customTime}
-                        onChange={(e) => setCustomTime(e.target.value)}
-                        className="bg-transparent outline-none text-sm"
-                      />
+          {/* Time Selection (multiple) */}
+          {enableReminders && (
+            <div className="space-y-6 mb-8">
+              <div className="text-center">
+                <Label className="text-lg font-semibold">Select reminder times</Label>
+                <p className="text-sm text-muted-foreground mt-2">Choose the best times for your daily habits</p>
+              </div>
+              <div className="grid gap-4">
+                {timeSlots.map((slot, index) => {
+                  const isSelected = selectedTimes.includes(slot.value);
+                  return (
+                    <button
+                      key={slot.value}
+                      onClick={() => toggleTime(slot.value)}
+                      className={`group flex items-center justify-between p-5 rounded-2xl border-2 transition-all duration-300 shadow-sm ${isSelected
+                        ? 'border-primary bg-primary/5 scale-105 shadow-lg'
+                        : 'border-border bg-card hover:bg-muted/50 hover:border-primary/50 hover:scale-102 hover:shadow-md'
+                        }`}
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isSelected ? 'bg-primary/20' : 'bg-muted/50'
+                          }`}>
+                          <Clock className={`w-5 h-5 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                        </div>
+                        <div className="text-left">
+                          <span className="font-semibold block text-lg">{slot.label}</span>
+                          <span className="text-sm text-muted-foreground">{slot.description}</span>
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-lg">
+                          <CheckCircle className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Custom time */}
+              <div className="bg-card border border-border rounded-2xl p-5">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-muted/50 rounded-xl flex items-center justify-center">
+                    <Plus className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1">
+                    <Label className="text-sm font-medium mb-2 block">Add custom time</Label>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 p-3 border border-border rounded-xl bg-background">
+                        <Clock className="w-4 h-4 text-muted-foreground" />
+                        <input
+                          type="time"
+                          value={customTime}
+                          onChange={(e) => setCustomTime(e.target.value)}
+                          className="bg-transparent outline-none text-sm"
+                        />
+                      </div>
+                      <Button variant="outline" onClick={addCustomTime} size="sm">
+                        <Plus className="w-4 h-4 mr-2" /> Add
+                      </Button>
                     </div>
-                    <Button variant="outline" onClick={addCustomTime} size="sm">
-                      <Plus className="w-4 h-4 mr-2" /> Add
-                    </Button>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {selectedTimes.length > 0 && (
-              <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-2xl p-5 animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
-                    <Zap className="w-4 h-4 text-primary" />
+              {selectedTimes.length > 0 && (
+                <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-2xl p-5 animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
+                      <Zap className="w-4 h-4 text-primary" />
+                    </div>
+                    <h3 className="font-semibold text-lg">Selected times</h3>
                   </div>
-                  <h3 className="font-semibold text-lg">Selected times</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedTimes.sort().map((t) => (
+                      <span key={t} className="text-sm px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+                        {formatTime(t)}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-sm text-primary/80 mt-3">
+                    You'll receive gentle reminders at these times daily.
+                  </p>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {selectedTimes.sort().map((t) => (
-                    <span key={t} className="text-sm px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
-                      {formatTime(t)}
-                    </span>
-                  ))}
-                </div>
-                <p className="text-sm text-primary/80 mt-3">
-                  You'll receive gentle reminders at these times daily.
-                </p>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
 
           {/* Summary */}
           <div className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-2xl p-6 mb-8">
@@ -361,7 +354,7 @@ export function OnboardingReminder() {
       {/* Sticky Footer */}
       <div className="intro-footer pb-safe-area-bottom">
         <div className="px-6 pb-6 space-y-3">
-          <Button onClick={handleFinish} disabled={finishing} className="w-full h-14 text-lg font-medium group rounded-2xl">
+          <Button onClick={handleFinish} disabled={finishing} className="w-full font-medium group" size="lg">
             {finishing ? 'Setting up...' : 'Finish Setup'}
             <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
           </Button>
@@ -372,7 +365,7 @@ export function OnboardingReminder() {
               await handleFinish();
             }}
             disabled={finishing}
-            className="w-full h-12 rounded-xl"
+            className="w-full"
           >
             Skip for now
           </Button>

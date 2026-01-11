@@ -1,23 +1,20 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { BarChart3, TrendingUp, Target, Award, Calendar, Zap, ArrowUpRight, ArrowDownRight, Plus, History } from 'lucide-react';
-import { Badge } from '../components/ui/badge';
+import { useEffect, useMemo, useState } from 'react';
+import { BarChart3, Calendar, Award, ArrowUpRight, ArrowDownRight, Plus } from 'lucide-react';
+
 import { Button } from '../components/ui/button';
-import { InsightCard, EmptyState } from '../components/HabitCard';
+import { EmptyState } from '../components/HabitCard';
 import { AppBar } from '../components/AppShell';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { useHabitsStore } from '../store/HabitsStore';
 import { useAppShell } from '../components/AppShell';
-import { CompletionRateRing, StreakRing, TopHabitRing } from '../components/ProgressRing';
+
 import { HabitLeaderboard } from '../components/HabitLeaderboard';
-import { CompletionRateCard, StreakCard, TopHabitCard } from '../components/MetricCard';
+
 import { CompletionCalendar } from '../components/CompletionCalendar';
-import { Skeleton, SkeletonCard, SkeletonStats, SkeletonTabs } from '../components/ui/skeleton';
-import { 
+import { SkeletonTabs } from '../components/ui/skeleton';
+import {
   getCompletionForDateMemoized,
   getCompletionSeriesMemoized,
-  getCompletionSummary,
-  type DayCompletion,
-  type CompletionSeriesItem
 } from '../lib/completion';
 import { toYMD } from '../lib/habits';
 
@@ -32,12 +29,12 @@ export function Insights() {
     const habits = Object.values(habitsById);
     const totalHabits = habits.length;
     const today = toYMD(new Date());
-    
+
     // Get today's completion using unified system
     const todayCompletion = getCompletionForDateMemoized(today, habits, habitDaysByKey, {
       includeSameDay: true
     });
-    
+
     const completedToday = todayCompletion.totalCompleted;
     const bestStreak = habits.reduce((max, h) => Math.max(max, statsById[h.id]?.bestStreak ?? 0), 0);
     const windowDays = timeFilter === 'week' ? 7 : 30;
@@ -46,7 +43,7 @@ export function Insights() {
     const endDate = new Date();
     const startDate = new Date();
     startDate.setDate(endDate.getDate() - (windowDays - 1));
-    
+
     const series = getCompletionSeriesMemoized({
       start: toYMD(startDate),
       end: toYMD(endDate),
@@ -58,7 +55,7 @@ export function Insights() {
     prevEndDate.setDate(prevEndDate.getDate() - 1);
     const prevStartDate = new Date(prevEndDate);
     prevStartDate.setDate(prevStartDate.getDate() - (windowDays - 1));
-    
+
     const prevSeries = getCompletionSeriesMemoized({
       start: toYMD(prevStartDate),
       end: toYMD(prevEndDate),
@@ -89,24 +86,24 @@ export function Insights() {
   const completedDates = useMemo(() => {
     const habits = Object.values(habitsById);
     const completed: string[] = [];
-    
+
     // Check last 30 days for completed dates
     for (let i = 0; i < 30; i++) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       const ymd = toYMD(date);
-      
+
       // Check if all habits were completed on this day (100% completion)
       const dayCompletion = getCompletionForDateMemoized(ymd, habits, habitDaysByKey, {
         includeSameDay: true
       });
-      
+
       // A day is "completed" if ALL scheduled habits are done (100% completion)
       if (dayCompletion.totalScheduled > 0 && dayCompletion.completionPercentage === 100) {
         completed.push(ymd);
       }
     }
-    
+
     return completed;
   }, [habitsById, habitDaysByKey]);
 
@@ -141,7 +138,7 @@ export function Insights() {
   }
 
   return (
-    <div 
+    <div
       className="flex flex-col min-h-screen bg-background w-full"
       style={{
         paddingTop: 'env(safe-area-inset-top)',
@@ -155,103 +152,84 @@ export function Insights() {
       <div className="flex-1 px-6 py-6 pt-20 pb-24 w-full overflow-x-hidden overflow-y-auto">
         {/* Period Tabs - Enhanced */}
         <div className="flex gap-3 mb-6 w-full" role="tablist" aria-label="Insights period">
-          <Button 
-            role="tab" 
-            aria-selected={timeFilter==='week'} 
-            variant={timeFilter === 'week' ? 'default' : 'outline'} 
-            size="lg" 
+          <Button
+            role="tab"
+            aria-selected={timeFilter === 'week'}
+            variant={timeFilter === 'week' ? 'default' : 'outline'}
+            size="lg"
             onClick={() => setTimeFilter('week')}
             className="flex-1 rounded-2xl font-semibold"
           >
             <Calendar size={18} className="mr-2" /> This Week
           </Button>
-          <Button 
-            role="tab" 
-            aria-selected={timeFilter==='month'} 
-            variant={timeFilter === 'month' ? 'default' : 'outline'} 
-            size="lg" 
+          <Button
+            role="tab"
+            aria-selected={timeFilter === 'month'}
+            variant={timeFilter === 'month' ? 'default' : 'outline'}
+            size="lg"
             onClick={() => setTimeFilter('month')}
             className="flex-1 rounded-2xl font-semibold"
           >
             <Calendar size={18} className="mr-2" /> This Month
           </Button>
         </div>
-        
-        {/* Summary Stats - Enhanced */}
-        <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-2xl p-6 mb-8 w-full">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-foreground">Performance Summary</h2>
-              <p className="text-sm text-muted-foreground font-medium">Your progress this {timeFilter}</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-1">{stats.avgPct}%</div>
-              <div className="text-sm text-muted-foreground font-medium">Average Completion</div>
-            </div>
-            <div className="text-center">
-              <div className={`text-3xl font-bold mb-1 flex items-center justify-center gap-1 ${stats.delta >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                {stats.delta >= 0 ? <ArrowUpRight className="w-6 h-6" /> : <ArrowDownRight className="w-6 h-6" />}
-                {Math.abs(stats.delta)}%
-              </div>
-              <div className="text-sm text-muted-foreground font-medium">vs Previous {timeFilter}</div>
-            </div>
-          </div>
-        </div>
 
-        {/* Key Metrics Section - Enhanced */}
-        <section className="mb-8 w-full">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-              <Target className="w-5 h-5 text-primary" />
-            </div>
-            <h2 className="text-2xl font-bold text-foreground">Key Metrics</h2>
-          </div>
-          <div className="space-y-6 w-full">
-            <CompletionRateCard 
-              rate={stats.avgPct}
-              trend={stats.delta >= 0 ? 'up' : 'down'}
-              trendValue={stats.delta >= 0 ? `+${stats.delta}% vs prev` : `${stats.delta}% vs prev`}
-            />
-            <StreakCard 
-              streak={stats.bestStreak}
-            />
-            {stats.topHabits.length > 0 && (
-              <TopHabitCard 
-                habitName={stats.topHabits[0].name}
-                completionRate={stats.topHabits[0].completionRate}
+        {/* Hero Section - Large Progress Ring */}
+        <div className="flex flex-col items-center mb-8 w-full">
+          <div className="relative w-32 h-32 mb-4">
+            <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 36 36">
+              <path
+                className="text-muted/20 stroke-current"
+                strokeWidth="3"
+                fill="none"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
               />
-            )}
+              <path
+                className="text-primary stroke-current"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+                fill="none"
+                strokeDasharray={`${stats.avgPct}, 100`}
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                style={{
+                  transition: 'stroke-dasharray 0.8s ease-out',
+                  filter: 'drop-shadow(0 0 12px hsl(158, 88%, 45%, 0.4))'
+                }}
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div className="text-4xl font-bold text-primary">{stats.avgPct}%</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Avg Completion</div>
+            </div>
           </div>
-        </section>
 
-        {/* Quick stats - Enhanced */}
-        <div className="grid grid-cols-2 gap-6 mb-8 w-full">
-          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                <Award className="w-4 h-4 text-primary" />
-              </div>
-              <h3 className="font-semibold text-foreground">Active Habits</h3>
-            </div>
-            <div className="text-3xl font-bold text-primary mb-1">{Object.keys(habitsById).length}</div>
-            <div className="text-sm text-muted-foreground font-medium">Currently tracking</div>
-          </div>
-          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-                <Zap className="w-4 h-4 text-green-600 dark:text-green-400" />
-              </div>
-              <h3 className="font-semibold text-foreground">Completed Today</h3>
-            </div>
-            <div className="text-3xl font-bold text-primary mb-1">{stats.completedToday}/{stats.totalHabits}</div>
-            <div className="text-sm text-muted-foreground font-medium">Habits done</div>
+          {/* Trend Badge */}
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${stats.delta >= 0
+            ? 'bg-primary/10 text-primary'
+            : 'bg-red-500/10 text-red-500'
+            }`}>
+            {stats.delta >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+            {stats.delta >= 0 ? '+' : ''}{stats.delta}% vs last {timeFilter}
           </div>
         </div>
+
+        {/* Compact Quick Stats Row */}
+        <div className="grid grid-cols-3 gap-3 mb-8 w-full">
+          <div className="bg-card border border-border rounded-xl p-4 text-center shadow-sm">
+            <div className="text-2xl font-bold text-primary mb-0.5">🔥 {stats.bestStreak}</div>
+            <div className="text-xs text-muted-foreground font-medium">Best Streak</div>
+          </div>
+          <div className="bg-card border border-border rounded-xl p-4 text-center shadow-sm">
+            <div className="text-2xl font-bold text-primary mb-0.5">{stats.totalHabits}</div>
+            <div className="text-xs text-muted-foreground font-medium">Habits</div>
+          </div>
+          <div className="bg-card border border-border rounded-xl p-4 text-center shadow-sm">
+            <div className="text-2xl font-bold text-primary mb-0.5">{stats.completedToday}/{stats.totalHabits}</div>
+            <div className="text-xs text-muted-foreground font-medium">Today</div>
+          </div>
+        </div>
+
+
 
         {/* Completion Calendar - Enhanced */}
         <section className="mb-8 w-full">
@@ -261,8 +239,8 @@ export function Insights() {
             </div>
             <h2 className="text-2xl font-bold text-foreground">Completion Calendar</h2>
           </div>
-          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-            <CompletionCalendar 
+          <div className="bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.12)] rounded-[1.25rem] p-5 shadow-[0_8px_24px_rgba(0,0,0,0.15)]">
+            <CompletionCalendar
               view={timeFilter}
               completedDates={completedDates}
               onDateClick={(date) => {
@@ -276,11 +254,11 @@ export function Insights() {
                 }).length;
                 const pct = habits.length ? Math.round((completed / habits.length) * 100) : 0;
                 const isFullyCompleted = habits.length > 0 && completed === habits.length;
-                setDayDetail({ 
-                  ymd: date, 
-                  label, 
+                setDayDetail({
+                  ymd: date,
+                  label,
                   pct,
-                  isFullyCompleted 
+                  isFullyCompleted
                 } as any);
               }}
             />
@@ -296,7 +274,7 @@ export function Insights() {
             <h2 className="text-2xl font-bold text-foreground">Top Habits</h2>
           </div>
           <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-            <HabitLeaderboard 
+            <HabitLeaderboard
               habits={stats.topHabits.map((habit, index) => ({
                 id: habit.id,
                 name: habit.name,
@@ -312,37 +290,38 @@ export function Insights() {
           </div>
         </section>
 
-        {/* Insights - Enhanced */}
-        <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-2xl p-6 w-full shadow-sm mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center">
-              <span className="text-2xl">💡</span>
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-primary">Personal Insights</h3>
-              <p className="text-sm text-muted-foreground font-medium">Your habit performance analysis</p>
-            </div>
+        {/* Personal Insights - Enhanced with Gradient */}
+        <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-2xl p-6 w-full shadow-lg mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-3xl">💡</span>
+            <h3 className="text-xl font-bold text-foreground">Personal Insights</h3>
           </div>
-          <p className="text-primary/90 font-medium text-base leading-relaxed mb-4">
+
+          <p className="text-foreground font-medium text-base leading-relaxed mb-5">
             {stats.delta >= 10
-              ? `Great job! You've improved by ${stats.delta}% compared to last ${timeFilter}.`
+              ? `🎉 Great job! You've improved by ${stats.delta}% compared to last ${timeFilter}.`
               : stats.delta >= -5
-                ? `Stable performance — keep your streaks going!`
-                : `Let's bounce back — down ${Math.abs(stats.delta)}% vs last ${timeFilter}.`}
+                ? `💪 Stable performance — keep your streaks going!`
+                : `🔄 Let's bounce back — down ${Math.abs(stats.delta)}% vs last ${timeFilter}.`}
           </p>
-          <div className="space-y-2 text-sm text-primary/80">
+
+          <div className="grid grid-cols-1 gap-3">
             {stats.mostConsistent && (
-              <div className="flex items-center gap-2">
-                <span className="font-semibold">Most consistent:</span>
-                <span className="font-medium">{stats.mostConsistent.emoji} {stats.mostConsistent.name}</span>
-                <span className="text-primary/60">({stats.mostConsistent.rate}%)</span>
+              <div className="flex items-center gap-3 p-3 bg-green-500/10 border border-green-500/20 rounded-xl">
+                <span className="text-2xl">{stats.mostConsistent.emoji}</span>
+                <div>
+                  <div className="text-sm font-semibold text-green-400">⭐ Most Consistent</div>
+                  <div className="text-foreground font-medium">{stats.mostConsistent.name} <span className="text-muted-foreground">({stats.mostConsistent.rate}%)</span></div>
+                </div>
               </div>
             )}
-            {stats.mostSkipped && (
-              <div className="flex items-center gap-2">
-                <span className="font-semibold">Most skipped:</span>
-                <span className="font-medium">{stats.mostSkipped.emoji} {stats.mostSkipped.name}</span>
-                <span className="text-primary/60">({stats.mostSkipped.rate}%)</span>
+            {stats.mostSkipped && stats.mostSkipped.rate < 80 && (
+              <div className="flex items-center gap-3 p-3 bg-orange-500/10 border border-orange-500/20 rounded-xl">
+                <span className="text-2xl">{stats.mostSkipped.emoji}</span>
+                <div>
+                  <div className="text-sm font-semibold text-orange-400">⚠️ Needs Attention</div>
+                  <div className="text-foreground font-medium">{stats.mostSkipped.name} <span className="text-muted-foreground">({stats.mostSkipped.rate}%)</span></div>
+                </div>
               </div>
             )}
           </div>

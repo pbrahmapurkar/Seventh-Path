@@ -5,38 +5,38 @@
  */
 
 :root {
-  /* Light Theme (Default) */
-  --color-background: hsl(210, 40%, 98%);
-  --color-foreground: hsl(222, 47%, 11%);
-  --color-card: hsl(0, 0%, 100%);
-  --color-cardForeground: hsl(222, 47%, 11%);
-  --color-popover: hsl(0, 0%, 100%);
-  --color-popoverForeground: hsl(222, 47%, 11%);
-  --color-primary: hsl(217, 91%, 60%);
-  --color-primaryForeground: hsl(0, 0%, 100%);
-  --color-secondary: hsl(210, 40%, 96%);
-  --color-secondaryForeground: hsl(222, 47%, 11%);
-  --color-muted: hsl(210, 40%, 96%);
-  --color-mutedForeground: hsl(215, 16%, 47%);
-  --color-accent: hsl(142, 76%, 73%);
-  --color-accentForeground: hsl(222, 47%, 11%);
-  --color-destructive: hsl(0, 84%, 60%);
-  --color-destructiveForeground: hsl(0, 0%, 100%);
-  --color-success: hsl(142, 76%, 36%);
-  --color-successForeground: hsl(0, 0%, 100%);
-  --color-warning: hsl(38, 92%, 50%);
-  --color-warningForeground: hsl(0, 0%, 100%);
-  --color-info: hsl(199, 89%, 48%);
-  --color-infoForeground: hsl(0, 0%, 100%);
-  --color-border: hsl(214, 32%, 91%);
-  --color-input: hsl(214, 32%, 91%);
-  --color-ring: hsl(217, 91%, 60%);
-  --color-chartFill1: hsl(217, 91%, 60%);
-  --color-chartFill2: hsl(142, 76%, 36%);
-  --color-chartFill3: hsl(38, 92%, 50%);
-  --color-chartFill4: hsl(199, 89%, 48%);
-  --color-chartFill5: hsl(0, 84%, 60%);
-  --color-gradient: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(142, 76%, 73%) 100%);
+  /* Emerald Night Theme (Dark Mode Default) */
+  --color-background: #0C1117;
+  --color-foreground: #E6E8EC;
+  --color-card: #1a1f26;
+  --color-cardForeground: #E6E8EC;
+  --color-popover: #1a1f26;
+  --color-popoverForeground: #E6E8EC;
+  --color-primary: #10B981;
+  --color-primaryForeground: #ffffff;
+  --color-secondary: #2a3441;
+  --color-secondaryForeground: #E6E8EC;
+  --color-muted: #2a3441;
+  --color-mutedForeground: #9CA3AF;
+  --color-accent: #10B981;
+  --color-accentForeground: #ffffff;
+  --color-destructive: #EF4444;
+  --color-destructiveForeground: #ffffff;
+  --color-success: #10B981;
+  --color-successForeground: #ffffff;
+  --color-warning: #F59E0B;
+  --color-warningForeground: #000000;
+  --color-info: #3B82F6;
+  --color-infoForeground: #ffffff;
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-input: rgba(255, 255, 255, 0.12);
+  --color-ring: #10B981;
+  --color-chartFill1: #10B981;
+  --color-chartFill2: #3B82F6;
+  --color-chartFill3: #F59E0B;
+  --color-chartFill4: #EF4444;
+  --color-chartFill5: #8B5CF6;
+  --color-gradient: linear-gradient(135deg, #10B981 0%, #059669 100%);
 }
 
 /* Dark Theme */
@@ -217,21 +217,22 @@
 /* Theme Transition Animations */
 .theme-transition {
   transition: background-color 300ms ease-in-out,
-              color 300ms ease-in-out,
-              border-color 300ms ease-in-out,
-              box-shadow 300ms ease-in-out;
+    color 300ms ease-in-out,
+    border-color 300ms ease-in-out,
+    box-shadow 300ms ease-in-out;
 }
 
 /* Apply theme transitions to all elements */
 * {
   transition: background-color 300ms ease-in-out,
-              color 300ms ease-in-out,
-              border-color 300ms ease-in-out,
-              box-shadow 300ms ease-in-out;
+    color 300ms ease-in-out,
+    border-color 300ms ease-in-out,
+    box-shadow 300ms ease-in-out;
 }
 
 /* Disable transitions for reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
+
   .theme-transition,
   * {
     transition: none !important;
@@ -244,7 +245,7 @@
     --color-border: hsl(0, 0%, 0%);
     --color-input: hsl(0, 0%, 0%);
   }
-  
+
   .theme-dark {
     --color-border: hsl(0, 0%, 100%);
     --color-input: hsl(0, 0%, 100%);
@@ -287,5 +288,3 @@
   outline: 2px solid var(--color-ring);
   outline-offset: 2px;
 }
-
-

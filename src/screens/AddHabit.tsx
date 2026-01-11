@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Switch } from '../components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '../components/ui/select';
 import { AppBar } from '../components/AppShell';
 import { useAppShell } from '../components/AppShell';
 import { useNotifications } from '../providers/notificationProvider';
@@ -12,7 +11,7 @@ import { useHabitsStore } from '../store/HabitsStore';
 import { MultiTimePicker } from '../components/MultiTimePicker';
 import { TimerConfiguration } from '../components/Timer';
 import type { TimerConfig } from '../types/timer';
-import { Bell, BellOff, Plus, Target, Sparkles, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Bell, BellOff, Plus, Target, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
 
 const emojiOptions = [
   { emoji: '💧', label: 'Water' },
@@ -44,13 +43,13 @@ const emojiOptions = [
 export function AddHabit() {
   const { navigate } = useAppShell();
   const { addHabit } = useHabitsStore();
-  const { 
-    scheduleHabitReminder, 
-    isPermissionGranted, 
+  const {
+    scheduleHabitReminder,
+    isPermissionGranted,
     isLoading: notificationLoading,
     checkAndRequestPermission,
   } = useNotifications();
-  
+
   const [title, setTitle] = useState('');
   const [emoji, setEmoji] = useState('🎯');
   const [frequency, setFrequency] = useState<'daily' | 'weekly'>('daily');
@@ -77,22 +76,22 @@ export function AddHabit() {
     if (!title.trim()) return;
     if (!emoji) return;
     setError(null);
-    
+
     // Validate weekly habits
     if (frequency === 'weekly' && weeklyDays.length === 0) {
       setError('Please select at least one day for weekly habits');
       return;
     }
-    
+
     if (hasReminder) {
-      if (reminderTimes.length === 0) { 
-        setError('Please select at least one time'); 
-        return; 
+      if (reminderTimes.length === 0) {
+        setError('Please select at least one time');
+        return;
       }
     }
 
     setIsSaving(true);
-    
+
     try {
       // Persist habit to Preferences
       const newHabit = await createHabit({
@@ -103,7 +102,7 @@ export function AddHabit() {
         weeklyDays: frequency === 'weekly' ? weeklyDays : undefined,
         timerConfig: timerConfig.enabled ? timerConfig : undefined,
       });
-      
+
       // Schedule notification if enabled and permission granted
       if (hasReminder && isPermissionGranted) {
         try {
@@ -122,7 +121,7 @@ export function AddHabit() {
           // Don't block habit creation if notification fails
         }
       }
-      
+
       // Refresh in-memory store so Home reflects immediately
       await addHabit(newHabit);
 
@@ -154,7 +153,7 @@ export function AddHabit() {
   };
 
   return (
-    <div 
+    <div
       className="flex flex-col min-h-screen bg-background w-full"
       style={{
         paddingTop: 'env(safe-area-inset-top)',
@@ -176,30 +175,30 @@ export function AddHabit() {
       />
 
       {/* Enhanced Form Content */}
-      <div className="flex-1 px-6 py-6 pt-20 pb-24 w-full overflow-y-auto">
+      <div className="flex-1 px-4 sm:px-6 py-4 sm:py-6 pt-20 pb-32 w-full overflow-y-auto">
         <div className="space-y-8 w-full">
           {/* Habit Title Section */}
-          <div className="bg-gradient-to-r from-card to-card/50 border border-border rounded-2xl p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+          <div className="bg-gradient-to-r from-card to-card/50 border border-border rounded-2xl p-4 sm:p-6">
+            <div className="flex items-center gap-3 mb-4 sm:mb-6">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-primary/10 rounded-lg flex items-center justify-center">
                 <Target className="w-4 h-4 text-primary" />
               </div>
-              <h2 className="text-lg font-semibold">Habit Details</h2>
+              <h2 className="text-base sm:text-lg font-semibold">Habit Details</h2>
             </div>
-            
+
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="title" className="text-base font-medium">What's your habit?</Label>
+                <Label htmlFor="title" className="text-sm sm:text-base font-medium">What's your habit?</Label>
                 <Input
                   id="title"
                   type="text"
-                  placeholder="e.g. Drink 8 glasses of water, Read for 20 minutes, Take a 10-minute walk"
+                  placeholder="e.g. Drink 8 glasses of water, Read for 20 minutes"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="h-14 text-lg border-2 focus:border-primary transition-colors"
+                  className="h-14 sm:h-16 text-base sm:text-lg border-2 focus:border-primary transition-colors"
                   autoFocus
                 />
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Be specific! The more detailed, the easier it is to track.
                 </p>
               </div>
@@ -207,38 +206,36 @@ export function AddHabit() {
           </div>
 
           {/* Enhanced Emoji Picker */}
-          <div className="bg-gradient-to-r from-card to-card/50 border border-border rounded-2xl p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+          <div className="bg-gradient-to-r from-card to-card/50 border border-border rounded-2xl p-4 sm:p-6">
+            <div className="flex items-center gap-3 mb-4 sm:mb-6">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-primary/10 rounded-lg flex items-center justify-center">
                 <Sparkles className="w-4 h-4 text-primary" />
               </div>
-              <h2 className="text-lg font-semibold">Choose an Icon</h2>
+              <h2 className="text-base sm:text-lg font-semibold">Choose an Icon</h2>
             </div>
-            
+
             <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Pick an emoji that represents your habit. This will help you quickly identify it in your daily list.
               </p>
-              
-              <div className="grid grid-cols-6 gap-3">
+
+              <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 sm:gap-3">
                 {emojiOptions.map((option, index) => (
                   <button
                     key={option.emoji}
                     onClick={() => setEmoji(option.emoji)}
-                    className={`group relative flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-300 ${
-                      emoji === option.emoji
-                        ? 'border-primary bg-primary/10 scale-105 shadow-lg'
-                        : 'border-border hover:border-primary/50 hover:bg-muted/50 hover:scale-102'
-                    }`}
+                    className={`group relative flex flex-col items-center p-3 sm:p-4 rounded-xl border-2 transition-all duration-300 min-h-[72px] sm:min-h-[80px] ${emoji === option.emoji
+                      ? 'border-primary bg-primary/10 scale-105 shadow-lg shadow-primary/20'
+                      : 'border-border hover:border-primary/50 hover:bg-muted/50 active:scale-95'
+                      }`}
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-2 transition-all ${
-                      emoji === option.emoji ? 'bg-primary/20' : 'bg-muted/50'
-                    }`}>
+                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-2xl sm:text-3xl mb-1 sm:mb-2 transition-all ${emoji === option.emoji ? 'bg-primary/20 scale-110' : 'bg-muted/50'
+                      }`}>
                       {option.emoji}
                     </div>
-                    <span className="text-xs font-medium text-center leading-tight">{option.label}</span>
-                    
+                    <span className="text-[10px] sm:text-xs font-medium text-center leading-tight">{option.label}</span>
+
                     {emoji === option.emoji && (
                       <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center shadow-lg">
                         <CheckCircle2 className="w-3 h-3 text-white" />
@@ -261,40 +258,37 @@ export function AddHabit() {
           />
 
           {/* Frequency & Schedule Section */}
-          <div className="bg-gradient-to-r from-card to-card/50 border border-border rounded-2xl p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+          <div className="bg-gradient-to-r from-card to-card/50 border border-border rounded-2xl p-4 sm:p-6">
+            <div className="flex items-center gap-3 mb-4 sm:mb-6">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-primary/10 rounded-lg flex items-center justify-center">
                 <Target className="w-4 h-4 text-primary" />
               </div>
-              <h2 className="text-lg font-semibold">Schedule & Frequency</h2>
+              <h2 className="text-base sm:text-lg font-semibold">Schedule & Frequency</h2>
             </div>
-            
+
             <div className="space-y-6">
               {/* Enhanced Frequency Selection */}
               <div className="space-y-2">
                 <Label className="text-base font-medium">How often do you want to do this habit?</Label>
-                <Select value={frequency} onValueChange={setFrequency}>
-                  <SelectTrigger className={`h-16 text-lg border-2 focus:border-primary transition-all duration-300 hover:border-primary/50 bg-background ${
-                    frequency === 'daily' 
-                      ? 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/20' 
-                      : 'border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20'
-                  }`}>
+                <Select value={frequency} onValueChange={(v) => setFrequency(v as 'daily' | 'weekly')}>
+                  <SelectTrigger className={`h-16 text-lg border-2 focus:border-primary transition-all duration-300 hover:border-primary/50 bg-background ${frequency === 'daily'
+                    ? 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/20'
+                    : 'border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20'
+                    }`}>
                     <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all shadow-lg ${
-                        frequency === 'daily' 
-                          ? 'bg-green-100 dark:bg-green-900/30 scale-105' 
-                          : 'bg-blue-100 dark:bg-blue-900/30 scale-105'
-                      }`}>
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all shadow-lg ${frequency === 'daily'
+                        ? 'bg-green-100 dark:bg-green-900/30 scale-105'
+                        : 'bg-blue-100 dark:bg-blue-900/30 scale-105'
+                        }`}>
                         <span className="text-2xl">
                           {frequency === 'daily' ? '📅' : '🗓️'}
                         </span>
                       </div>
                       <div className="text-left">
-                        <div className={`font-semibold text-lg ${
-                          frequency === 'daily' 
-                            ? 'text-green-700 dark:text-green-300' 
-                            : 'text-blue-700 dark:text-blue-300'
-                        }`}>
+                        <div className={`font-semibold text-lg ${frequency === 'daily'
+                          ? 'text-green-700 dark:text-green-300'
+                          : 'text-blue-700 dark:text-blue-300'
+                          }`}>
                           {frequency === 'daily' ? 'Daily (Everyday)' : 'Weekly (Specific Days)'}
                         </div>
                       </div>
@@ -337,7 +331,7 @@ export function AddHabit() {
                       <Sparkles className="w-4 h-4 text-primary" />
                     </div>
                     <p className="text-sm text-primary font-medium">
-                      {frequency === 'daily' 
+                      {frequency === 'daily'
                         ? '💡 Daily habits are easier to stick to and build momentum faster'
                         : '💡 Weekly habits give you flexibility while still maintaining consistency'
                       }
@@ -397,12 +391,11 @@ export function AddHabit() {
               </div>
               <h2 className="text-lg font-semibold">Preview</h2>
             </div>
-            
+
             <div className="bg-card border border-border rounded-xl p-5">
               <div className="flex items-center gap-4">
-                <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-3xl transition-all ${
-                  hasReminder ? 'bg-green-100 dark:bg-green-900/30' : 'bg-primary/10'
-                }`}>
+                <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-3xl transition-all ${hasReminder ? 'bg-green-100 dark:bg-green-900/30' : 'bg-primary/10'
+                  }`}>
                   {emoji}
                 </div>
                 <div className="flex-1">
@@ -432,13 +425,18 @@ export function AddHabit() {
         </div>
 
         {/* Sticky Save Button - Positioned after Preview */}
-        <div className="sticky bottom-0 left-0 right-0 z-50 mt-8">
-          <div className="bg-gradient-to-r from-background to-background/95 backdrop-blur-sm border-t border-border pt-4 pb-6">
-            <div className="px-6">
+        <div className="sticky bottom-0 left-0 right-0 z-50 mt-6 sm:mt-8">
+          <div
+            className="bg-gradient-to-r from-background to-background/95 backdrop-blur-sm border-t border-border pt-4 pb-4"
+            style={{
+              paddingBottom: 'max(16px, env(safe-area-inset-bottom))'
+            }}
+          >
+            <div className="px-4 sm:px-6">
               <Button
                 onClick={handleSave}
                 disabled={!title.trim() || isSaving || notificationLoading}
-                className="w-full h-14 text-lg font-semibold rounded-2xl group shadow-lg hover:shadow-xl transition-all duration-300"
+                className="w-full font-semibold group shadow-lg hover:shadow-xl transition-all duration-300"
                 size="lg"
               >
                 {isSaving ? (
@@ -454,16 +452,16 @@ export function AddHabit() {
                   </div>
                 )}
               </Button>
-              
+
               {!title.trim() && (
-                <p className="text-sm text-muted-foreground text-center mt-3">
+                <p className="text-xs sm:text-sm text-muted-foreground text-center mt-3">
                   Enter a habit name to continue
                 </p>
               )}
             </div>
           </div>
         </div>
-        
+
         {/* Enhanced Error Display */}
         {error && (
           <div className="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 border border-red-200 dark:border-red-800 rounded-2xl p-6 mt-6">
@@ -486,8 +484,8 @@ export function AddHabit() {
 // Helpers for weekly UI
 function formatWeeklyDays(days: number[]): string {
   if (!days || days.length === 0) return '—';
-  const order = [1,2,3,4,5,6,0];
-  const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const order = [1, 2, 3, 4, 5, 6, 0];
+  const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const selected = order
     .map((real, i) => ({ label: labels[i], real }))
     .filter(({ real }) => days.includes(real))
@@ -499,7 +497,7 @@ function formatTime(t: string): string {
   const [h, m] = t.split(':').map(Number);
   const ampm = h >= 12 ? 'PM' : 'AM';
   const hr = ((h % 12) || 12);
-  return `${hr}:${String(m).padStart(2,'0')} ${ampm}`;
+  return `${hr}:${String(m).padStart(2, '0')} ${ampm}`;
 }
 function formatTimeList(times: string[]): string {
   return times.map(formatTime).join(', ');
@@ -521,14 +519,14 @@ function buildPreviewSummary(
 
 function DayChips({ selected, onChange, disabled }: { selected: number[]; onChange: (days: number[]) => void; disabled?: boolean }) {
   // Show Mon..Sun order in UI, map to 0-6 (Sun=0) internally
-  const order = [1,2,3,4,5,6,0];
-  const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const order = [1, 2, 3, 4, 5, 6, 0];
+  const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const toggle = (uiIndex: number) => {
     if (disabled) return;
     const real = order[uiIndex];
     const set = new Set(selected);
     if (set.has(real)) set.delete(real); else set.add(real);
-    onChange(Array.from(set).sort((a,b)=>a-b));
+    onChange(Array.from(set).sort((a, b) => a - b));
   };
   return (
     <div className="flex flex-wrap gap-3">
@@ -540,11 +538,10 @@ function DayChips({ selected, onChange, disabled }: { selected: number[]; onChan
             key={lab}
             type="button"
             onClick={() => toggle(i)}
-            className={`group relative px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all duration-300 ${
-              isOn 
-                ? 'bg-primary text-primary-foreground border-primary shadow-lg scale-105' 
-                : 'border-border text-foreground hover:border-primary/50 hover:bg-muted/50 hover:scale-102'
-            } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`group relative px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all duration-300 ${isOn
+              ? 'bg-primary text-primary-foreground border-primary shadow-lg scale-105'
+              : 'border-border text-foreground hover:border-primary/50 hover:bg-muted/50 hover:scale-102'
+              } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {lab}
             {isOn && (

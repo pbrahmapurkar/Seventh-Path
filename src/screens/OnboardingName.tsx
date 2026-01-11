@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -17,7 +17,7 @@ export function OnboardingName() {
   };
 
   return (
-    <div 
+    <div
       className="flex flex-col min-h-screen bg-background w-full"
       style={{
         paddingTop: 'env(safe-area-inset-top)',
@@ -98,7 +98,8 @@ export function OnboardingName() {
         <Button
           onClick={handleContinue}
           disabled={!name.trim()}
-          className="w-full h-14 text-lg font-medium group"
+          className="w-full font-medium group"
+          size="lg"
         >
           Save & Continue
           <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />

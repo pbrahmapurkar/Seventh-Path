@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { useAppShell } from '../components/AppShell';
@@ -69,7 +69,7 @@ export function OnboardingHabits() {
             <button
               key={habit.title}
               onClick={() => toggleHabit(habit)}
-              className={`group relative flex flex-col items-center p-6 rounded-2xl border-2 transition-all duration-300 motion-fade-in`}
+              className={`group relative flex flex-col items-center p-6 rounded-2xl border-2 transition-all duration-300 motion-fade-in shadow-sm hover:shadow-md`}
               style={{ animationDelay: `${200 + index * 80}ms` }}
             >
               {isSelected(habit) && (
@@ -78,9 +78,8 @@ export function OnboardingHabits() {
                 </div>
               )}
               <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-all ${
-                  isSelected(habit) ? 'bg-primary/20' : 'bg-muted/50'
-                }`}
+                className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-all ${isSelected(habit) ? 'bg-primary/20' : 'bg-muted/50'
+                  }`}
               >
                 <span className="text-2xl">{habit.emoji}</span>
               </div>
@@ -139,11 +138,12 @@ export function OnboardingHabits() {
               await setOnboardingSelected(ids);
               try {
                 await hydrateAll(true);
-              } catch {}
+              } catch { }
               navigate('/onboarding/reminder');
             }}
             disabled={selectedHabits.length === 0}
-            className="w-full h-14 text-lg font-medium group rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
+            className="w-full font-medium group shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
+            size="lg"
           >
             Continue with {selectedHabits.length} habit{selectedHabits.length !== 1 ? 's' : ''}
             <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -151,7 +151,7 @@ export function OnboardingHabits() {
           <Button
             variant="outline"
             onClick={() => navigate('/onboarding/reminder')}
-            className="w-full h-12 rounded-xl"
+            className="w-full"
           >
             Skip for now
           </Button>

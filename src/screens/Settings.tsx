@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useRef } from 'react';
-import { ChevronRight, User, Bell, RotateCcw, Info, Settings as SettingsIcon, TestTube, Trash2, FileText, Shield, Edit2, Check, X, Sparkles, Zap, Heart, ShieldCheck, AlertTriangle, CheckCircle2, History, BarChart3, Plus, Download, Upload, Database } from 'lucide-react';
+import { ChevronRight, User, Bell, RotateCcw, Info, Settings as SettingsIcon, TestTube, Trash2, FileText, Shield, Edit2, Check, X, Sparkles, Zap, Heart, ShieldCheck, AlertTriangle, CheckCircle2, Download, Upload, Database } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Switch } from '../components/ui/switch';
 import { Input } from '../components/ui/input';
@@ -10,6 +10,7 @@ import { useAppShell } from '../components/AppShell';
 import { useHabitsStore } from '../store/HabitsStore';
 import { useNotificationsStore } from '../store/NotificationsStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Modal } from '../components/ui/Modal';
 import { ImportDialog } from '../components/ImportDialog';
 import { Capacitor } from '@capacitor/core';
 import { exportHabitsToCSV, parseCSV, validateHabitData, downloadCSV, formatFileSize } from '../utils/csvExport';
@@ -30,15 +31,15 @@ export function Settings() {
     refreshScheduledCount,
     sendTest,
   } = useNotificationsStore();
-  const { 
-    factoryReset, 
-    habitsById, 
-    statsById, 
-    habitDaysByKey, 
-    addHabit, 
+  const {
+    factoryReset,
+    habitsById,
+    statsById,
+    habitDaysByKey,
+    addHabit,
     editHabit,
     clearAllHabits,
-    hydrate: hydrateHabits 
+    hydrate: hydrateHabits
   } = useHabitsStore();
   const toast = useToast();
 
@@ -49,14 +50,13 @@ export function Settings() {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [importResult, setImportResult] = useState<string>('');
-  const [showImportDialog, setShowImportDialog] = useState(false);
-  
+
+
   // Enhanced import state
   const [pendingImportFile, setPendingImportFile] = useState<File | null>(null);
   const [pendingHabits, setPendingHabits] = useState<any[]>([]);
   const [showEnhancedImportDialog, setShowEnhancedImportDialog] = useState(false);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const version = packageInfo?.version ?? '1.0.7';
 
@@ -68,7 +68,7 @@ export function Settings() {
         await Browser.open({ url });
         return;
       }
-    } catch {}
+    } catch { }
     window.open(url, '_blank', 'noopener,noreferrer');
   }, []);
 
@@ -142,19 +142,19 @@ export function Settings() {
     try {
       setIsExporting(true);
       const result = exportHabitsToCSV(habitsById, statsById, habitDaysByKey);
-      
+
       if (result.success && result.csv && result.filename) {
         downloadCSV(result.csv, result.filename);
-        
+
         // Calculate file size
         const fileSize = formatFileSize(new Blob([result.csv]).size);
-        
+
         // Show success toast with details
         toast.success(
           `Exported ${result.habitCount} habit${result.habitCount !== 1 ? 's' : ''} (${fileSize}) successfully!`,
           3000
         );
-        
+
         console.log('[Export] Success:', {
           habitCount: result.habitCount,
           filename: result.filename,
@@ -178,7 +178,7 @@ export function Settings() {
 
     try {
       setIsImporting(true);
-      
+
       // Validate file type
       if (!file.name.endsWith('.csv')) {
         throw new Error('Please select a CSV file');
@@ -187,7 +187,7 @@ export function Settings() {
       // Read and parse file
       const text = await file.text();
       const { habits, schemaVersion } = parseCSV(text);
-      
+
       if (habits.length === 0) {
         throw new Error('CSV file contains no valid habits');
       }
@@ -198,19 +198,19 @@ export function Settings() {
         schemaVersion,
         fileSize: formatFileSize(file.size)
       });
-      
+
       // Store for import dialog
       setPendingImportFile(file);
       setPendingHabits(habits);
       setShowEnhancedImportDialog(true);
-      
+
     } catch (error) {
       console.error('[Import] Parse error:', error);
       toast.error(
         `Invalid CSV file: ${error instanceof Error ? error.message : 'Unknown error'}`,
         4000
       );
-      
+
       // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -222,9 +222,9 @@ export function Settings() {
 
   const handleImportExecution = async (mode: 'merge' | 'replace'): Promise<CSVImportResult> => {
     if (!pendingImportFile || pendingHabits.length === 0) {
-      return { 
-        success: false, 
-        errors: ['No file selected or no valid habits found'] 
+      return {
+        success: false,
+        errors: ['No file selected or no valid habits found']
       };
     }
 
@@ -246,12 +246,12 @@ export function Settings() {
       // Import each habit
       for (const habitData of pendingHabits) {
         const validation = validateHabitData(habitData);
-        
+
         // Collect warnings
         if (validation.warnings && validation.warnings.length > 0) {
           warnings.push(...validation.warnings.map(w => `${habitData.name}: ${w}`));
         }
-        
+
         // Skip invalid habits
         if (!validation.valid) {
           errors.push(`${habitData.name}: ${validation.errors.join(', ')}`);
@@ -262,7 +262,7 @@ export function Settings() {
 
         try {
           const existingHabit = habitsById[habitData.id];
-          
+
           // Build timer config if available
           const timerConfig = habitData.timerEnabled ? {
             enabled: true,
@@ -270,7 +270,7 @@ export function Settings() {
             defaultDuration: habitData.timerDefaultDuration || 1800,
             autoCompleteHabit: habitData.timerAutoComplete ?? true
           } : undefined;
-          
+
           if (existingHabit && mode === 'merge') {
             // Update existing habit
             await editHabit({
@@ -313,13 +313,13 @@ export function Settings() {
       await hydrateHabits();
       await hydrate(); // Notifications store
       await refreshScheduledCount();
-      
+
       console.log('[Import] State refresh complete');
 
       // Clear pending state
       setPendingImportFile(null);
       setPendingHabits([]);
-      
+
       // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -377,18 +377,18 @@ export function Settings() {
     </div>
   );
 
-  const SettingsRow = ({ 
-    icon, 
-    title, 
-    description, 
-    action, 
+  const SettingsRow = ({
+    icon,
+    title,
+    description,
+    action,
     onClick,
     variant = 'default'
-  }: { 
-    icon: React.ReactNode; 
-    title: string; 
-    description?: string; 
-    action?: React.ReactNode; 
+  }: {
+    icon: React.ReactNode;
+    title: string;
+    description?: string;
+    action?: React.ReactNode;
     onClick?: () => void;
     variant?: 'default' | 'danger' | 'success';
   }) => {
@@ -404,37 +404,32 @@ export function Settings() {
     };
 
     return (
-      <div 
-        className={`flex items-center gap-4 p-6 border-b border-border last:border-b-0 transition-all duration-300 ${
-          onClick ? `cursor-pointer active:scale-[0.98] ${getVariantStyles()}` : ''
-        }`}
+      <div
+        className={`flex items-center gap-4 p-6 border-b border-border last:border-b-0 transition-all duration-300 ${onClick ? `cursor-pointer active:scale-[0.98] ${getVariantStyles()}` : ''
+          }`}
         onClick={onClick}
       >
-        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
-          variant === 'danger' ? 'bg-red-100 dark:bg-red-900/30' :
+        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${variant === 'danger' ? 'bg-red-100 dark:bg-red-900/30' :
           variant === 'success' ? 'bg-green-100 dark:bg-green-900/30' :
-          'bg-muted/50'
-        }`}>
-          <div className={`${
-            variant === 'danger' ? 'text-red-600 dark:text-red-400' :
-            variant === 'success' ? 'text-green-600 dark:text-green-400' :
-            'text-muted-foreground'
+            'bg-muted/50'
           }`}>
+          <div className={`${variant === 'danger' ? 'text-red-600 dark:text-red-400' :
+            variant === 'success' ? 'text-green-600 dark:text-green-400' :
+              'text-muted-foreground'
+            }`}>
             {icon}
           </div>
         </div>
         <div className="flex-1 min-w-0">
-          <p className={`font-bold text-lg ${
-            variant === 'danger' ? 'text-red-700 dark:text-red-300' :
+          <p className={`font-bold text-lg ${variant === 'danger' ? 'text-red-700 dark:text-red-300' :
             variant === 'success' ? 'text-green-700 dark:text-green-300' :
-            'text-foreground'
-          }`}>{title}</p>
+              'text-foreground'
+            }`}>{title}</p>
           {description && (
-            <p className={`text-sm mt-1 font-medium ${
-              variant === 'danger' ? 'text-red-600 dark:text-red-400' :
+            <p className={`text-sm mt-1 font-medium ${variant === 'danger' ? 'text-red-600 dark:text-red-400' :
               variant === 'success' ? 'text-green-600 dark:text-green-400' :
-              'text-muted-foreground'
-            }`}>{description}</p>
+                'text-muted-foreground'
+              }`}>{description}</p>
           )}
         </div>
         {action && <div className="flex-shrink-0">{action}</div>}
@@ -448,7 +443,7 @@ export function Settings() {
   };
 
   return (
-    <div 
+    <div
       className="flex flex-col min-h-screen bg-background w-full"
       style={{
         paddingTop: 'env(safe-area-inset-top)',
@@ -464,7 +459,7 @@ export function Settings() {
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-primary/3 to-transparent border border-primary/20 rounded-3xl mb-8 p-8 w-full">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5" />
           <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-primary/10 to-transparent rounded-full -translate-y-20 translate-x-20" />
-          
+
           <div className="relative">
             <div className="flex items-center gap-6 mb-6">
               <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-3xl flex items-center justify-center shadow-lg">
@@ -479,7 +474,7 @@ export function Settings() {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-4">
               <Badge variant="secondary" className="px-4 py-2 rounded-full font-semibold">
                 <Sparkles className="w-4 h-4 mr-2" />
@@ -522,16 +517,16 @@ export function Settings() {
                   }}
                 />
                 <div className="flex items-center gap-3">
-                  <Button 
-                    onClick={handleSaveName} 
+                  <Button
+                    onClick={handleSaveName}
                     disabled={!tempName.trim()}
                     className="flex-1 h-11 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
                   >
                     <Check className="w-4 h-4 mr-2" />
                     Save Changes
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={handleCancelEditingName}
                     className="h-11"
                   >
@@ -738,8 +733,8 @@ export function Settings() {
                   <p className="text-sm text-red-600 dark:text-red-400">This action cannot be undone</p>
                 </div>
               </div>
-              <Button 
-                variant="destructive" 
+              <Button
+                variant="destructive"
                 className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
                 onClick={handleRemoveAllHabits}
               >
@@ -758,7 +753,7 @@ export function Settings() {
           <div className="relative overflow-hidden bg-gradient-to-br from-card to-card/50 border border-border rounded-2xl p-8">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10" />
             <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-primary/10 to-transparent rounded-full -translate-y-12 translate-x-12" />
-            
+
             <div className="relative">
               <div className="w-20 h-20 flex items-center justify-center mx-auto mb-6 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl shadow-lg">
                 <img src="/icon-192.png" alt="Seventh Path Logo" className="w-16 h-16 object-contain" />
@@ -785,48 +780,28 @@ export function Settings() {
         </div>
       </div>
 
-      <Dialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
-        <DialogContent className="max-w-md rounded-3xl border border-red-200 dark:border-red-900/40">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-red-600 dark:text-red-400">
-              Are you sure?
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 text-sm text-muted-foreground">
-            <p>This action will permanently delete all of your habits, progress, and statistics. This cannot be undone.</p>
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 rounded-2xl p-4 text-red-700 dark:text-red-300 text-xs">
-              You’ll be returned to onboarding and must set everything up again.
-            </div>
+      {/* Reset Confirmation Modal */}
+      <Modal
+        isOpen={showResetConfirm}
+        onClose={() => setShowResetConfirm(false)}
+        title="Reset Onboarding?"
+        type="destructive"
+        primaryAction={{
+          label: 'Confirm Reset',
+          onClick: handleConfirmReset
+        }}
+        secondaryAction={{
+          label: 'Cancel',
+          onClick: () => setShowResetConfirm(false)
+        }}
+      >
+        <div className="space-y-4 text-sm text-muted-foreground">
+          <p>This action will permanently delete all of your habits, progress, and statistics. This cannot be undone.</p>
+          <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 text-red-400 text-xs">
+            You’ll be returned to onboarding and must set everything up again.
           </div>
-          <div className="flex flex-col sm:flex-row sm:justify-end sm:gap-3 gap-2 pt-6">
-            <Button variant="outline" onClick={() => setShowResetConfirm(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleConfirmReset} className="bg-red-600 hover:bg-red-700">
-              Confirm Reset
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Import Result Dialog - OLD (Remove this) */}
-      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
-        <DialogContent className="max-w-md rounded-3xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">
-              Import Results
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 text-sm">
-            <pre className="whitespace-pre-wrap text-sm bg-muted/30 p-4 rounded-lg">
-              {importResult}
-            </pre>
-          </div>
-          <div className="flex justify-end pt-4">
-            <Button onClick={() => setShowImportDialog(false)}>
-              Close
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </Modal>
 
       {/* Enhanced Import Dialog - NEW */}
       <ImportDialog
@@ -997,12 +972,12 @@ export function Settings() {
                 </div>
               </section>
 
-              
+
             </div>
 
             {/* Sticky Footer */}
             <div className="sticky bottom-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-t border-border px-4 py-3 flex items-center justify-between">
-              <Button variant="ghost" onClick={() => {/* placeholder for Licenses route */}} aria-label="Open licenses">
+              <Button variant="ghost" onClick={() => {/* placeholder for Licenses route */ }} aria-label="Open licenses">
                 Licenses
               </Button>
               <Button onClick={() => setAboutOpen(false)} aria-label="Close About">

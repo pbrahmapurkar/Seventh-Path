@@ -5,32 +5,34 @@
 @layer base {
   :root {
     /* Emerald Night Theme - Deep slate with vibrant emerald accents */
-    --background: #111827;
-    --foreground: #F9FAFB;
-    --card: #1F2937;
-    --card-foreground: #F9FAFB;
-    --popover: #1F2937;
-    --popover-foreground: #F9FAFB;
-    --primary: #10B981;
-    --primary-foreground: #FFFFFF;
-    --secondary: #374151;
-    --secondary-foreground: #F9FAFB;
-    --muted: #374151;
-    --muted-foreground: #9CA3AF;
-    --accent: #10B981;
-    --accent-foreground: #FFFFFF;
-    --destructive: #EF4444;
-    --destructive-foreground: #FFFFFF;
-    --success: #10B981;
-    --success-foreground: #FFFFFF;
-    --warning: #F59E0B;
-    --warning-foreground: #000000;
-    --info: #3B82F6;
-    --info-foreground: #FFFFFF;
-    --border: #374151;
-    --input: #374151;
-    --ring: #10B981;
-    --radius: 0.75rem;
+    /* Using HSL values without wrapper for Tailwind compatibility */
+    /* Background: #0C1117 = HSL(216, 33%, 7%) - deeper than before */
+    --background: 216 33% 7%;
+    --foreground: 220 13% 91%;
+    --card: 217 19% 12%;
+    --card-foreground: 220 13% 91%;
+    --popover: 217 19% 12%;
+    --popover-foreground: 220 13% 91%;
+    --primary: 158 88% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 19% 18%;
+    --secondary-foreground: 220 13% 91%;
+    --muted: 217 19% 18%;
+    --muted-foreground: 215 16% 65%;
+    --accent: 158 88% 45%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 4 80% 58%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 158 88% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 0%;
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+    --border: 217 19% 18%;
+    --input: 217 19% 18%;
+    --ring: 158 88% 45%;
+    --radius: 1.25rem;
   }
 }
 
@@ -38,24 +40,29 @@
   * {
     @apply border-border;
   }
-  
+
   body {
     @apply bg-background text-foreground;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  
+
   /* Improved readability */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-semibold;
     letter-spacing: -0.02em;
   }
-  
+
   p {
     line-height: 1.6;
   }
-  
+
   /* Smooth transitions for interactive elements */
   button,
   a,
@@ -68,7 +75,37 @@
 
 /* Emerald gradient utilities */
 .bg-gradient-emerald {
-  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  background: linear-gradient(135deg, hsl(158, 88%, 45%) 0%, hsl(158, 88%, 35%) 100%);
 }
 
+/* Card Enhanced - matches onboarding design */
+.card-enhanced {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1.25rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
+.card-enhanced:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* Motion animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.motion-fade-in-up {
+  animation: fadeInUp 0.4s ease-out both;
+}

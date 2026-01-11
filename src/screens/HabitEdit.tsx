@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -33,7 +33,7 @@ export function HabitEdit({ habitId }: { habitId: string }) {
 
   if (!habit) {
     return (
-      <div 
+      <div
         className="flex flex-col min-h-screen bg-background w-full"
         style={{
           paddingTop: 'env(safe-area-inset-top)',
@@ -90,7 +90,7 @@ export function HabitEdit({ habitId }: { habitId: string }) {
       } catch (e) {
         console.warn('Notification update failed', e);
       }
-      try { alert('Habit updated successfully'); } catch {}
+      try { alert('Habit updated successfully'); } catch { }
       navigate(`/habit/${habit.id}`);
     } catch (e: any) {
       const msg = e?.message || 'Failed to save changes';
@@ -126,7 +126,7 @@ export function HabitEdit({ habitId }: { habitId: string }) {
   );
 
   return (
-    <div 
+    <div
       className="flex flex-col min-h-screen bg-background w-full"
       style={{
         paddingTop: 'env(safe-area-inset-top)',
@@ -150,73 +150,72 @@ export function HabitEdit({ habitId }: { habitId: string }) {
       <div className="flex-1 flex flex-col">
         <div className="flex-1 px-6 pt-20 pb-30 overflow-y-auto">
           <div className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="title">Habit name</Label>
-            <Input
-              id="title"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="h-12"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Choose an emoji</Label>
-            <div className="grid grid-cols-8 gap-2 p-4 bg-card border border-border rounded-lg">
-              {emojiOptions.map((emojiOption) => (
-                <button
-                  key={emojiOption}
-                  onClick={() => setEmoji(emojiOption)}
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-all ${
-                    emoji === emojiOption ? 'bg-primary text-white' : 'hover:bg-muted'
-                  }`}
-                >
-                  {emojiOption}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Frequency</Label>
-            <Select value={frequency} onValueChange={setFrequency}>
-              <SelectTrigger className="h-12">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="daily">Daily</SelectItem>
-                <SelectItem value="weekly">Weekly</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {frequency === 'weekly' && (
             <div className="space-y-2">
-              <Label>Select Days</Label>
-              <DayChips selected={weeklyDays} onChange={setWeeklyDays} disabled={!hasReminder} />
+              <Label htmlFor="title">Habit name</Label>
+              <Input
+                id="title"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="h-12"
+              />
             </div>
-          )}
 
-          <MultiTimePicker
-            enabled={hasReminder}
-            onEnabledChange={handleReminderToggle}
-            times={reminderTimes}
-            onChange={setReminderTimes}
-            defaultTime="08:00"
-            disabled={isSaving}
-            onAutoSave={async (times) => {
-              // Auto-save reminder times immediately
-              await store.editHabit({
-                id: habit.id,
-                name: habit.name,
-                emoji: habit.emoji,
-                frequency: habit.frequency,
-                reminderTimes: times,
-                weeklyDays: habit.weeklyDays,
-              });
-            }}
-          />
+            <div className="space-y-2">
+              <Label>Choose an emoji</Label>
+              <div className="grid grid-cols-8 gap-2 p-4 bg-card border border-border rounded-lg">
+                {emojiOptions.map((emojiOption) => (
+                  <button
+                    key={emojiOption}
+                    onClick={() => setEmoji(emojiOption)}
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-all ${emoji === emojiOption ? 'bg-primary text-white shadow-md scale-110' : 'hover:bg-muted hover:shadow-sm hover:scale-105'
+                      }`}
+                  >
+                    {emojiOption}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Frequency</Label>
+              <Select value={frequency} onValueChange={(v) => setFrequency(v as 'daily' | 'weekly')}>
+                <SelectTrigger className="h-12">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {frequency === 'weekly' && (
+              <div className="space-y-2">
+                <Label>Select Days</Label>
+                <DayChips selected={weeklyDays} onChange={setWeeklyDays} disabled={!hasReminder} />
+              </div>
+            )}
+
+            <MultiTimePicker
+              enabled={hasReminder}
+              onEnabledChange={handleReminderToggle}
+              times={reminderTimes}
+              onChange={setReminderTimes}
+              defaultTime="08:00"
+              disabled={isSaving}
+              onAutoSave={async (times) => {
+                // Auto-save reminder times immediately
+                await store.editHabit({
+                  id: habit.id,
+                  name: habit.name,
+                  emoji: habit.emoji,
+                  frequency: habit.frequency,
+                  reminderTimes: times,
+                  weeklyDays: habit.weeklyDays,
+                });
+              }}
+            />
             <div className="text-sm text-muted-foreground -mt-2">
               {hasReminder ? (
                 <div className="flex items-center gap-2"><Bell size={16} /> Reminder enabled</div>
@@ -229,7 +228,7 @@ export function HabitEdit({ habitId }: { habitId: string }) {
 
         <div className="px-6 pb-safe-area-bottom pt-4 pb-6 border-t border-border bg-background">
           {error && (<div className="text-sm text-red-600 dark:text-red-400 mb-2">{error}</div>)}
-          <Button onClick={handleSave} disabled={!title.trim() || isSaving} className="w-full h-12">
+          <Button onClick={handleSave} disabled={!title.trim() || isSaving} className="w-full font-semibold" size="lg">
             {isSaving ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>
@@ -239,14 +238,14 @@ export function HabitEdit({ habitId }: { habitId: string }) {
 }
 
 function DayChips({ selected, onChange, disabled }: { selected: number[]; onChange: (days: number[]) => void; disabled?: boolean }) {
-  const order = [1,2,3,4,5,6,0];
-  const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const order = [1, 2, 3, 4, 5, 6, 0];
+  const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const toggle = (uiIndex: number) => {
     if (disabled) return;
     const real = order[uiIndex];
     const set = new Set(selected);
     if (set.has(real)) set.delete(real); else set.add(real);
-    onChange(Array.from(set).sort((a,b)=>a-b));
+    onChange(Array.from(set).sort((a, b) => a - b));
   };
   return (
     <div className="flex flex-wrap gap-2">
