@@ -1,65 +1,55 @@
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useAppShell } from '../components/AppShell';
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '../components/ui/alert-dialog';
 import { useNotifications } from '../providers/notificationProvider';
 import { useHabitsStore } from '../store/HabitsStore';
+import { Modal } from '../components/ui/Modal';
 
 export function ConfirmRemoveHabits() {
   const { navigate } = useAppShell();
   const { clearAllHabits } = useHabitsStore();
   const { cancelAllReminders } = useNotifications();
   const [open, setOpen] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (!open) {
-      // If dialog is dismissed via outside click or Esc, go back to settings
-      navigate('/settings');
-    }
-  }, [open, navigate]);
+  const handleClose = () => {
+    setOpen(false);
+    // Wait for animation
+    setTimeout(() => navigate('/settings'), 300);
+  };
 
   const handleConfirm = async () => {
+    setIsLoading(true);
     try {
       await clearAllHabits();
       await cancelAllReminders();
-      try { alert('All habits removed successfully ✅'); } catch {}
+      try { alert('All habits removed successfully ✅'); } catch { }
       navigate('/home');
     } catch (e) {
       // Fallback: navigate back to settings on error
       navigate('/settings');
+    } finally {
+      setIsLoading(false);
     }
-  };
-
-  const handleCancel = () => {
-    navigate('/settings');
   };
 
   return (
     <div className="min-h-screen bg-background">
-      <AlertDialog open={open} onOpenChange={setOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove All Habits</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to permanently delete all habits, completions, and reminders?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancel}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Modal
+        isOpen={open}
+        onClose={handleClose}
+        title="Delete All Habits"
+        description="This will permanently delete all your habits, completion history, and reminders. This action cannot be undone."
+        type="destructive"
+        primaryAction={{
+          label: 'Delete Everything',
+          onClick: handleConfirm,
+          isLoading
+        }}
+        secondaryAction={{
+          label: 'Cancel',
+          onClick: handleClose
+        }}
+      />
     </div>
   );
 }

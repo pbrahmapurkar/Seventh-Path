@@ -1,13 +1,14 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useHabitDetails } from './hooks';
 import { useAppShell, AppBar, BottomNav } from '../../components/AppShell';
 import { Button } from '../../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Badge } from '../../components/ui/badge';
-import { Skeleton, SkeletonCard, SkeletonStats, SkeletonTabs } from '../../components/ui/skeleton';
-import { Edit, Trash2, Plus, Clock, Check, Home, BarChart3, Settings, History, CheckCircle2, Timer } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { SkeletonCard, SkeletonTabs } from '../../components/ui/skeleton';
+import { Edit, Trash2, Plus, Clock, Check, CheckCircle2, Timer } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { TimerTab } from './TimerTab';
+import { Modal } from '../../components/ui/Modal';
 // removed Snooze action; no LocalNotifications import needed here
 
 function formatSinceDays(iso: string): number {
@@ -20,7 +21,7 @@ function formatSinceDays(iso: string): number {
 function TimeInput({ onSubmit, initial }: { onSubmit: (t: string) => void; initial?: string }) {
   const [t, setT] = useState(initial || '08:00');
   const [showConfirmation, setShowConfirmation] = useState(false);
-  
+
   const handleTimeChange = (newTime: string) => {
     setT(newTime);
     onSubmit(newTime);
@@ -62,11 +63,18 @@ export function HabitDetails({ habitId }: { habitId: string }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [adding, setAdding] = useState(false);
   const [editingTime, setEditingTime] = useState<string | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const handleDeleteHabit = async () => {
+    await removeHabit();
+    setIsDeleteModalOpen(false);
+    navigate('/home');
+  };
 
   const canCompleteToday = useMemo(() => Boolean(todayEntry && todayEntry.reminders.length > 0 && !completedToday), [todayEntry, completedToday]);
 
   if (loading) return (
-    <div 
+    <div
       className="flex flex-col min-h-screen bg-background w-full"
       style={{
         paddingTop: 'env(safe-area-inset-top)',
@@ -84,7 +92,7 @@ export function HabitDetails({ habitId }: { habitId: string }) {
     </div>
   );
   if (error || !habit) return (
-    <div 
+    <div
       className="flex flex-col min-h-screen bg-background w-full p-6"
       style={{
         paddingTop: 'env(safe-area-inset-top)',
@@ -98,7 +106,7 @@ export function HabitDetails({ habitId }: { habitId: string }) {
   );
 
   return (
-    <div 
+    <div
       className="flex flex-col min-h-screen bg-background w-full"
       style={{
         paddingTop: 'env(safe-area-inset-top)',
@@ -120,46 +128,50 @@ export function HabitDetails({ habitId }: { habitId: string }) {
 
       <div className="flex-1 px-6 py-6 pt-20 pb-24 w-full overflow-x-hidden overflow-y-auto">
         {/* Header Card - Enhanced */}
-        <div className="bg-gradient-to-br from-card to-card/50 border border-border rounded-2xl p-8 mb-8 w-full shadow-sm">
-          <div className="flex items-center gap-6 mb-8">
-            <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-3xl flex items-center justify-center shadow-lg">
-              <span className="text-4xl">{habit.emoji}</span>
+        <div className="bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.12)] rounded-[1.25rem] p-6 mb-8 w-full shadow-[0_8px_24px_rgba(0,0,0,0.15)]">
+          <div className="flex items-center gap-5 mb-6">
+            <div className="w-16 h-16 bg-[rgba(16,185,129,0.1)] rounded-xl flex items-center justify-center">
+              <span className="text-3xl">{habit.emoji}</span>
             </div>
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-foreground mb-2">{habit.name}</h1>
-              <p className="text-muted-foreground font-medium text-lg">
+              <h1 className="text-2xl font-bold text-foreground mb-1">{habit.name}</h1>
+              <p className="text-muted-foreground font-medium">
                 {habit.frequency === 'daily' ? 'Daily' : 'Weekly'} Habit
               </p>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
-            <div className="text-center bg-primary/5 rounded-2xl p-4">
-              <div className="text-3xl font-bold text-primary mb-1">{stats?.currentStreak ?? 0}</div>
-              <div className="text-sm text-muted-foreground font-medium">🔥 Current streak</div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="text-center bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] rounded-xl p-3">
+              <div className="text-2xl font-bold text-primary mb-1">{stats?.currentStreak ?? 0}</div>
+              <div className="text-xs text-muted-foreground font-medium">🔥 Current streak</div>
+              {/* Show previous best when current is lower to encourage recovery */}
+              {stats && stats.currentStreak < stats.bestStreak && stats.bestStreak > 0 && (
+                <div className="text-xs text-muted-foreground/60 mt-0.5">Previous best: {stats.bestStreak}</div>
+              )}
             </div>
-            <div className="text-center bg-primary/5 rounded-2xl p-4">
-              <div className="text-3xl font-bold text-primary mb-1">{stats?.bestStreak ?? 0}</div>
-              <div className="text-sm text-muted-foreground font-medium">🏆 Best streak</div>
+            <div className="text-center bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] rounded-xl p-3">
+              <div className="text-2xl font-bold text-primary mb-1">{stats?.bestStreak ?? 0}</div>
+              <div className="text-xs text-muted-foreground font-medium">🏆 Best streak</div>
             </div>
-            <div className="text-center bg-primary/5 rounded-2xl p-4">
-              <div className="text-3xl font-bold text-primary mb-1">{stats?.completionRate ?? 0}%</div>
-              <div className="text-sm text-muted-foreground font-medium">% Completion</div>
+            <div className="text-center bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] rounded-xl p-3">
+              <div className="text-2xl font-bold text-primary mb-1">{stats?.completionRate ?? 0}%</div>
+              <div className="text-xs text-muted-foreground font-medium">% Completion</div>
             </div>
-            <div className="text-center bg-primary/5 rounded-2xl p-4">
-              <div className="text-3xl font-bold text-primary mb-1">{stats?.totalCompletedDays ?? 0}</div>
-              <div className="text-sm text-muted-foreground font-medium">Total completions</div>
+            <div className="text-center bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] rounded-xl p-3">
+              <div className="text-2xl font-bold text-primary mb-1">{stats?.totalCompletedDays ?? 0}</div>
+              <div className="text-xs text-muted-foreground font-medium">Total completions</div>
             </div>
           </div>
         </div>
 
         {/* Reminder Checklist (today) - Enhanced */}
-        <div className="bg-card border border-border rounded-2xl p-6 mb-8 w-full shadow-sm">
-          <div className="flex items-center justify-between mb-6">
+        <div className="bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.12)] rounded-[1.25rem] p-5 mb-8 w-full shadow-[0_8px_24px_rgba(0,0,0,0.15)]">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-primary/10 rounded-xl flex items-center justify-center">
-                <Clock className="w-4 h-4 text-primary" />
+              <div className="w-10 h-10 bg-[rgba(16,185,129,0.1)] rounded-xl flex items-center justify-center">
+                <Clock className="w-5 h-5 text-primary" />
               </div>
-              <h3 className="text-xl font-bold text-foreground">Today's Reminders</h3>
+              <h3 className="text-lg font-bold text-foreground">Today's Reminders</h3>
             </div>
             {!completedToday && (
               <Button size="sm" variant="secondary" onClick={() => setAdding(v => !v)} className="rounded-xl font-semibold hover:scale-105 active:scale-95 transition-all duration-200">
@@ -176,7 +188,7 @@ export function HabitDetails({ habitId }: { habitId: string }) {
 
           <div className="space-y-3">
             {todayEntry && todayEntry.reminders.length > 0 ? (
-              todayEntry.reminders.map((r) => (
+              todayEntry.reminders.map((r: { time: string; done: boolean }) => (
                 <div key={r.time} className="flex items-center justify-between p-4 rounded-2xl border border-border bg-card/50 hover:bg-card transition-all duration-200">
                   <div className="flex items-center gap-4">
                     <button
@@ -295,7 +307,7 @@ export function HabitDetails({ habitId }: { habitId: string }) {
           {/* Timer Tab - NEW */}
           {habit.timerConfig?.enabled && (
             <TabsContent value="timer" className="mt-8 w-full">
-              <TimerTab 
+              <TimerTab
                 habit={habit}
                 onHabitComplete={async () => {
                   // Refresh the habit details after auto-completion
@@ -317,7 +329,7 @@ export function HabitDetails({ habitId }: { habitId: string }) {
                 {stats?.weeklyProgress && (
                   [...Array(14)].map((_, i) => {
                     const d = new Date(); d.setDate(d.getDate() - (13 - i));
-                    const ymd = d.toISOString().slice(0,10);
+                    const ymd = d.toISOString().slice(0, 10);
                     const found = stats.weeklyProgress.find(w => w.date === ymd);
                     const complete = found?.complete ?? false;
                     return (
@@ -330,14 +342,15 @@ export function HabitDetails({ habitId }: { habitId: string }) {
           </TabsContent>
         </Tabs>
 
-        {/* Danger Zone - Enhanced */}
-        <div className="mt-8 pt-6 border-t border-border w-full">
-          <Button variant="destructive" className="w-full h-14 text-lg font-bold rounded-2xl hover:scale-105 active:scale-95 transition-all duration-200" onClick={async () => {
-            if (confirm('Delete this habit and all its data?')) {
-              await removeHabit();
-              navigate('/home');
-            }
-          }}>
+        {/* Danger Zone - Isolated for safety */}
+        <div className="mt-12 pt-6 border-t border-destructive/20 w-full">
+          <p className="text-xs text-destructive/60 uppercase tracking-wider font-semibold mb-4">Danger Zone</p>
+          <Button
+            variant="destructive"
+            className="w-full font-bold"
+            size="lg"
+            onClick={() => setIsDeleteModalOpen(true)}
+          >
             <Trash2 size={18} className="mr-2" /> Delete Habit
           </Button>
         </div>
@@ -345,6 +358,26 @@ export function HabitDetails({ habitId }: { habitId: string }) {
 
       {/* Bottom Navigation */}
       <BottomNav currentRoute={currentRoute} onNavigate={navigate} />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Delete Habit?"
+        type="destructive"
+        primaryAction={{
+          label: 'Delete Habit',
+          onClick: handleDeleteHabit
+        }}
+        secondaryAction={{
+          label: 'Cancel',
+          onClick: () => setIsDeleteModalOpen(false)
+        }}
+      >
+        <p className="text-muted-foreground">
+          Are you sure you want to delete <strong>{habit.name}</strong>? This action cannot be undone and all your progress will be lost.
+        </p>
+      </Modal>
     </div>
   );
 }

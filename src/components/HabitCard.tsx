@@ -1,7 +1,8 @@
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useState, useEffect } from 'react';
 import { Badge } from './ui/badge';
 import { Checkbox } from './ui/checkbox';
 import { ChevronRight, Clock, Flame, CheckCircle2 } from 'lucide-react';
+import { getIdentityMessage } from '../lib/identityMessages';
 
 interface HabitCardProps {
   id: string;
@@ -18,38 +19,79 @@ interface HabitCardProps {
   onClick?: () => void;
 }
 
-export const HabitCard = memo(function HabitCard({ 
-  id, 
-  title, 
-  emoji, 
-  streak, 
+export const HabitCard = memo(function HabitCard({
+  id,
+  title,
+  emoji,
+  streak,
   completed,
   frequency,
   reminderTime,
   scheduleSummary,
   progress,
   showCheckbox = true,
-  onToggle, 
-  onClick 
+  onToggle,
+  onClick
 }: HabitCardProps) {
-  const handleToggle = useCallback((checked: boolean) => {
+  const [showIdentityMessage, setShowIdentityMessage] = useState(false);
+  const [identityMessage, setIdentityMessage] = useState('');
+
+  const handleToggle = useCallback(async (checked: boolean) => {
+    // Trigger haptic feedback for mobile satisfaction
+    try {
+      if ('vibrate' in navigator) {
+        navigator.vibrate(10); // Subtle pulse
+      }
+      // Also try Capacitor Haptics if available
+      const Haptics = (window as any)?.Capacitor?.Plugins?.Haptics;
+      if (Haptics) {
+        await Haptics.impact({ style: 'light' });
+      }
+    } catch {
+      // Ignore haptics errors silently
+    }
+
+    // Show identity message when completing (not uncompleting)
+    if (!completed) {
+      const message = getIdentityMessage(emoji, title, streak);
+      setIdentityMessage(message);
+      setShowIdentityMessage(true);
+    }
+
     onToggle?.(id);
-  }, [onToggle, id]);
+  }, [onToggle, id, completed, emoji, title, streak]);
+
+  // Auto-hide identity message after 3 seconds
+  useEffect(() => {
+    if (showIdentityMessage) {
+      const timer = setTimeout(() => setShowIdentityMessage(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showIdentityMessage]);
 
   const handleClick = useCallback(() => {
     onClick?.();
   }, [onClick]);
   return (
     <div
-      className={`group relative flex items-center gap-4 p-5 bg-card border border-border rounded-2xl transition-all duration-300 hover:shadow-lg hover:border-primary/30 cursor-pointer ${
-        completed ? 'bg-gradient-to-r from-green-50/50 to-green-100/30 dark:from-green-950/20 dark:to-green-900/10 border-green-200/50 dark:border-green-800/50' : 'hover:bg-muted/30'
-      }`}
+      className={`group relative flex items-center gap-4 p-5 rounded-[1.25rem] transition-all duration-300 cursor-pointer
+        ${completed
+          ? 'bg-[rgba(16,185,129,0.08)] border border-[rgba(16,185,129,0.25)] shadow-[0_8px_24px_rgba(0,0,0,0.15)]'
+          : 'bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.12)] shadow-[0_8px_24px_rgba(0,0,0,0.15)] hover:border-[rgba(255,255,255,0.18)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.2)] hover:-translate-y-0.5'
+        }`}
       onClick={handleClick}
     >
       {/* Completion Status Indicator */}
       {completed && (
         <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
           <CheckCircle2 className="w-4 h-4 text-white" />
+        </div>
+      )}
+
+      {/* Identity Message Toast */}
+      {showIdentityMessage && (
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 z-10 bg-green-600 text-white text-xs font-medium px-4 py-2 rounded-full shadow-lg whitespace-nowrap animate-pulse">
+          {identityMessage}
         </div>
       )}
 
@@ -68,9 +110,8 @@ export const HabitCard = memo(function HabitCard({
         )}
 
         {/* Habit Icon */}
-        <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-2xl transition-all ${
-          completed ? 'bg-green-100 dark:bg-green-900/30' : 'bg-primary/10'
-        }`}>
+        <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-2xl transition-all ${completed ? 'bg-green-100 dark:bg-green-900/30' : 'bg-primary/10'
+          }`}>
           {emoji}
         </div>
 
@@ -122,11 +163,10 @@ export const HabitCard = memo(function HabitCard({
             <div className="relative">
               <div className="w-full bg-muted/50 rounded-full h-2 overflow-hidden">
                 <div
-                  className={`h-2 rounded-full transition-all duration-500 ease-out ${
-                    completed 
-                      ? 'bg-gradient-to-r from-green-500 to-green-400' 
-                      : 'bg-gradient-to-r from-primary to-primary/80'
-                  }`}
+                  className={`h-2 rounded-full transition-all duration-500 ease-out ${completed
+                    ? 'bg-gradient-to-r from-green-500 to-green-400'
+                    : 'bg-gradient-to-r from-primary to-primary/80'
+                    }`}
                   style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
                 />
               </div>

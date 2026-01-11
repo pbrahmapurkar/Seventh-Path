@@ -1,9 +1,9 @@
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 import { Button } from '../components/ui/button';
 import { useAppShell } from '../components/AppShell';
 import seventhPathLogo from '../assets/d39dcef0d5c4765688b970ab66912bbb65f81e62.png';
 import '../styles/onboarding.css';
-import { Capacitor } from '@capacitor/core';
+
 import { ArrowRight, Sparkles, Target, TrendingUp, Heart } from 'lucide-react';
 
 export function OnboardingMain() {
@@ -18,12 +18,12 @@ export function OnboardingMain() {
         await Haptics.impact({ style: 'light' });
         return;
       }
-    } catch {}
+    } catch { }
     if ('vibrate' in navigator) navigator.vibrate(10);
   }, []);
 
   return (
-    <div 
+    <div
       className="onboarding-intro bg-[#0C1117] dark:bg-[#0C1117] min-h-screen w-full flex flex-col"
       style={{
         paddingTop: 'env(safe-area-inset-top)',
@@ -85,7 +85,8 @@ export function OnboardingMain() {
         <div className="px-6 pb-6">
           <Button
             onClick={async () => { await hapticTap(); navigate('/onboarding/name'); }}
-            className="w-full h-16 text-lg font-semibold rounded-2xl group bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
+            className="w-full text-lg font-semibold group bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
+            size="lg"
             aria-label="Get Started"
           >
             <div className="flex items-center justify-center gap-3">
@@ -94,7 +95,7 @@ export function OnboardingMain() {
               <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform duration-300" />
             </div>
           </Button>
-          
+
           {/* Motivational text */}
           <p className="text-center text-sm text-muted-foreground mt-4 leading-relaxed">
             Join thousands building better habits, one day at a time

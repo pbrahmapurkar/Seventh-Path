@@ -67,7 +67,7 @@ function AppContent() {
         lastNotifHabitRef.current = detail.habitId;
         lastNotifNavAtRef.current = now;
         navigate(`/habit/${detail.habitId}`);
-      } catch {}
+      } catch { }
     };
     window.addEventListener('notification-click', onNotificationClick as EventListener);
     return () => window.removeEventListener('notification-click', onNotificationClick as EventListener);
@@ -82,31 +82,31 @@ function AppContent() {
     switch (true) {
       case currentRoute === '/boot':
         return <BootScreen />;
-      
+
       case currentRoute === '/onboarding':
         return <OnboardingMain />;
-      
+
       case currentRoute === '/onboarding/name':
         return <OnboardingName />;
-      
+
       case currentRoute === '/onboarding/habits':
         return <OnboardingHabits />;
-      
+
       case currentRoute === '/onboarding/reminder':
         return <OnboardingReminder />;
-      
+
       case currentRoute === '/home':
         return <HomeToday />;
-      
+
       case currentRoute === '/add':
         return <AddHabit />;
-      
+
       case currentRoute === '/insights':
         return <Insights />;
-      
+
       case currentRoute === '/history':
         return <HistoryScreen />;
-      
+
       case currentRoute === '/settings':
         return <Settings />;
 
@@ -115,30 +115,30 @@ function AppContent() {
 
       case currentRoute === '/privacy':
         return <PrivacyPolicy />;
-      
+
       case currentRoute === '/confirm-remove-habits':
       case currentRoute === '/remove-all-habits':
         return <ConfirmRemoveHabits />;
-      
+
       case currentRoute.startsWith('/habit/') && currentRoute.endsWith('/edit'):
         return <HabitEdit habitId={habitId || '1'} />;
 
       case currentRoute.startsWith('/habit/') && !currentRoute.includes('/edit'):
         return <HabitDetails habitId={habitId || '1'} />;
-      
+
       case currentRoute === '/affirmations':
         return <Affirmations />;
-      
+
       case currentRoute === '/daily-gratitudes':
         return <DailyGratitudes />;
-      
+
       default:
         return <ErrorNotFound />;
     }
   };
 
   // Show bottom navigation for main app routes
-  const showBottomNav = isOnboarded && ['/home', '/history', '/insights', '/settings'].includes(currentRoute);
+  const showBottomNav = isOnboarded && ['/home', '/add', '/history', '/insights', '/settings'].includes(currentRoute);
 
   useEffect(() => {
     let handle: { remove: () => void } | undefined;
@@ -172,7 +172,7 @@ function AppContent() {
       <div className="flex-1 flex flex-col w-full">
         {renderScreen()}
       </div>
-      
+
       {/* Fixed bottom navigation */}
       {showBottomNav && (
         <BottomNav

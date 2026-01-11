@@ -1,4 +1,3 @@
-import React from 'react';
 import { Plus } from 'lucide-react';
 
 interface FloatingActionButtonProps {
@@ -25,9 +24,9 @@ export function FloatingActionButton({
   };
 
   const variantClasses = {
-    primary: 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg',
-    secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-md',
-    tertiary: 'bg-tertiary text-tertiary-foreground hover:bg-tertiary/90 shadow-sm',
+    primary: 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-xl shadow-primary/30 border border-white/10',
+    secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-lg border border-white/10',
+    tertiary: 'bg-tertiary text-tertiary-foreground hover:bg-tertiary/90 shadow-md border border-white/10',
   };
 
   const iconSizes = {
@@ -55,23 +54,19 @@ export function FloatingActionButton({
         ${className}
       `}
       style={{
-        // Material 3 elevation
-        boxShadow: disabled 
-          ? '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)'
-          : '0 4px 8px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08)',
         // Safe area padding
         marginBottom: 'env(safe-area-inset-bottom, 16px)',
         marginRight: 'env(safe-area-inset-right, 16px)',
       }}
     >
-      <Plus 
-        size={iconSizes[size]} 
+      <Plus
+        size={iconSizes[size]}
         className="transition-transform duration-200"
         style={{
           transform: disabled ? 'none' : 'scale(1)',
         }}
       />
-      
+
       {/* Ripple effect overlay */}
       <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-200 hover:opacity-100" />
@@ -134,7 +129,7 @@ export function ExtendedFAB({
       `}
       style={{
         // Material 3 elevation
-        boxShadow: disabled 
+        boxShadow: disabled
           ? '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)'
           : '0 4px 8px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08)',
         // Safe area padding
@@ -142,17 +137,17 @@ export function ExtendedFAB({
         marginRight: 'env(safe-area-inset-right, 16px)',
       }}
     >
-      <Plus 
-        size={iconSizes[size]} 
+      <Plus
+        size={iconSizes[size]}
         className="transition-transform duration-200 flex-shrink-0"
       />
-      
+
       {showLabel && (
         <span className="text-sm font-medium whitespace-nowrap">
           {label}
         </span>
       )}
-      
+
       {/* Ripple effect overlay */}
       <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-200 hover:opacity-100" />

@@ -1,28 +1,24 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, TrendingUp, CheckCircle2, CircleDashed, Lock, Edit3, X } from 'lucide-react';
-import { useAppShell, AppBar } from '../components/AppShell';
+import { Calendar, TrendingUp, CheckCircle2, CircleDashed, Edit3, X } from 'lucide-react';
+import { AppBar } from '../components/AppShell';
 import { useHabitsStore } from '../store/HabitsStore';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Switch } from '../components/ui/switch';
-import { Skeleton, SkeletonCard, SkeletonStats } from '../components/ui/skeleton';
-import { toYMD, getDayEntry, ensureDayEntry, setDayEntry } from '../lib/habits';
-import { 
+
+import { toYMD } from '../lib/habits';
+import {
   getCompletionForDate,
-  getCompletionForDateMemoized,
   getCompletionSeriesMemoized,
-  clearCompletionCaches,
-  type DayCompletion,
   type CompletionSeriesItem
 } from '../lib/completion';
 import { formatHistoryDate, getHabitChangesForDay } from '../lib/historyUtils';
 import { FloatingActionButton } from '../components/FloatingActionButton';
 import { AddHabitBottomSheet } from '../components/AddHabitBottomSheet';
-import * as EventBus from '../lib/eventBus';
-import type { DayEntry as HabitDay } from '../lib/habits/types';
+
 import { format, subDays } from 'date-fns';
 
 export function HistoryScreen() {
@@ -38,13 +34,13 @@ export function HistoryScreen() {
 
   // Get all habits
   const habits = Object.values(habitsById);
-  
+
   // Get rolling 7-day history using unified completion system
   const rollingHistory = useMemo(() => {
     const today = new Date();
     const startDate = new Date(today);
     startDate.setDate(today.getDate() - 6); // 7 days total
-    
+
     return getCompletionSeriesMemoized({
       start: toYMD(startDate),
       end: toYMD(today),
@@ -81,25 +77,25 @@ export function HistoryScreen() {
       console.log('❌ Habit not found:', habitId);
       return;
     }
-    
+
     // Get fresh state from store
     const store = useHabitsStore.getState();
     const freshHabitDaysByKey = store.habitDaysByKey;
-    
+
     // Get current completion status with fresh data
     const completion = getCompletionForDate(date, [habit], freshHabitDaysByKey, {
       includeSameDay: true
     });
     const habitStatus = completion.habitStatuses.find(s => s.habitId === habitId);
     const isCompleted = habitStatus?.isCompleted ?? false;
-    
-    console.log('📊 Current status:', { 
-      habitName: habit.name, 
-      isCompleted, 
+
+    console.log('📊 Current status:', {
+      habitName: habit.name,
+      isCompleted,
       totalReminders: habitStatus?.totalReminders,
       completedReminders: habitStatus?.completedReminders
     });
-    
+
     if (date !== todayYMD && editablePastDates.has(date)) {
       await store.toggleCompletionForDate(habitId, date);
     } else if (!isCompleted) {
@@ -112,7 +108,7 @@ export function HistoryScreen() {
         await toggleTime(habitId, time, date);
       }
     }
-    
+
     // Check if Today reached 100% completion and trigger checkmark animation
     const today = toYMD(new Date());
     if (date === today) {
@@ -121,14 +117,14 @@ export function HistoryScreen() {
       const todayCompletion = getCompletionForDate(today, habits, updatedStore.habitDaysByKey, {
         includeSameDay: true
       });
-      
+
       if (todayCompletion.percentage === 100) {
         setShowTodayCheckmark(true);
         // Hide checkmark after animation
         setTimeout(() => setShowTodayCheckmark(false), 2000);
       }
     }
-    
+
     console.log('✅ Toggle completed');
   };
 
@@ -137,11 +133,11 @@ export function HistoryScreen() {
     // Get fresh state from store
     const store = useHabitsStore.getState();
     const freshHabitDaysByKey = store.habitDaysByKey;
-    
+
     const completion = getCompletionForDate(date, habits, freshHabitDaysByKey, {
       includeSameDay: true
     });
-    
+
     const habitsForDate = completion.habitStatuses.map(status => ({
       id: status.habitId,
       name: status.name,
@@ -149,26 +145,26 @@ export function HistoryScreen() {
       completed: status.isCompleted,
       times: status.reminderDetails.map(r => r.time)
     }));
-    
+
     console.log('📅 Habits for date:', { date, habits: habitsForDate });
-    
+
     return habitsForDate;
   };
 
   // Filter rolling history to show only meaningful days
   const getMeaningfulDays = (history: CompletionSeriesItem[]) => {
     const today = toYMD(new Date());
-    
+
     return history.filter(day => {
       const isToday = day.date === today;
       const hasScheduledHabits = day.total > 0;
       const hasCompletionActivity = day.percentage > 0;
-      
+
       // Always include Today for orientation, even if no habits
       if (isToday) {
         return true;
       }
-      
+
       // Include days that have scheduled habits OR completion activity
       return hasScheduledHabits || hasCompletionActivity;
     });
@@ -185,17 +181,29 @@ export function HistoryScreen() {
     const totalDays = last7Days.length;
     const completedDays = last7Days.filter(day => day.percentage === 100).length;
     const averageCompletion = last7Days.reduce((sum, day) => sum + day.percentage, 0) / totalDays;
-    
+
+    // Calculate current streak (consecutive 100% days from today backwards)
+    let currentStreak = 0;
+    const reversedDays = [...last7Days].reverse();
+    for (const day of reversedDays) {
+      if (day.percentage === 100) {
+        currentStreak++;
+      } else {
+        break;
+      }
+    }
+
     return {
       totalDays,
       completedDays,
       averageCompletion: Math.round(averageCompletion),
-      totalHabits: habits.length
+      totalHabits: habits.length,
+      currentStreak
     };
   }, [rollingHistory, habits.length]);
 
   return (
-    <div 
+    <div
       className="flex flex-col min-h-screen bg-background w-full"
       style={{
         paddingTop: 'env(safe-area-inset-top)',
@@ -208,10 +216,10 @@ export function HistoryScreen() {
 
       <div className="flex-1 px-6 py-6 pt-20 pb-24 w-full overflow-x-hidden overflow-y-auto">
         {/* Weekly Overview - Enhanced */}
-        <Card className="mb-8 bg-gradient-to-br from-primary/5 via-primary/3 to-transparent border-primary/20 rounded-2xl shadow-sm w-full">
+        <Card className="mb-8 bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.12)] rounded-[1.25rem] shadow-[0_8px_24px_rgba(0,0,0,0.15)] w-full">
           <CardHeader className="pb-6">
             <CardTitle className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-[rgba(16,185,129,0.1)] rounded-xl flex items-center justify-center">
                 <TrendingUp className="w-6 h-6 text-primary" />
               </div>
               <div>
@@ -253,16 +261,20 @@ export function HistoryScreen() {
                   </div>
                 </div>
               </div>
-              
-              {/* Stats - Enhanced */}
-              <div className="flex-1 grid grid-cols-2 gap-6">
-                <div className="text-center bg-card/50 rounded-2xl p-4">
-                  <div className="text-3xl font-bold text-primary mb-1">{getWeeklyStats.completedDays}</div>
-                  <div className="text-sm text-muted-foreground font-medium">Perfect Days</div>
+
+              {/* Stats - Enhanced with Streak */}
+              <div className="flex-1 grid grid-cols-3 gap-3">
+                <div className="text-center bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] rounded-xl p-3">
+                  <div className="text-2xl font-bold text-primary mb-0.5">🔥 {getWeeklyStats.currentStreak}</div>
+                  <div className="text-xs text-muted-foreground font-medium">Streak</div>
                 </div>
-                <div className="text-center bg-card/50 rounded-2xl p-4">
-                  <div className="text-3xl font-bold text-primary mb-1">{getWeeklyStats.totalHabits}</div>
-                  <div className="text-sm text-muted-foreground font-medium">Total Habits</div>
+                <div className="text-center bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] rounded-xl p-3">
+                  <div className="text-2xl font-bold text-primary mb-0.5">{getWeeklyStats.completedDays}</div>
+                  <div className="text-xs text-muted-foreground font-medium">Perfect</div>
+                </div>
+                <div className="text-center bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] rounded-xl p-3">
+                  <div className="text-2xl font-bold text-primary mb-0.5">{getWeeklyStats.totalHabits}</div>
+                  <div className="text-xs text-muted-foreground font-medium">Habits</div>
                 </div>
               </div>
             </div>
@@ -290,20 +302,30 @@ export function HistoryScreen() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
+                {/* Day of Week Labels */}
+                <div className="grid grid-cols-7 gap-3 mb-3 w-full">
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
+                    <div key={day} className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      {day}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Calendar Grid */}
                 <div className="grid grid-cols-7 gap-3 w-full">
                   {rollingHistory.map((day) => {
                     const isToday = day.date === toYMD(new Date());
                     const completionRate = day.percentage;
                     const isEditable = isDateEditable(day.date);
                     const isLocked = !isEditable;
-                    
+
                     // Enhanced color coding with 3 states
                     let chipClass = '';
                     let bgClass = '';
                     let borderClass = '';
                     let textClass = '';
                     let iconClass = '';
-                    
+
                     if (isLocked) {
                       // Locked dates - greyed out
                       chipClass = 'cursor-not-allowed opacity-60';
@@ -334,15 +356,14 @@ export function HistoryScreen() {
                       borderClass = 'border-muted';
                       textClass = 'text-muted-foreground';
                     }
-                    
+
                     return (
                       <div
                         key={day.date}
-                        className={`aspect-square rounded-2xl border-2 flex flex-col items-center justify-center p-2 text-xs transition-all duration-300 relative ${
-                          isLocked ? '' : 'hover:scale-105 cursor-pointer active:scale-95'
-                        } ${chipClass} ${bgClass} ${borderClass} ${textClass}`}
+                        className={`aspect-square rounded-2xl border-2 flex flex-col items-center justify-center p-2 text-xs transition-all duration-300 relative ${isLocked ? '' : 'hover:scale-105 cursor-pointer active:scale-95'
+                          } ${chipClass} ${bgClass} ${borderClass} ${textClass}`}
                         title={
-                          isLocked 
+                          isLocked
                             ? `${formatHistoryDate(day.date)} - ${completionRate}% complete (locked)`
                             : `${formatHistoryDate(day.date)} - ${completionRate}% complete (${day.total} habits)${isEditable ? ' - Tap to edit' : ''}`
                         }
@@ -368,14 +389,13 @@ export function HistoryScreen() {
                       >
                         <div className="font-medium flex items-center gap-1">
                           {new Date(day.date).getDate()}
-                          {isLocked && <Lock className="w-2 h-2" />}
-                          {isEditable && !isToday && <Edit3 className="w-2 h-2" />}
-                          {isEditable && isToday && <Edit3 className="w-2 h-2" />}
+                          {/* Removed lock icon - subtle opacity is enough */}
+                          {isEditable && <Edit3 className="w-2 h-2" />}
                         </div>
                         <div className="text-[10px]">
                           {completionRate}%
                         </div>
-                        
+
                         {/* Checkmark animation for Today when 100% */}
                         {isToday && showTodayCheckmark && (
                           <motion.div
@@ -392,37 +412,30 @@ export function HistoryScreen() {
                     );
                   })}
                 </div>
-                
-                {/* Legend */}
-                <div className="mt-6 space-y-3">
-                  <div className="flex flex-wrap gap-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded border-2 border-primary bg-primary/15 ring-2 ring-primary"></div>
-                      <span className="font-medium">Today (Editable)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded border-2 border-green-500 bg-green-500/20"></div>
-                      <span>Perfect Day (100%)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded border-2 border-orange-400 bg-orange-400/20"></div>
-                      <span>Partial (1-99%)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded border-2 border-muted bg-muted/30"></div>
-                      <span>No Activity (0%)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded border-2 border-muted/50 bg-muted/20 opacity-60"></div>
-                      <span className="text-muted-foreground/60">Locked</span>
-                    </div>
+
+                {/* Compact Legend */}
+                <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1.5" title="Today (Editable)">
+                    <div className="w-2.5 h-2.5 rounded border-2 border-primary bg-primary/15 ring-1 ring-primary"></div>
+                    <span>Today</span>
                   </div>
-                  
-                  {/* Helper Text */}
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 rounded-lg p-3">
-                    <Edit3 className="w-4 h-4" />
-                    <span>Tap Today to log progress. You can edit Today, Yesterday, and Day Before Yesterday.</span>
+                  <div className="flex items-center gap-1.5" title="Perfect Day (100%)">
+                    <div className="w-2.5 h-2.5 rounded border-2 border-green-500 bg-green-500/20"></div>
+                    <span>100%</span>
                   </div>
+                  <div className="flex items-center gap-1.5" title="Partial Completion (1-99%)">
+                    <div className="w-2.5 h-2.5 rounded border-2 border-orange-400 bg-orange-400/20"></div>
+                    <span>Partial</span>
+                  </div>
+                  <div className="flex items-center gap-1.5" title="No Activity (0%)">
+                    <div className="w-2.5 h-2.5 rounded border-2 border-muted bg-muted/30"></div>
+                    <span>0%</span>
+                  </div>
+                  <div className="flex items-center gap-1.5" title="Locked past days">
+                    <div className="w-2.5 h-2.5 rounded border-2 border-muted/50 bg-muted/20 opacity-60"></div>
+                    <span>Locked</span>
+                  </div>
+                  <span className="text-muted-foreground/60 ml-auto">Tap to edit</span>
                 </div>
               </CardContent>
             </Card>
@@ -440,162 +453,158 @@ export function HistoryScreen() {
             ) : (
               <div className="space-y-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 400px)' }}>
                 {meaningfulDays.slice().reverse().map((day, index) => {
-                const previousDay = index < meaningfulDays.length - 1 ? meaningfulDays[meaningfulDays.length - 2 - index] : null;
-                const changes = getHabitChangesForDay(habits, day.date, previousDay?.date);
-                const isToday = day.date === toYMD(new Date());
-                const completionRate = day.percentage;
-                const completedCount = day.completed;
-                
-                return (
-                  <Card 
-                    key={day.date} 
-                    className={`transition-all duration-300 hover:shadow-lg active:scale-[0.98] rounded-2xl ${
-                      isToday 
-                        ? 'ring-2 ring-primary/50 shadow-lg bg-gradient-to-r from-primary/5 to-transparent border-primary/30' 
-                        : 'hover:shadow-md'
-                    }`}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                            isToday 
-                              ? 'bg-primary/20 ring-2 ring-primary/30' 
-                              : 'bg-primary/10'
-                          }`}>
-                            <Calendar className={`w-4 h-4 ${isToday ? 'text-primary' : 'text-primary'}`} />
-                          </div>
-                          <div>
-                            <h3 className={`font-medium ${isToday ? 'text-primary' : ''}`}>
-                              {formatHistoryDate(day.date)}
-                              {isToday && <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-1 rounded-full">TODAY</span>}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                              {completedCount} of {day.total} habits completed
-                            </p>
-                            {/* Show habit changes */}
-                            {(changes.added.length > 0 || changes.removed.length > 0) && (
-                              <div className="flex gap-2 mt-1">
-                                {changes.added.length > 0 && (
-                                  <Badge variant="secondary" className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
-                                    +{changes.added.length} added
-                                  </Badge>
-                                )}
-                                {changes.removed.length > 0 && (
-                                  <Badge variant="secondary" className="text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
-                                    -{changes.removed.length} removed
-                                  </Badge>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <Badge 
-                          variant={completionRate === 100 ? "default" : completionRate > 0 ? "secondary" : "outline"}
-                          className={completionRate === 100 ? "bg-green-500" : ""}
-                        >
-                          {completionRate}%
-                        </Badge>
-                      </div>
-                      
-                      {/* Progress Bar */}
-                      <div className="mb-4">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                          <span>Progress</span>
-                          <span>{completionRate}%</span>
-                        </div>
-                        <div className="w-full bg-muted/50 rounded-full h-2 overflow-hidden">
-                          <div
-                            className={`h-2 rounded-full transition-all duration-500 ease-out ${
-                              completionRate === 100 
-                                ? 'bg-gradient-to-r from-green-500 to-green-400' 
-                                : completionRate > 0 
-                                  ? 'bg-gradient-to-r from-orange-400 to-orange-300'
-                                  : 'bg-muted'
-                            }`}
-                            style={{ width: `${completionRate}%` }}
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-2">
-                        {getHabitsForDate(day.date).map((habit) => {
-                          const isNew = changes.added.some(h => h.id === habit.id);
-                          const isPastEditable = editablePastDates.has(day.date) && !isToday;
-                          const dayKey = `habit:${habit.id}:day:${day.date}`;
-                          const habitDayEntry = habitDaysByKey[dayKey];
-                          const totalReminders = habitDayEntry?.reminders.length ?? 0;
-                          const completedReminders = habitDayEntry ? habitDayEntry.reminders.filter(r => r.done).length : 0;
-                          const isCompleted = totalReminders > 0 && completedReminders === totalReminders;
-                          console.log(`RENDER CHECK => Date: ${day.date}, Habit: ${habit.id}, Completed: ${isCompleted}`);
-                          const baseClasses = `flex items-center gap-2 p-2 rounded-lg border transition-all duration-200 ${
-                            isCompleted
-                              ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800'
-                              : 'bg-muted/30 border-border'
-                          } ${isNew ? 'ring-2 ring-green-300 dark:ring-green-700' : ''}`;
+                  const previousDay = index < meaningfulDays.length - 1 ? meaningfulDays[meaningfulDays.length - 2 - index] : null;
+                  const changes = getHabitChangesForDay(habits, day.date, previousDay?.date);
+                  const isToday = day.date === toYMD(new Date());
+                  const completionRate = day.percentage;
+                  const completedCount = day.completed;
 
-                          const content = (
-                            <>
-                              <div className="text-lg">{habit.emoji}</div>
-                              <div className="flex-1 min-w-0">
-                                <div className="text-sm font-medium truncate flex items-center gap-1">
-                                  {habit.name}
-                                  {isNew && (
-                                    <Badge variant="outline" className="text-xs px-1 py-0 h-4 text-green-600 dark:text-green-400 border-green-300 dark:border-green-700">
-                                      NEW
+                  return (
+                    <Card
+                      key={day.date}
+                      className={`transition-all duration-300 hover:shadow-lg active:scale-[0.98] rounded-2xl ${isToday
+                        ? 'ring-2 ring-primary/50 shadow-lg bg-gradient-to-r from-primary/5 to-transparent border-primary/30'
+                        : 'hover:shadow-md'
+                        }`}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isToday
+                              ? 'bg-primary/20 ring-2 ring-primary/30'
+                              : 'bg-primary/10'
+                              }`}>
+                              <Calendar className={`w-4 h-4 ${isToday ? 'text-primary' : 'text-primary'}`} />
+                            </div>
+                            <div>
+                              <h3 className={`font-medium ${isToday ? 'text-primary' : ''}`}>
+                                {formatHistoryDate(day.date)}
+                                {isToday && <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-1 rounded-full">TODAY</span>}
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                {completedCount} of {day.total} habits completed
+                              </p>
+                              {/* Show habit changes */}
+                              {(changes.added.length > 0 || changes.removed.length > 0) && (
+                                <div className="flex gap-2 mt-1">
+                                  {changes.added.length > 0 && (
+                                    <Badge variant="secondary" className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
+                                      +{changes.added.length} added
+                                    </Badge>
+                                  )}
+                                  {changes.removed.length > 0 && (
+                                    <Badge variant="secondary" className="text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
+                                      -{changes.removed.length} removed
                                     </Badge>
                                   )}
                                 </div>
-                                {isCompleted && (
-                                  <div className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
-                                    <CheckCircle2 className="w-3 h-3" />
-                                    Completed
-                                  </div>
-                                )}
-                              </div>
-                              <div className="shrink-0 flex items-center justify-center">
-                                {isCompleted ? (
-                                  <CheckCircle2 className="w-4 h-4 text-primary" />
-                                ) : (
-                                  <CircleDashed className="w-4 h-4 text-muted-foreground" />
-                                )}
-                              </div>
-                            </>
-                          );
+                              )}
+                            </div>
+                          </div>
+                          <Badge
+                            variant={completionRate === 100 ? "default" : completionRate > 0 ? "secondary" : "outline"}
+                            className={completionRate === 100 ? "bg-green-500" : ""}
+                          >
+                            {completionRate}%
+                          </Badge>
+                        </div>
 
-                          if (isPastEditable) {
+                        {/* Progress Bar */}
+                        <div className="mb-4">
+                          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                            <span>Progress</span>
+                            <span>{completionRate}%</span>
+                          </div>
+                          <div className="w-full bg-muted/50 rounded-full h-2 overflow-hidden">
+                            <div
+                              className={`h-2 rounded-full transition-all duration-500 ease-out ${completionRate === 100
+                                ? 'bg-gradient-to-r from-green-500 to-green-400'
+                                : completionRate > 0
+                                  ? 'bg-gradient-to-r from-orange-400 to-orange-300'
+                                  : 'bg-muted'
+                                }`}
+                              style={{ width: `${completionRate}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          {getHabitsForDate(day.date).map((habit) => {
+                            const isNew = changes.added.some(h => h.id === habit.id);
+                            const isPastEditable = editablePastDates.has(day.date) && !isToday;
+                            const dayKey = `habit:${habit.id}:day:${day.date}`;
+                            const habitDayEntry = habitDaysByKey[dayKey];
+                            const totalReminders = habitDayEntry?.reminders.length ?? 0;
+                            const completedReminders = habitDayEntry ? habitDayEntry.reminders.filter(r => r.done).length : 0;
+                            const isCompleted = totalReminders > 0 && completedReminders === totalReminders;
+                            console.log(`RENDER CHECK => Date: ${day.date}, Habit: ${habit.id}, Completed: ${isCompleted}`);
+                            const baseClasses = `flex items-center gap-2 p-2 rounded-lg border transition-all duration-200 ${isCompleted
+                              ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800'
+                              : 'bg-muted/30 border-border'
+                              } ${isNew ? 'ring-2 ring-green-300 dark:ring-green-700' : ''}`;
+
+                            const content = (
+                              <>
+                                <div className="text-lg">{habit.emoji}</div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-sm font-medium truncate flex items-center gap-1">
+                                    {habit.name}
+                                    {isNew && (
+                                      <Badge variant="outline" className="text-xs px-1 py-0 h-4 text-green-600 dark:text-green-400 border-green-300 dark:border-green-700">
+                                        NEW
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  {isCompleted && (
+                                    <div className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                                      <CheckCircle2 className="w-3 h-3" />
+                                      Completed
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="shrink-0 flex items-center justify-center">
+                                  {isCompleted ? (
+                                    <CheckCircle2 className="w-4 h-4 text-primary" />
+                                  ) : (
+                                    <CircleDashed className="w-4 h-4 text-muted-foreground" />
+                                  )}
+                                </div>
+                              </>
+                            );
+
+                            if (isPastEditable) {
+                              return (
+                                <button
+                                  key={habit.id}
+                                  type="button"
+                                  onClick={async () => {
+                                    console.log(`CLICKED: Habit ID: ${habit.id}, Date: ${day.date}`);
+                                    await toggleCompletionForDate(habit.id, day.date);
+                                  }}
+                                  className={`${baseClasses} cursor-pointer hover:ring-2 hover:ring-primary/50 focus:ring-2 focus:ring-primary focus:outline-none`}
+                                  aria-pressed={isCompleted}
+                                  aria-label={`Toggle ${habit.name} completion for ${formatHistoryDate(day.date)}`}
+                                >
+                                  {content}
+                                </button>
+                              );
+                            }
+
                             return (
-                              <button
+                              <div
                                 key={habit.id}
-                                type="button"
-                                onClick={async () => {
-                                  console.log(`CLICKED: Habit ID: ${habit.id}, Date: ${day.date}`);
-                                  await toggleCompletionForDate(habit.id, day.date);
-                                }}
-                                className={`${baseClasses} cursor-pointer hover:ring-2 hover:ring-primary/50 focus:ring-2 focus:ring-primary focus:outline-none`}
-                                aria-pressed={isCompleted}
-                                aria-label={`Toggle ${habit.name} completion for ${formatHistoryDate(day.date)}`}
+                                className={`${baseClasses} opacity-70`}
+                                aria-hidden="true"
                               >
                                 {content}
-                              </button>
+                              </div>
                             );
-                          }
-
-                          return (
-                            <div
-                              key={habit.id}
-                              className={`${baseClasses} opacity-70`}
-                              aria-hidden="true"
-                            >
-                              {content}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+                          })}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </TabsContent>
@@ -614,29 +623,30 @@ export function HistoryScreen() {
         onClose={() => setIsAddHabitOpen(false)}
       />
 
-      {/* Habit Editor Bottom Sheet */}
+      {/* Habit Editor Bottom Sheet - Enhanced */}
       {editingDate && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-end">
-          <div className="bg-background rounded-t-2xl w-full max-h-[80vh] overflow-hidden">
-            <div className="sticky top-0 bg-background border-b border-border p-4 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end animate-in fade-in duration-200">
+          <div className="bg-background rounded-t-3xl w-full max-h-[80vh] overflow-hidden shadow-2xl border-t border-white/10 animate-in slide-in-from-bottom duration-300">
+            <div className="sticky top-0 bg-background/95 backdrop-blur-sm border-b border-border p-5 flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold">
-                  Edit {formatHistoryDate(editingDate)}
+                <h3 className="text-xl font-bold">
+                  {formatHistoryDate(editingDate)}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Mark habits as completed for this day
+                  Toggle habits you completed
                 </p>
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={() => setEditingDate(null)}
                 aria-label="Close editor"
+                className="rounded-full"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </Button>
             </div>
-            
+
             <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
               {getHabitsForDate(editingDate).map((habit) => {
                 const dayKey = `habit:${habit.id}:day:${editingDate}`;
@@ -659,7 +669,7 @@ export function HistoryScreen() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-muted-foreground">
                         {isCompleted ? 'Completed' : 'Not completed'}
@@ -673,7 +683,7 @@ export function HistoryScreen() {
                   </div>
                 );
               })}
-              
+
               {getHabitsForDate(editingDate).length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
                   <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
@@ -681,7 +691,7 @@ export function HistoryScreen() {
                 </div>
               )}
             </div>
-            
+
             <div className="sticky bottom-0 bg-background border-t border-border p-4">
               <Button
                 onClick={() => setEditingDate(null)}
